@@ -1,0 +1,5 @@
+.nextflow*
+trace.*
+work/
+results/
+baktflow.code-workspace
