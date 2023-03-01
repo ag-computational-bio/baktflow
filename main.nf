@@ -597,7 +597,36 @@ process  polishShortPolyPolish {
 
 chAssembly.concat( chPolishShortPolishEnd, chAssemblyOntMedaka )
     .dump( { "chAssembly: sample=${it[0]}, assembly=${it[1]}" } )
-    .into( { chAssemblyMash; chAssemblyAni; chAssemblyBakta; chAssemblyPlaton; chAssemblyCardRGI; chAssemblyMlst } )
+    .into( { chCheckM2; chAssemblyMash; chAssemblyAni; chAssemblyBakta; chAssemblyPlaton; chAssemblyCardRGI; chAssemblyMlst } )
+
+
+process checkm2 {
+
+    tag "${sample}"
+    cpus 1
+    memory { 20.GB * task.attempt }
+    conda "${params.containerdir}/checkm2"
+    
+    input:
+    tuple val(sample), path(assembly) from chCheckM2
+
+    output:
+    path("${sample}.checkm2.tsv") into chEndCheckM2
+    publishDir path: "${pathOutput}/${sample}/", mode: 'copy'
+
+    script:
+    """
+	mkdir ./input
+	cp ${assembly} ./input
+	checkm2 predict --input ./input --output-directory ./qc --database_path ${params.checkm2db} --threads ${task.cpus}
+	mv ./qc/quality_report.tsv ${sample}.checkm2.tsv
+	"""
+
+    stub:
+    """
+    touch ${sample}.checkm2.tsv
+    """
+}
 
 
 process mash {
