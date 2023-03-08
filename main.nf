@@ -495,11 +495,45 @@ process assemblyHybrid {
 }
 
 
-chPolishShort.into( { chPolishShortPilon; chPolishShortPolca; chPolishShortPolypolish } )
+chPolishShort.into( { chPolishShortPolypolish; chPolishShortPilon; chPolishShortPolca } )
 
 
 chAssemblyRaw.concat( chAssemblyIll, chAssemblyHybrid )
     .set{ chAssemblyRawConcat }
+
+
+process  polishShortPolyPolish {
+
+    tag "${sample}"
+    cpus 4
+    memory { 2.GB * task.attempt }
+    conda "${params.containerdir}/polish-short-polypolish"
+    scratch = { params.scratch ? params.scratch != null : false }
+
+    input:
+    tuple val(sample), val(type), path('R1.fastq.gz'), path('R2.fastq.gz'), path('SE.fastq.gz') from chPolishShortPolypolish
+    tuple val(sample), path('assembly.fna') from chAssemblyRawConcat
+
+    output:
+    tuple val(sample), path("${sample}.polished.fna") into chPolishShortPolypolishPilon
+    publishDir path: "${pathOutput}/${sample}/assembly/", mode: 'copy'
+
+    script:
+    """
+    bwa index assembly.fna
+    bwa mem -t ${task.cpus} -a assembly.fna R1.fastq.gz > alignments_r1.sam
+    bwa mem -t ${task.cpus} -a assembly.fna R2.fastq.gz > alignments_r2.sam
+    bwa mem -t ${task.cpus} -a assembly.fna SE.fastq.gz > alignments_se.sam
+    polypolish_insert_filter.py --in1 alignments_r1.sam --in2 alignments_r2.sam --out1 filtered_r1.sam --out2 filtered_r2.sam
+    polypolish assembly.fna filtered_r1.sam filtered_r2.sam alignments_se.sam > ${sample}.polished.fna
+    """
+
+    stub:
+    """
+    touch ${sample}.polished.fna
+    """
+
+}
 
 
 process  polishShortPilon {
@@ -512,7 +546,7 @@ process  polishShortPilon {
 
     input:
     tuple val(sample), val(type), path('R1.fastq.gz'), path('R2.fastq.gz'), path('SE.fastq.gz') from chPolishShortPilon
-    tuple val(sample), path('assembly.fna') from chAssemblyRawConcat
+    tuple val(sample), path('assembly.fna') from chPolishShortPolypolishPilon
 
     output:
     tuple val(sample), path('pilon.fasta') into chPolishShortPilonPOLCA
@@ -547,7 +581,7 @@ process  polishShortPOLCA {
     tuple val(sample), path('assembly.fna') from chPolishShortPilonPOLCA
 
     output:
-    tuple val(sample), path('assembly.fna.PolcaCorrected.fa') into chPolishShortPOLCAPolypolish
+    tuple val(sample), path('assembly.fna.PolcaCorrected.fa') into chPolishShortPolishEnd
 
     script:
     """
@@ -558,40 +592,6 @@ process  polishShortPOLCA {
     """
     touch assembly.fna.PolcaCorrected.fa
     """
-}
-
-
-process  polishShortPolyPolish {
-
-    tag "${sample}"
-    cpus 4
-    memory { 2.GB * task.attempt }
-    conda "${params.containerdir}/polish-short-polypolish"
-    scratch = { params.scratch ? params.scratch != null : false }
-
-    input:
-    tuple val(sample), val(type), path('R1.fastq.gz'), path('R2.fastq.gz'), path('SE.fastq.gz') from chPolishShortPolypolish
-    tuple val(sample), path('assembly.fna') from chPolishShortPOLCAPolypolish
-
-    output:
-    tuple val(sample), path("${sample}.polished.fna") into chPolishShortPolishEnd
-    publishDir path: "${pathOutput}/${sample}/assembly/", mode: 'copy'
-
-    script:
-    """
-    bwa index assembly.fna
-    bwa mem -t ${task.cpus} -a assembly.fna R1.fastq.gz > alignments_r1.sam
-    bwa mem -t ${task.cpus} -a assembly.fna R2.fastq.gz > alignments_r2.sam
-    bwa mem -t ${task.cpus} -a assembly.fna SE.fastq.gz > alignments_se.sam
-    polypolish_insert_filter.py --in1 alignments_r1.sam --in2 alignments_r2.sam --out1 filtered_r1.sam --out2 filtered_r2.sam
-    polypolish assembly.fna filtered_r1.sam filtered_r2.sam alignments_se.sam > ${sample}.polished.fna
-    """
-
-    stub:
-    """
-    touch ${sample}.polished.fna
-    """
-
 }
 
 
