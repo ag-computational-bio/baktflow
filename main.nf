@@ -166,7 +166,7 @@ process qcIll {
 
     tag "${sample}"
     cpus 2
-    memory { 2.GB * task.attempt }
+    memory { 4.GB * task.attempt }
     conda "${params.containerdir}/qc-ill"
 
     input:
@@ -495,7 +495,7 @@ process assemblyHybrid {
 }
 
 
-chPolishShort.into( { chPolishShortPolypolish; chPolishShortPilon; chPolishShortPolca } )
+chPolishShort.into( { chPolishShortPolypolish; chPolishShortPolca } )
 
 
 chAssemblyRaw.concat( chAssemblyIll, chAssemblyHybrid )
@@ -515,7 +515,7 @@ process  polishShortPolyPolish {
     tuple val(sample), path('assembly.fna') from chAssemblyRawConcat
 
     output:
-    tuple val(sample), path("${sample}.polished.fna") into chPolishShortPolypolishPilon
+    tuple val(sample), path("${sample}.polished.fna") into chPolishShortPolypolishPOLCA
     publishDir path: "${pathOutput}/${sample}/assembly/", mode: 'copy'
 
     script:
@@ -536,38 +536,6 @@ process  polishShortPolyPolish {
 }
 
 
-process  polishShortPilon {
-
-    tag "${sample}"
-    cpus 4
-    memory { 2.GB * task.attempt }
-    conda "${params.containerdir}/polish-short-pilon"
-    scratch = { params.scratch ? params.scratch != null : false }
-
-    input:
-    tuple val(sample), val(type), path('R1.fastq.gz'), path('R2.fastq.gz'), path('SE.fastq.gz') from chPolishShortPilon
-    tuple val(sample), path('assembly.fna') from chPolishShortPolypolishPilon
-
-    output:
-    tuple val(sample), path('pilon.fasta') into chPolishShortPilonPOLCA
-
-    script:
-    """
-    bwa index assembly.fna
-    bwa mem -t ${task.cpus} assembly.fna R1.fastq.gz R2.fastq.gz | samtools sort --output-fmt BAM -o mapping-pe.bam
-    samtools index -b mapping-pe.bam
-    bwa mem -t ${task.cpus} assembly.fna SE.fastq.gz | samtools sort --output-fmt BAM -o mapping-se.bam
-    samtools index -b mapping-se.bam
-    pilon --genome assembly.fna --frags mapping-pe.bam --unpaired mapping-se.bam
-    """
-
-    stub:
-    """
-    touch pilon.fasta
-    """
-}
-
-
 process  polishShortPOLCA {
 
     tag "${sample}"
@@ -578,7 +546,7 @@ process  polishShortPOLCA {
 
     input:
     tuple val(sample), val(type), path('R1.fastq.gz'), path('R2.fastq.gz'), path('SE.fastq.gz') from chPolishShortPolca
-    tuple val(sample), path('assembly.fna') from chPolishShortPilonPOLCA
+    tuple val(sample), path('assembly.fna') from chPolishShortPolypolishPOLCA
 
     output:
     tuple val(sample), path('assembly.fna.PolcaCorrected.fa') into chPolishShortPolishEnd
