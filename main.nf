@@ -358,7 +358,7 @@ process polishLongRacon {
 
     tag "${sample}"
     cpus 8
-    memory { 2.GB * task.attempt }
+    memory { 8.GB * task.attempt }
     conda "${params.containerdir}/polish-long-racon"
     scratch = { params.scratch ? params.scratch != null : false }
 
@@ -425,7 +425,7 @@ process assemblyShort {
 
     tag "${sample}"
     cpus 16
-    memory { 16.GB * task.attempt }
+    memory { 32.GB * task.attempt }
     conda "${params.containerdir}/assembly-short"
     scratch = { params.scratch ? params.scratch != null : false }
 
@@ -506,7 +506,7 @@ process  polishShortPolyPolish {
 
     tag "${sample}"
     cpus 4
-    memory { 2.GB * task.attempt }
+    memory { 4.GB * task.attempt }
     conda "${params.containerdir}/polish-short-polypolish"
     scratch = { params.scratch ? params.scratch != null : false }
 
@@ -540,7 +540,7 @@ process  polishShortPOLCA {
 
     tag "${sample}"
     cpus 4
-    memory { 2.GB * task.attempt }
+    memory { 4.GB * task.attempt }
     conda "${params.containerdir}/polish-short-polca"
     scratch = { params.scratch ? params.scratch != null : false }
 
@@ -626,8 +626,8 @@ process mash {
 process bakta {
 
     tag "${sample}"
-    cpus 4
-    memory { 8.GB * task.attempt }
+    cpus 8
+    memory { 16.GB * task.attempt }
     conda "${params.containerdir}/bakta"
 
     input:
