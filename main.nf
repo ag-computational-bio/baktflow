@@ -207,7 +207,7 @@ process qcIllPlot {
 
     tag "${sample}"
     cpus 2
-    memory { 1.GB * task.attempt }
+    memory { 2.GB * task.attempt }
     conda "${params.containerdir}/qc-ill-plot"
 
     input:
@@ -565,36 +565,7 @@ process  polishShortPOLCA {
 
 chAssembly.concat( chPolishShortPolishEnd, chAssemblyOntMedaka )
     .dump( { "chAssembly: sample=${it[0]}, assembly=${it[1]}" } )
-    .into( { chCheckM2; chAssemblyMash; chAssemblyAni; chAssemblyBakta; chAssemblyPlaton; chAssemblyCardRGI; chAssemblyMlst } )
-
-
-process checkm2 {
-
-    tag "${sample}"
-    cpus 1
-    memory { 20.GB * task.attempt }
-    conda "${params.containerdir}/checkm2"
-    
-    input:
-    tuple val(sample), path(assembly) from chCheckM2
-
-    output:
-    path("${sample}.checkm2.tsv") into chEndCheckM2
-    publishDir path: "${pathOutput}/${sample}/", mode: 'copy'
-
-    script:
-    """
-	mkdir ./input
-	cp ${assembly} ./input
-	checkm2 predict --input ./input --output-directory ./qc --database_path ${params.checkm2db} --threads ${task.cpus}
-	mv ./qc/quality_report.tsv ${sample}.checkm2.tsv
-	"""
-
-    stub:
-    """
-    touch ${sample}.checkm2.tsv
-    """
-}
+    .into( { chAssemblyMash; chAssemblyAni; chAssemblyBakta; chAssemblyPlaton; chAssemblyCardRGI; chAssemblyMlst } )
 
 
 process mash {
@@ -634,7 +605,7 @@ process bakta {
     tuple val(sample), path(assembly) from chAssemblyBakta
 
     output:
-    tuple val(sample), path("${sample}.faa") into chBaktaVfdb, chBaktaAmrFinderPlus
+    tuple val(sample), path("${sample}.faa") into chBaktaCheckM2, chBaktaVfdb, chBaktaAmrFinderPlus
     tuple val(sample), path("${sample}.ffn") into chBakta16S
     path("${sample}.*") into chEndBakta
     publishDir path: "${pathOutput}/${sample}/annotation/", mode: 'copy'
@@ -656,11 +627,40 @@ process bakta {
 }
 
 
+process checkm2 {
+
+    tag "${sample}"
+    cpus 4
+    memory { 8.GB * task.attempt }
+    conda "${params.containerdir}/checkm2"
+    
+    input:
+    tuple val(sample), path(proteins) from chBaktaCheckM2
+
+    output:
+    path("${sample}.checkm2.tsv") into chEndCheckM2
+    publishDir path: "${pathOutput}/${sample}/", mode: 'copy'
+
+    script:
+    """
+	mkdir ./input
+	cp ${proteins} ./input
+	checkm2 predict --input ./input --output-directory ./out --database_path ${params.checkm2db} --genes --extension .faa --threads ${task.cpus}
+	mv ./out/quality_report.tsv ${sample}.checkm2.tsv
+	"""
+
+    stub:
+    """
+    touch ${sample}.checkm2.tsv
+    """
+}
+
+
 process tax16S {
 
     tag "${sample}"
     cpus 1
-    memory { 256.MB * task.attempt }
+    memory { 1.GB * task.attempt }
     conda "${params.containerdir}/tax-16-s"
     
     input:
@@ -687,7 +687,7 @@ process vf {
 
     tag "${sample}"
     cpus 1
-    memory { 128.MB * task.attempt }
+    memory { 1.GB * task.attempt }
     conda "${params.containerdir}/vf"
     
     input:
@@ -713,7 +713,7 @@ process amrFinderPlus {
 
     tag "${sample}"
     cpus 1
-    memory { 128.MB * task.attempt }
+    memory { 1.GB * task.attempt }
     conda "${params.containerdir}/amr-finder-plus"
     
     input:
@@ -739,7 +739,7 @@ process taxAni {
 
     tag "${sample}"
     cpus 8
-    memory { 6.GB * task.attempt }
+    memory { 8.GB * task.attempt }
     conda "${params.containerdir}/tax-ani"
     
     input:
@@ -818,7 +818,7 @@ process mlst {
 
     tag "${sample}"
     cpus 1
-    memory { 256.MB * task.attempt }
+    memory { 1.GB * task.attempt }
     conda "${params.containerdir}/mlst"
     
     input:
