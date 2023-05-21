@@ -39,11 +39,8 @@ except:
     log.error('provided genome file not valid! path=%s', args.genome)
     sys.exit(f'ERROR: genome file ({args.genome}) not valid!')
 
-prefix = args.prefix if args.prefix else 'assembly'
-genome_out_path = Path(args.output).joinpath(f'{prefix}.fna').resolve()
-with genome_in_path.open() as fh_in, genome_out_path.open('w') as fh_out:
-    contig_no = 1
-    contigs = []
+contigs = []
+with genome_in_path.open() as fh_in:
     for record in SeqIO.parse(fh_in, 'fasta'):
         seq = str(record.seq).upper()
         contig = {
@@ -64,12 +61,19 @@ with genome_in_path.open() as fh_in, genome_out_path.open('w') as fh_out:
             contig['id'], contig['length'], contig['complete'], contig['depth'], contig['description']
         )
         if contig['length'] >= args.min_contig_length:
-            contig_id = f'contig_{contig_no:04}'
-            depth = f"{contig['depth']:.2f}" if contig['depth'] is not None else '?'
-            fh_out.write(f">{contig_id} length={contig['length']} depth={depth} complete={contig['complete']}\n")
-            for i in range(0, len(seq), 70):
-                fh_out.write(seq[i:i + 70])
-                fh_out.write('\n')
             contigs.append(contig)
-            contig_no += 1
+
+prefix = args.prefix if args.prefix else 'assembly'
+genome_out_path = Path(args.output).joinpath(f'{prefix}.fna').resolve()
+with genome_out_path.open('w') as fh_out:
+    contig_no = 1
+    for contig in sorted(contigs, key=lambda k: k['length'], reverse=True):
+        contig_id = f'contig_{contig_no:04}'
+        # depth = f"depth={contig['depth']:.2f}" if contig['depth'] is not None else ''
+        fh_out.write(f">{contig_id} length={contig['length']} complete={contig['complete']}\n")
+        seq = contig['sequence']
+        for i in range(0, len(seq), 70):
+            fh_out.write(seq[i:i + 70])
+            fh_out.write('\n')
+        contig_no += 1
 

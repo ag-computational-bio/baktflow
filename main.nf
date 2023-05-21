@@ -366,7 +366,7 @@ process polishLongRacon {
     tuple val(sample), val(type), path('assembly.fna'), path('ONT.fastq.gz') from chAssemblyOnt.ont
 
     output:
-    tuple val(sample), path('long.racon.fna'), path('ONT.fastq.gz') into chAssemblyOntRacon
+    tuple val(sample), path('long.racon.fna'), path('ONT.fastq.gz') into chPolishOntRaconMedaka
 
     script:
     """
@@ -397,19 +397,15 @@ process polishLongMedaka {
     conda "${params.containerdir}/polish-long-medaka"
 
     input:
-    tuple val(sample), path(assembly), path(reads) from chAssemblyOntRacon
+    tuple val(sample), path(assembly), path(reads) from chPolishOntRaconMedaka
 
     output:
-    tuple val(sample), path("${sample}.fna") into chAssemblyOntMedaka
-
-    path("${sample}.long.polished.fna") into chEndAssemblyOntMedaka
-    publishDir path: "${pathOutput}/${sample}/assembly/", mode: 'copy'
+    tuple val(sample), path("${sample}.long.polished.fna") into chPolishOntEnd
 
     script:
     """
     medaka_consensus -i ${reads} -d ${assembly} -o medaka -t ${task.cpus}
     mv medaka/consensus.fasta ${sample}.long.polished.fna
-    assembly-qc.py --prefix ${sample} --output . ${sample}.long.polished.fna
     """
 
     stub:
@@ -433,7 +429,7 @@ process assemblyShort {
     tuple val(sample), val(type), path('R1.fastq.gz'), path('R2.fastq.gz'), path('SE.fastq.gz') from chQcIllAssembly.ill
 
     output:
-    tuple val(sample), path("${sample}.fna") into chAssemblyIll
+    tuple val(sample), path("${sample}.short.fna") into chAssemblyIll
 
     path("${sample}.short.*") into chEndAssemblyIll
     publishDir path: "${pathOutput}/${sample}/assembly/", mode: 'copy'
@@ -444,7 +440,6 @@ process assemblyShort {
     mv assembly.fasta ${sample}.short.fna
     mv assembly.gfa ${sample}.short.gfa
     mv unicycler.log ${sample}.short.log
-    assembly-qc.py --prefix ${sample} --output . ${sample}.short.fna
     """
 
     stub:
@@ -452,7 +447,6 @@ process assemblyShort {
     touch ${sample}.short.fna
     touch ${sample}.short.gfa
     touch ${sample}.short.log
-    touch ${sample}.fna
     """
 }
 
@@ -471,7 +465,7 @@ process assemblyHybrid {
     tuple val(sample), val(type), path('assembly_graph.gfa') from chAssemblyOnt.hybrid
 
     output:
-    tuple val(sample), path("${sample}.fna") into chAssemblyHybrid
+    tuple val(sample), path("${sample}.hybrid.fna") into chAssemblyHybrid
 
     path("${sample}.hybrid.*") into chEndAssemblyHybrid
     publishDir path: "${pathOutput}/${sample}/assembly/", mode: 'copy'
@@ -482,7 +476,6 @@ process assemblyHybrid {
     mv assembly.fasta ${sample}.hybrid.fna
     mv assembly.gfa ${sample}.hybrid.gfa
     mv unicycler.log ${sample}.hybrid.log
-    assembly-qc.py --prefix ${sample} --output . ${sample}.hybrid.fna
     """
 
     stub:
@@ -490,7 +483,6 @@ process assemblyHybrid {
     touch ${sample}.hybrid.fna
     touch ${sample}.hybrid.gfa
     touch ${sample}.hybrid.log
-    touch ${sample}.fna
     """
 }
 
@@ -516,7 +508,6 @@ process  polishShortPolyPolish {
 
     output:
     tuple val(sample), path("${sample}.polished.fna") into chPolishShortPolypolishPOLCA
-    publishDir path: "${pathOutput}/${sample}/assembly/", mode: 'copy'
 
     script:
     """
@@ -549,11 +540,12 @@ process  polishShortPOLCA {
     tuple val(sample), path('assembly.fna') from chPolishShortPolypolishPOLCA
 
     output:
-    tuple val(sample), path('assembly.fna.PolcaCorrected.fa') into chPolishShortPolishEnd
+    tuple val(sample), path("${sample}.polished.fna") into chPolishShortPolishEnd
 
     script:
     """
     polca.sh -a assembly.fna -r 'R1.fastq R2.fastq.gz SE.fastq.gz' -t ${task.cpus}
+    mv assembly.fna.PolcaCorrected.fa ${sample}.polished.fna
     """
 
     stub:
@@ -563,8 +555,37 @@ process  polishShortPOLCA {
 }
 
 
-chAssembly.concat( chPolishShortPolishEnd, chAssemblyOntMedaka )
+chAssembly.concat( chPolishShortPolishEnd, chPolishOntEnd )
     .dump( { "chAssembly: sample=${it[0]}, assembly=${it[1]}" } )
+    .set{ chAssemblyQC }
+
+
+process  assemblyQC {
+
+    tag "${sample}"
+    cpus 1
+    memory { 1.GB }
+
+    input:
+    tuple val(sample), path('assembly.fna') from chAssemblyQC
+
+    output:
+    tuple val(sample), path("${sample}.fna") into chAssemblyQCEnd
+    publishDir path: "${pathOutput}/${sample}/assembly/", mode: 'copy'
+
+    script:
+    """
+    assembly-qc.py --min-contig-length 200 --prefix ${sample} --output . assembly.fna
+    """
+
+    stub:
+    """
+    touch ${sample}.fna
+    """
+}
+
+
+chAssemblyQCEnd
     .into( { chAssemblyMash; chAssemblyAni; chAssemblyBakta; chAssemblyPlaton; chAssemblyCardRGI; chAssemblyMlst } )
 
 
@@ -803,7 +824,7 @@ process cardRgi {
 
     script:
     """
-    rgi main -i ${assembly} -o ${sample}.card -t contig -d wgs -a DIAMOND --num_threads ${task.cpus}
+    rgi main -i ${assembly} --output_file ${sample}.card --input_type contig --data wgs --orf_finder PYRODIGAL --alignment_tool DIAMOND --num_threads ${task.cpus}
     """
 
     stub:
