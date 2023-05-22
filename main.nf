@@ -498,7 +498,7 @@ process  polishShortPolyPolish {
 
     tag "${sample}"
     cpus 4
-    memory { 4.GB * task.attempt }
+    memory { 8.GB * task.attempt }
     conda "${params.containerdir}/polish-short-polypolish"
     scratch = { params.scratch ? params.scratch != null : false }
 
@@ -813,7 +813,7 @@ process cardRgi {
 
     tag "${sample}"
     cpus 1
-    memory { 1.GB * task.attempt }
+    memory { 2.GB * task.attempt }
     conda "${params.containerdir}/card-rgi"
     
     input:
