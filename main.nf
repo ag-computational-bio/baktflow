@@ -165,7 +165,7 @@ chInputOntBranch
 process qcIll {
 
     tag "${sample}"
-    cpus 2
+    cpus 3
     memory { 4.GB * task.attempt }
     conda "${params.containerdir}/qc-ill"
 
