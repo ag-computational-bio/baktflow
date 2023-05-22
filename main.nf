@@ -626,7 +626,8 @@ process bakta {
     tuple val(sample), path(assembly) from chAssemblyBakta
 
     output:
-    tuple val(sample), path("${sample}.faa") into chBaktaCheckM2, chBaktaVfdb, chBaktaAmrFinderPlus
+    tuple val(sample), path("${sample}.faa") into chBaktaCheckM2, chBaktaVfdb
+    tuple val(sample), path("${sample}.fna"), path("${sample}.faa"), path("${sample}.gff3") into chBaktaAmrFinderPlus
     tuple val(sample), path("${sample}.ffn") into chBakta16S
     path("${sample}.*") into chEndBakta
     publishDir path: "${pathOutput}/${sample}/annotation/", mode: 'copy'
@@ -738,7 +739,7 @@ process amrFinderPlus {
     conda "${params.containerdir}/amr-finder-plus"
     
     input:
-    tuple val(sample), path(protein) from chBaktaAmrFinderPlus
+    tuple val(sample), path(nucleotide), path(protein), path(annotation) from chBaktaAmrFinderPlus
 
     output:
     path("${sample}.amrfinder.tsv") into chEndAmrFinderPlus
@@ -746,7 +747,7 @@ process amrFinderPlus {
 
     script:
     """
-    amrfinder --protein ${protein} --database ${params.amrfinderplusdb} --output ${sample}.amrfinder.tsv --name ${sample} --plus --threads ${task.cpus}
+    amrfinder --nucleotide ${nucleotide} --protein ${protein} --gff ${annotation} --annotation_format bakta --database ${params.amrfinderplusdb} --output ${sample}.amrfinder.tsv --name ${sample} --plus --threads ${task.cpus}
     """
 
     stub:
