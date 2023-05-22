@@ -550,7 +550,7 @@ process  polishShortPOLCA {
 
     stub:
     """
-    touch assembly.fna.PolcaCorrected.fa
+    touch ${sample}.polished.fna
     """
 }
 
