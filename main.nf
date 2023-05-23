@@ -206,7 +206,7 @@ chQcIllPlot.concat( chQcIllPlotR1, chQcIllPlotR2, chQcIllPlotSE )
 process qcIllPlot {
 
     tag "${sample}"
-    cpus 2
+    cpus 1
     memory { 2.GB * task.attempt }
     conda "${params.containerdir}/qc-ill-plot"
 
@@ -497,8 +497,8 @@ chAssemblyRaw.concat( chAssemblyIll, chAssemblyHybrid )
 process  polishShortPolyPolish {
 
     tag "${sample}"
-    cpus 4
-    memory { 8.GB * task.attempt }
+    cpus 2
+    memory { 4.GB * task.attempt }
     conda "${params.containerdir}/polish-short-polypolish"
     scratch = { params.scratch ? params.scratch != null : false }
 
@@ -530,7 +530,7 @@ process  polishShortPolyPolish {
 process  polishShortPOLCA {
 
     tag "${sample}"
-    cpus 4
+    cpus 2
     memory { 4.GB * task.attempt }
     conda "${params.containerdir}/polish-short-polca"
     scratch = { params.scratch ? params.scratch != null : false }
