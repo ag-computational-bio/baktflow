@@ -626,7 +626,7 @@ process ska {
     tuple val(sample), path(assembly) from chAssemblySka
 
     output:
-    path("${sample}.ska") into chEndSka
+    path("${sample}.skf") into chEndSka
     publishDir path: "${pathOutput}/${sample}/", mode: 'copy'
 
     script:
@@ -636,7 +636,7 @@ process ska {
 
     stub:
     """
-    touch ${sample}.ska
+    touch ${sample}.skf
     """
 }
 
