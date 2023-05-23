@@ -498,7 +498,7 @@ process  polishShortPolyPolish {
 
     tag "${sample}"
     cpus 2
-    memory { 4.GB * task.attempt }
+    memory { 8.GB * task.attempt }
     conda "${params.containerdir}/polish-short-polypolish"
     scratch = { params.scratch ? params.scratch != null : false }
 
