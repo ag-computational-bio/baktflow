@@ -259,7 +259,7 @@ process qcOnt {
     script:
     """
     porechop --input ONT.fastq.gz --output tmp.fastq.gz --threads ${task.cpus}
-    filtlong --min_length ${params.minOntReadLength} --target_bases ${params.qcOntTargetBases} tmp.fastq.gz | pigz -c > ${sample}.ONT.fastq.gz
+    filtlong --min_length ${params.minOntReadLength} --target_bases ${params.qcOntTargetBases} tmp.fastq.gz | pigz --processes ${task.cpus} --stdout > ${sample}.ONT.fastq.gz
     """
 
     stub:
