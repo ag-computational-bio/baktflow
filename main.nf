@@ -586,7 +586,7 @@ process  assemblyQC {
 
 
 chAssemblyQCEnd
-    .into( { chAssemblyMash; chAssemblyAni; chAssemblyBakta; chAssemblyPlaton; chAssemblyCardRGI; chAssemblyMlst } )
+    .into( { chAssemblyMash; chAssemblyAni; chAssemblySka; chAssemblyBakta; chAssemblyPlaton; chAssemblyCardRGI; chAssemblyMlst } )
 
 
 process mash {
@@ -611,6 +611,32 @@ process mash {
     stub:
     """
     touch ${sample}.mash-screen.tsv
+    """
+}
+
+
+process ska {
+
+    tag "${sample}"
+    cpus 1
+    memory { 1.GB * task.attempt }
+    conda "${params.containerdir}/ska"
+    
+    input:
+    tuple val(sample), path(assembly) from chAssemblySka
+
+    output:
+    path("${sample}.ska") into chEndSka
+    publishDir path: "${pathOutput}/${sample}/", mode: 'copy'
+
+    script:
+    """
+    ska fasta -o ${sample} ${assembly}
+    """
+
+    stub:
+    """
+    touch ${sample}.ska
     """
 }
 

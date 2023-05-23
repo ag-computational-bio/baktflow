@@ -13,6 +13,7 @@ mamba create --yes --quiet -p conda/assembly-short blast=2.12.0 spades=3.15.5 sa
 mamba create --yes --quiet -p conda/assembly-hybrid blast=2.12.0 spades=3.15.5 samtools=1.16.1 unicycler=0.5.0 biopython=1.80
 mamba create --yes --quiet -p conda/checkm2 checkm2=1.0.1
 mamba create --yes --quiet -p conda/mash mash=2.3
+mamba create --yes --quiet -p conda/ska ska=1.0
 mamba create --yes --quiet -p conda/bakta bakta=1.7.0
 mamba create --yes --quiet -p conda/tax-16-s blast=2.12.0
 mamba create --yes --quiet -p conda/vf diamond=2.0.14
