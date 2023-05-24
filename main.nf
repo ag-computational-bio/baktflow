@@ -5,6 +5,7 @@ def chInputIllBranch = null
 def chInputOntBranch = null
 def chAssemblyRaw = null
 def chAssembly = null
+def chAssemblyGraph = Channel.empty()
 def chQcIllPlot = null
 
 
@@ -69,7 +70,7 @@ if(params.sample != null) {
         
         String type
         if(ill  &&  ont) {
-            type = 'hyb'
+            type = 'hybrid'
             print("Start hybrid assembly:")
         } else if(ill) {
             type = 'ill'
@@ -131,7 +132,7 @@ if(params.sample != null) {
             }
             String type
             if(ill  &&  ont) {
-                type = 'hyb'
+                type = 'hybrid'
             } else if(ill) {
                 type = 'ill'
             } else if(ont) {
@@ -150,13 +151,13 @@ if(params.sample != null) {
 }
 
 chInputIllBranch
-.filter( { it[1] == 'ill'  ||  it[1] == 'hyb' } )
+.filter( { it[1] == 'ill'  ||  it[1] == 'hybrid' } )
 .dump( { "chInputIllBranch: sample=${it[0]}, type=${it[1]}" } )
 .map( { [ it[0], it[1], it[2], it[3] ] } )
 .set( { chInputIll } )
 
 chInputOntBranch
-.filter( { it[1] == 'ont'  ||  it[1] == 'hyb' } )
+.filter( { it[1] == 'ont'  ||  it[1] == 'hybrid' } )
 .dump( { "chInputOntBranch: sample=${it[0]}, type=${it[1]}" } )
 .map( { [ it[0], it[1], it[4] ] } )
 .set( { chInputOnt } )
@@ -234,7 +235,7 @@ process qcIllPlot {
 chQcIll
 .dump( { "chQcIll: sample=${it[0]}, type=${it[1]}" } )
 .branch {
-    hybrid: it[1] == 'hyb'
+    hybrid: it[1] == 'hybrid'
     ill: it[1] == 'ill'
 }
 .set( { chQcIllAssembly } )
@@ -307,7 +308,7 @@ chQcOnt
 .set( { chQcOntAssemblyOnt } )
 
 chTapQcOnt
-.filter( { it[1] == 'hyb' } )
+.filter( { it[1] == 'hybrid' } )
 .set( { chQcOntAssemblyHybrid } )
 
 
@@ -324,6 +325,7 @@ process assemblyLong {
 
     output:
     tuple val(sample), val(type), path("${sample}.long.fna"), path("${sample}.long.gfa"), path('ONT.fastq.gz') into chAssemblyOntBranch
+    tuple val(sample), val('long'), path("${sample}.long.gfa") into chAssemblyGraphLong
 
     path("${sample}.long.*") into chEndAssemblyOnt
     publishDir pattern: "${sample}.long.*", path: "${pathOutput}/${sample}/assembly/", mode: 'copy'
@@ -346,7 +348,7 @@ process assemblyLong {
 chAssemblyOntBranch
 .dump( { "chAssemblyOntBranch: sample=${it[0]}, type=${it[1]}" } )
 .branch {
-    hybrid: it[1] == 'hyb'
+    hybrid: it[1] == 'hybrid'
         return [ it[0], it[1], it[3] ]
     ont: it[1] == 'ont'
         return [ it[0], it[1], it[2], it[4] ]
@@ -430,6 +432,7 @@ process assemblyShort {
 
     output:
     tuple val(sample), path("${sample}.short.fna") into chAssemblyIll
+    tuple val(sample), val('short'), path("${sample}.short.gfa") into chAssemblyGraphShort
 
     path("${sample}.short.*") into chEndAssemblyIll
     publishDir path: "${pathOutput}/${sample}/assembly/", mode: 'copy'
@@ -466,6 +469,7 @@ process assemblyHybrid {
 
     output:
     tuple val(sample), path("${sample}.hybrid.fna") into chAssemblyHybrid
+    tuple val(sample), val('hybrid'), path("${sample}.hybrid.gfa") into chAssemblyGraphHybrid
 
     path("${sample}.hybrid.*") into chEndAssemblyHybrid
     publishDir path: "${pathOutput}/${sample}/assembly/", mode: 'copy'
@@ -551,6 +555,36 @@ process  polishShortPOLCA {
     stub:
     """
     touch ${sample}.polished.fna
+    """
+}
+
+
+chAssemblyGraph.concat( chAssemblyGraphLong, chAssemblyGraphShort, chAssemblyGraphHybrid )
+    .set{ chAssemblyViz }
+
+
+process  assemblyViz {
+
+    tag "${sample}"
+    cpus 1
+    memory { 1.GB }
+    conda "${params.containerdir}/assembly-viz"
+
+    input:
+    tuple val(sample), val(type), path('assembly.gfa') from chAssemblyViz
+
+    output:
+    tuple val(sample), path("${sample}.${type}.svg") into chAssemblyVizEnd
+    publishDir path: "${pathOutput}/${sample}/assembly/", mode: 'copy'
+
+    script:
+    """
+    Bandage image assembly.gfa ${sample}.${type}.svg
+    """
+
+    stub:
+    """
+    touch ${sample}.${type}.svg
     """
 }
 

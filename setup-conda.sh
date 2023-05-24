@@ -11,6 +11,7 @@ mamba create --yes --quiet -p conda/polish-short-polca masurca=4.0.9
 mamba create --yes --quiet -p conda/polish-short-polypolish polypolish=0.5.0
 mamba create --yes --quiet -p conda/assembly-short blast=2.12.0 spades=3.15.5 samtools=1.16.1 unicycler=0.5.0 biopython=1.80
 mamba create --yes --quiet -p conda/assembly-hybrid blast=2.12.0 spades=3.15.5 samtools=1.16.1 unicycler=0.5.0 biopython=1.80
+mamba create --yes --quiet -p conda/assembly-viz bandage=0.8.1
 mamba create --yes --quiet -p conda/checkm2 checkm2=1.0.1
 mamba create --yes --quiet -p conda/mash mash=2.3
 mamba create --yes --quiet -p conda/ska ska=1.0
