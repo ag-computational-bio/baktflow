@@ -39,7 +39,7 @@ for genome_amrfinder_path in results_path.glob('**/*.amrfinder.tsv'):
     for line in lines[1:]:
         cols = line.split('\t')
         sample = cols[0]
-        gene = cols[2]  # gen symbol
+        gene = cols[6]  # gen symbol
         amr_genes.add(gene)
         genes.append(gene)
     if sample is not None:
