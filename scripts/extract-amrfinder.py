@@ -2,16 +2,10 @@
 
 import argparse
 import logging
-import os
-import re
 import sys
 
 from pathlib import Path
 
-from Bio import SeqIO
-
-
-# RE_CIRC = re.compile(r'circular=true', re.IGNORECASE)  # detection of Unicycler circularized sequences
 
 parser = argparse.ArgumentParser(
     prog='extract-amrfinder',
