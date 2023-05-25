@@ -847,7 +847,7 @@ process platon {
 
     tag "${sample}"
     cpus 4
-    memory { 4.GB * task.attempt }
+    memory { 8.GB * task.attempt }
     conda "${params.containerdir}/platon"
     
     input:
