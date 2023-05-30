@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 mkdir conda
-mamba create --yes --quiet -p conda/qc-ill fastp=0.23.3
+mamba create --yes --quiet -p conda/qc-ill fastp=0.23.4
 mamba create --yes --quiet -p conda/qc-ill-plot fastqc=0.11.9
 mamba create --yes --quiet -p conda/qc-ont pigz porechop=0.2.4 filtlong=0.2.1
 mamba create --yes --quiet -p conda/assembly-long flye=2.9.1 biopython=1.80
