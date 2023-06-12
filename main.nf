@@ -288,7 +288,7 @@ process qcOntPlot {
 
     script:
     """
-    NanoPlot --fastq ONT.qc.fastq.gz --prefix ${sample}. --tsv_stats --threads ${task.cpus}
+    NanoPlot --fastq ONT.qc.fastq.gz --prefix ${sample}. --plots dot --N50 --dpi 300 --tsv_stats --threads ${task.cpus}
     mv ${sample}.NanoStats.txt ${sample}.nanoplot.tsv
     """
 
