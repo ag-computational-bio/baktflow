@@ -4,6 +4,7 @@ mkdir conda
 mamba create --yes --quiet -p conda/qc-ill fastp=0.23.4
 mamba create --yes --quiet -p conda/qc-ill-plot fastqc=0.11.9
 mamba create --yes --quiet -p conda/qc-ont pigz porechop=0.2.4 filtlong=0.2.1
+mamba create --yes --quiet -p conda/qc-ont-plot nanoplot=1.41.0
 mamba create --yes --quiet -p conda/assembly-long flye=2.9.2 biopython=1.80
 mamba create --yes --quiet -p conda/polish-long-racon minimap2=2.24 racon=1.5.0
 mamba create --yes --quiet -p conda/polish-long-medaka medaka=1.8.0
@@ -23,5 +24,3 @@ mamba create --yes --quiet -p conda/tax-ani referenceseeker=1.7.3
 mamba create --yes --quiet -p conda/platon platon=1.6
 mamba create --yes --quiet -p conda/card-rgi rgi=6.0.2
 mamba create --yes --quiet -p conda/mlst blast=2.12.0 mlst=2.23.0
-
-mamba create --yes --quiet -p conda/qc-ont-plot nanoplot=1.41.0
