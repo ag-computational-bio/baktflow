@@ -20,8 +20,8 @@ if(params.setupdir == null) {
 
 def pathData = null
 if(params.data != null) {
-    print("Data: ${pathData}")
     pathData = Paths.get(params.data).toAbsolutePath()
+    print("Data: ${pathData}")
 }
 
 if(params.sample != null) {
@@ -294,7 +294,7 @@ process qcOntPlot {
 
     stub:
     """
-    touch ${sample}.stats.tsv
+    touch ${sample}.nanoplot.tsv
     touch ${sample}.xyz.png
     """
 }
@@ -305,6 +305,7 @@ def chTapQcOnt = Channel.create()
 chQcOnt
 .dump( { "chQcOnt: sample=${it[0]}, type=${it[1]}" } )
 .tap( chTapQcOnt )
+.filter( { it[1] == 'ont' } )
 .set( { chQcOntAssemblyOnt } )
 
 chTapQcOnt
@@ -465,7 +466,6 @@ process assemblyHybrid {
     input:
     tuple val(sample), val(type), path('R1.fastq.gz'), path('R2.fastq.gz'), path('SE.fastq.gz') from chQcIllAssembly.hybrid
     tuple val(sample), val(type), path('ONT.fastq.gz') from chQcOntAssemblyHybrid
-    tuple val(sample), val(type), path('assembly_graph.gfa') from chAssemblyOnt.hybrid
 
     output:
     tuple val(sample), path("${sample}.hybrid.fna") into chAssemblyHybrid
@@ -476,7 +476,7 @@ process assemblyHybrid {
 
     script:
     """
-    unicycler --short1 R1.fastq.gz --short2 R2.fastq.gz --unpaired SE.fastq.gz --long ONT.fastq.gz --existing_long_read_assembly assembly_graph.gfa --out . --threads ${task.cpus}
+    unicycler --short1 R1.fastq.gz --short2 R2.fastq.gz --unpaired SE.fastq.gz --long ONT.fastq.gz --out . --threads ${task.cpus}
     mv assembly.fasta ${sample}.hybrid.fna
     mv assembly.gfa ${sample}.hybrid.gfa
     mv unicycler.log ${sample}.hybrid.log
