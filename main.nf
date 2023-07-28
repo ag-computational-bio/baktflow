@@ -3,7 +3,6 @@ import java.nio.file.*
 
 def chInputIllBranch = null
 def chInputOntBranch = null
-def chAssemblyRaw = null
 def chAssembly = null
 def chAssemblyGraph = Channel.empty()
 def chQcIllPlot = null
@@ -87,7 +86,6 @@ if(params.sample != null) {
         chInputOntBranch = Channel.create()
         chTapQcOnt = Channel.create()
         chQcIllPlot = Channel.empty()
-        chAssemblyRaw = Channel.empty()
         chAssembly = Channel.empty()
 
         Channel.of( [sample, type, pathR1, pathR2, pathOnt] )
@@ -107,7 +105,6 @@ if(params.sample != null) {
     chInputOntBranch = Channel.create()
     chTapQcOnt = Channel.create()
     chQcIllPlot = Channel.empty()
-    chAssemblyRaw = Channel.empty()
     chAssembly = Channel.empty()
 
     Channel.fromPath( pathSamples )
@@ -346,6 +343,7 @@ process assemblyLong {
     """
 }
 
+
 chAssemblyOntBranch
 .dump( { "chAssemblyOntBranch: sample=${it[0]}, type=${it[1]}" } )
 .branch {
@@ -494,10 +492,6 @@ process assemblyHybrid {
 chPolishShort.into( { chPolishShortPolypolish; chPolishShortPolca } )
 
 
-chAssemblyRaw.concat( chAssemblyIll, chAssemblyHybrid )
-    .set{ chAssemblyRawConcat }
-
-
 process  polishShortPolyPolish {
 
     tag "${sample}"
@@ -508,7 +502,7 @@ process  polishShortPolyPolish {
 
     input:
     tuple val(sample), val(type), path('R1.fastq.gz'), path('R2.fastq.gz'), path('SE.fastq.gz') from chPolishShortPolypolish
-    tuple val(sample), path('assembly.fna') from chAssemblyRawConcat
+    tuple val(sample), path('assembly.fna') from chAssemblyHybrid
 
     output:
     tuple val(sample), path("${sample}.polished.fna") into chPolishShortPolypolishPOLCA
@@ -544,7 +538,7 @@ process  polishShortPOLCA {
     tuple val(sample), path('assembly.fna') from chPolishShortPolypolishPOLCA
 
     output:
-    tuple val(sample), path("${sample}.polished.fna") into chPolishShortPolishEnd
+    tuple val(sample), path("${sample}.polished.fna") into chPolishShortEnd
 
     script:
     """
@@ -589,7 +583,7 @@ process  assemblyViz {
 }
 
 
-chAssembly.concat( chPolishShortPolishEnd, chPolishOntEnd )
+chAssembly.concat( chAssemblyIll, chPolishShortEnd, chPolishOntEnd )
     .dump( { "chAssembly: sample=${it[0]}, assembly=${it[1]}" } )
     .set{ chAssemblyQC }
 
