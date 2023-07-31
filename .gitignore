@@ -3,3 +3,4 @@ trace.*
 work/
 results/
 baktflow.code-workspace
+conda
