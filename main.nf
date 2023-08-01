@@ -761,6 +761,7 @@ process bakta {
 
     stub:
     """
+    touch ${sample}.fna
     touch ${sample}.faa
     touch ${sample}.ffn
     touch ${sample}.gbff
