@@ -647,7 +647,15 @@ process taxAni {
 
     tag "${sample}"
     cpus 8
-    memory { 8.GB * task.attempt }
+    memory {  // either very low (Mash+FastANI) or very high (MSA+pplacer)
+        if(task.attempt == 1){
+            4.GB;
+        } else if(task.attempt == 2){
+            64.GB;
+        } else{
+            128.GB;
+        }
+    }
     conda "${params.containerdir}/tax-ani"
     
     input:
@@ -672,7 +680,7 @@ process taxAni {
 process taxGTDBtk {
 
     tag "${sample}"
-    cpus 4
+    cpus 2
     memory { 32.GB * task.attempt }
     conda "${params.containerdir}/gtdbtk"
     
