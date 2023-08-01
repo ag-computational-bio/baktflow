@@ -677,7 +677,7 @@ process bakta {
     conda "${params.containerdir}/bakta"
 
     input:
-    tuple val(sample), path(assembly) from chAssemblyBakta
+    tuple val(sample), path('assembly.fasta') from chAssemblyBakta
 
     output:
     tuple val(sample), path("${sample}.faa") into chBaktaCheckM2, chBaktaVfdb
@@ -690,7 +690,9 @@ process bakta {
     String speciesOption = params.species != null ? "--species ${params.species}" : ''
     script:
     """
-    bakta --db ${params.baktadb} --prefix ${sample} ${genusOption} ${speciesOption} --strain "${sample}" --keep-contig-headers --threads ${task.cpus} ${assembly}
+    bakta --db ${params.baktadb} --prefix ${sample} ${genusOption} ${speciesOption} --strain "${sample}" --keep-contig-headers --threads ${task.cpus} --output ${sample} assembly.fasta
+    mv ${sample}/* .
+    rmdir ${sample}
     """
 
     stub:
