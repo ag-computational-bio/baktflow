@@ -614,7 +614,7 @@ process  assemblyQC {
 
 
 chAssemblyQCEnd
-    .into( { chAssemblyMash; chAssemblyAni; chAssemblySka; chAssemblyBakta; chAssemblyPlaton; chAssemblyCardRGI; chAssemblyMlst } )
+    .into( { chAssemblyMash; chAssemblyAni; chAssemblyGTDBtk; chAssemblySka; chAssemblyBakta; chAssemblyPlaton; chAssemblyCardRGI; chAssemblyMlst } )
 
 
 process mash {
@@ -639,6 +639,62 @@ process mash {
     stub:
     """
     touch ${sample}.mash-screen.tsv
+    """
+}
+
+
+process taxAni {
+
+    tag "${sample}"
+    cpus 8
+    memory { 8.GB * task.attempt }
+    conda "${params.containerdir}/tax-ani"
+    
+    input:
+    tuple val(sample), path(assembly) from chAssemblyAni
+
+    output:
+    path("${sample}.ani.tsv") into chEndTaxAni
+    publishDir path: "${pathOutput}/${sample}/", mode: 'copy'
+
+    script:
+    """
+    referenceseeker --bidirectional --threads ${task.cpus} ${params.referenceseekerdb} ${assembly} > ${sample}.ani.tsv
+    """
+
+    stub:
+    """
+    touch ${sample}.ani.tsv
+    """
+}
+
+
+process taxGTDBtk {
+
+    tag "${sample}"
+    cpus 4
+    memory { 32.GB * task.attempt }
+    conda "${params.containerdir}/gtdbtk"
+    
+    input:
+    tuple val(sample), path(assembly) from chAssemblyGTDBtk
+
+    output:
+    path("${sample}.gtdbtk.tsv") into chEndTaxGTDBtk
+    publishDir path: "${pathOutput}/${sample}/", mode: 'copy'
+
+    script:
+    """
+    export GTDBTK_DATA_PATH="${params.gtdbtkdb}"
+    mkdir genomes/
+    mv ${assembly} genomes/
+    gtdbtk classify_wf --genome_dir genomes/ --out_dir . --pplacer_cpus ${task.cpus} --mash_db ${params.gtdbtkdb}/mash/ --cpus ${task.cpus}
+    cp classify/gtdbtk.bac120.summary.tsv ${sample}.gtdbtk.tsv
+    """
+
+    stub:
+    """
+    touch ${sample}.gtdbtk.tsv
     """
 }
 
@@ -809,32 +865,6 @@ process amrFinderPlus {
     stub:
     """
     touch ${sample}.amrfinder.tsv
-    """
-}
-
-
-process taxAni {
-
-    tag "${sample}"
-    cpus 8
-    memory { 8.GB * task.attempt }
-    conda "${params.containerdir}/tax-ani"
-    
-    input:
-    tuple val(sample), path(assembly) from chAssemblyAni
-
-    output:
-    path("${sample}.ani.tsv") into chEndTaxAni
-    publishDir path: "${pathOutput}/${sample}/", mode: 'copy'
-
-    script:
-    """
-    referenceseeker --bidirectional --threads ${task.cpus} ${params.referenceseekerdb} ${assembly} > ${sample}.ani.tsv
-    """
-
-    stub:
-    """
-    touch ${sample}.ani.tsv
     """
 }
 

@@ -15,6 +15,7 @@ mamba create --yes --quiet -p conda/assembly-hybrid blast=2.12.0 spades=3.15.5 s
 mamba create --yes --quiet -p conda/assembly-viz bandage=0.8.1
 mamba create --yes --quiet -p conda/checkm2 checkm2=1.0.1
 mamba create --yes --quiet -p conda/mash mash=2.3
+mamba create --yes --quiet -p conda/gtdbtk gtdbtk=2.3.2
 mamba create --yes --quiet -p conda/ska ska=1.0
 mamba create --yes --quiet -p conda/bakta bakta=1.8.1
 mamba create --yes --quiet -p conda/tax-16-s blast=2.12.0
