@@ -7,7 +7,7 @@ mamba create --yes --quiet -p conda/qc-ont pigz porechop=0.2.4 filtlong=0.2.1
 mamba create --yes --quiet -p conda/qc-ont-plot nanoplot=1.41.0
 mamba create --yes --quiet -p conda/assembly-long flye=2.9.2 biopython=1.80
 mamba create --yes --quiet -p conda/polish-long-racon minimap2=2.24 racon=1.5.0
-mamba create --yes --quiet -p conda/polish-long-medaka medaka=1.8.0 chardet=5.1.0
+mamba create --yes --quiet -p conda/polish-long-medaka medaka=1.11.1
 mamba create --yes --quiet -p conda/polish-short-polca masurca=4.1.0
 mamba create --yes --quiet -p conda/polish-short-polypolish polypolish=0.5.0
 mamba create --yes --quiet -p conda/assembly-short blast=2.12.0 spades=3.15.5 samtools=1.16.1 unicycler=0.5.0 biopython=1.80
