@@ -23,5 +23,5 @@ mamba create --yes --quiet -p conda/vf diamond=2.0.14
 mamba create --yes --quiet -p conda/amr-finder-plus ncbi-amrfinderplus=3.11.26
 mamba create --yes --quiet -p conda/tax-ani referenceseeker=1.7.3
 mamba create --yes --quiet -p conda/platon platon=1.6
-mamba create --yes --quiet -p conda/card-rgi rgi=6.0.2
+mamba create --yes --quiet -p conda/card-rgi rgi=6.0.3
 mamba create --yes --quiet -p conda/mlst blast=2.12.0 mlst=2.23.0
