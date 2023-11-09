@@ -330,7 +330,7 @@ process assemblyLong {
 
     script:
     """
-    flye --nano-raw ONT.fastq.gz --out-dir . --threads ${task.cpus}
+    flye --nano-hq ONT.fastq.gz --out-dir . --threads ${task.cpus}
     mv assembly.fasta ${sample}.long.fna
     mv assembly_graph.gfa ${sample}.long.gfa
     mv flye.log ${sample}.long.log
