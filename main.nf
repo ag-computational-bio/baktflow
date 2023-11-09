@@ -542,7 +542,7 @@ process  polishShortPOLCA {
 
     script:
     """
-    polca.sh -a assembly.fna -r 'R1.fastq R2.fastq.gz SE.fastq.gz' -t ${task.cpus}
+    polca.sh -a assembly.fna -r 'R1.fastq.gz R2.fastq.gz SE.fastq.gz' -t ${task.cpus}
     mv assembly.fna.PolcaCorrected.fa ${sample}.polished.fna
     """
 
