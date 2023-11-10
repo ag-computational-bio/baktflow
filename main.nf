@@ -585,7 +585,33 @@ process  assemblyViz {
 
 chAssembly.concat( chAssemblyIll, chPolishShortEnd, chPolishOntEnd )
     .dump( { "chAssembly: sample=${it[0]}, assembly=${it[1]}" } )
-    .set{ chAssemblyQC }
+    .set{ chAssemblyReorientate }
+
+
+process  assemblyReorientate {
+
+    tag "${sample}"
+    cpus 2
+    memory { 2.GB }
+    conda "${params.containerdir}/assembly-reorientate"
+
+    input:
+    tuple val(sample), path('assembly.fna') from chAssemblyReorientate
+
+    output:
+    tuple val(sample), path("${sample}.fna") into chAssemblyQC
+
+    script:
+    """
+    dnaapler all --input assembly.fna --output out --threads ${task.cpus} --prefix ${sample} --autocomplete none
+    cp out/${sample}_reoriented.fasta ${sample}.fna
+    """
+
+    stub:
+    """
+    touch ${sample}.fna
+    """
+}
 
 
 process  assemblyQC {
