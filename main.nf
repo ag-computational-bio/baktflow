@@ -778,9 +778,10 @@ process bakta {
 
     String genusOption = params.species != null ? "--genus ${params.genus}" : ''
     String speciesOption = params.species != null ? "--species ${params.species}" : ''
+    String compliantOption = params.compliant != null ? '--compliant' : ''
     script:
     """
-    bakta --db ${params.baktadb} --prefix ${sample} ${genusOption} ${speciesOption} --strain "${sample}" --keep-contig-headers --threads ${task.cpus} --output ${sample} assembly.fasta
+    bakta --db ${params.baktadb} --prefix ${sample} ${genusOption} ${speciesOption} --strain "${sample}" ${compliantOption} --keep-contig-headers --threads ${task.cpus} --output ${sample} assembly.fasta
     mv ${sample}/* .
     rmdir ${sample}
     """
