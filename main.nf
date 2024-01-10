@@ -603,7 +603,7 @@ process  assemblyReorientate {
 
     script:
     """
-    dnaapler all --input assembly.fna --output out --threads ${task.cpus} --prefix ${sample} --autocomplete none
+    dnaapler all --input assembly.fna --output out --threads ${task.cpus} --prefix ${sample} --autocomplete none --db dnaa,repa
     cp out/${sample}_reoriented.fasta ${sample}.fna
     """
 
