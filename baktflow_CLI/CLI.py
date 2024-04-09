@@ -5,6 +5,7 @@ import csv
 
 
 def setup_subcommand(args):
+    """Setup subcommand function."""
     print("Running setup subcommand...")
     print(f"Home directory: {args.directory}")
     if args.config:
@@ -12,28 +13,33 @@ def setup_subcommand(args):
 
 
 def validate_tsv(tsv_file):
+    """Validate the TSV file format."""
     # Define the expected headers for the TSV file
-    expected_headers = ['column1', 'column2', 'column3']  # Update with your expected headers
-
+    expected_headers = ['id', 'type', 'read', 'read1', 'read2']
     with open(tsv_file, 'r') as file:
         reader = csv.DictReader(file, delimiter='\t')
         headers = reader.fieldnames
-
         # Check if the headers match the expected format
         if headers != expected_headers:
             raise ValueError(
                 f"TSV file headers do not match expected format. Expected: {expected_headers}, Actual: {headers}")
-
         # Validate each row
         for row in reader:
-            # Perform validation checks on each row
-            # Example: Check if required columns are present and have valid values
-            if not row['column1'] or not row['column2']:
-                raise ValueError("Required columns are missing or have invalid values.")
-            # Add more validation checks as needed
+            # Validate ID and type
+            if not row['id'] or not row['type']:
+                raise ValueError("ID or type is missing in the TSV file.")
+            # For Illumina type, validate r1 and r2
+            if row['type'] == 'illumina':
+                if not row['read1'] or not row['read2']:
+                    raise ValueError("For Illumina type, both read1 and read2 must be provided.")
+            # For other types, validate single read
+            else:
+                if not row['read']:
+                    raise ValueError("For non-Illumina types, a single read must be provided.")
 
 
 def batch_subcommand(args):
+    """Batch subcommand function."""
     print("Running batch subcommand...")
     print(f"Input samples file: {args.samples}")
     print(f"Output directory: {args.output}")
@@ -48,6 +54,7 @@ def batch_subcommand(args):
 
 
 def single_subcommand(args):
+    """Single subcommand function."""
     print("Running single subcommand...")
     print(f"Analysis ID: {args.id}")
     print(f"Analysis type: {args.type}")
@@ -55,9 +62,12 @@ def single_subcommand(args):
         print(f"Illumina R1 file: {args.r1}")
         if args.r2:
             print(f"Illumina R2 file: {args.r2}")
+    else:
+        print(f"Read file: {args.read}")
 
 
 def parse_arguments():
+    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
         description='Bacterial WGS analysis suite.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
@@ -82,11 +92,13 @@ def parse_arguments():
                                help='Type of analysis')
     single_parser.add_argument('--r1', help='Path to the first read file for Illumina analysis')
     single_parser.add_argument('--r2', help='Path to the second read file for paired-end Illumina analysis')
+    single_parser.add_argument('--read', help='Path to the read file for non-Illumina analysis')
 
     return parser.parse_args()
 
 
 def main():
+    """Main function."""
     args = parse_arguments()
 
     if args.subcommand == 'setup':
