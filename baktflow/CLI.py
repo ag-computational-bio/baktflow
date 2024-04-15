@@ -1,69 +1,55 @@
-#!/usr/bin/env python3
-
 import argparse
-import csv
+import logging
+import sys
+from utils.py import validate_tsv
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,  # Set the default logging level to INFO
+    format='%(asctime)s - %(levelname)s - %(message)s',  # Define log message format
+    datefmt='%Y-%m-%d %H:%M:%S',  # Define date/time format
+    handlers=[
+        logging.FileHandler('logfile.log'),  # Log to file
+        logging.StreamHandler(sys.stdout)  # Log to console
+    ]
+)
+
+# Create a logger object
+logger = logging.getLogger(__name__)
 
 
 def setup_subcommand(args):
     """Setup subcommand function."""
-    print("Running setup subcommand...")
-    print(f"Home directory: {args.directory}")
+    logger.info("Running setup subcommand...")
+    logger.info(f"Home directory: {args.directory}")
     if args.config:
-        print(f"Using config file: {args.config}")
-
-
-def validate_tsv(tsv_file):
-    """Validate the TSV file format."""
-    # Define the expected headers for the TSV file
-    expected_headers = ['id', 'type', 'read', 'read1', 'read2']
-    with open(tsv_file, 'r') as file:
-        reader = csv.DictReader(file, delimiter='\t')
-        headers = reader.fieldnames
-        # Check if the headers match the expected format
-        if headers != expected_headers:
-            raise ValueError(
-                f"TSV file headers do not match expected format. Expected: {expected_headers}, Actual: {headers}")
-        # Validate each row
-        for row in reader:
-            # Validate ID and type
-            if not row['id'] or not row['type']:
-                raise ValueError("ID or type is missing in the TSV file.")
-            # For Illumina type, validate r1 and r2
-            if row['type'] == 'illumina':
-                if not row['read1'] or not row['read2']:
-                    raise ValueError("For Illumina type, both read1 and read2 must be provided.")
-            # For other types, validate single read
-            else:
-                if not row['read']:
-                    raise ValueError("For non-Illumina types, a single read must be provided.")
+        logger.info(f"Using config file: {args.config}")
 
 
 def batch_subcommand(args):
     """Batch subcommand function."""
-    print("Running batch subcommand...")
-    print(f"Input samples file: {args.samples}")
-    print(f"Output directory: {args.output}")
+    logger.info("Running batch subcommand...")
+    logger.info(f"Input samples file: {args.samples}")
+    logger.info(f"Output directory: {args.output}")
 
-    # Validate the provided TSV file
     try:
         validate_tsv(args.samples)
-        print("TSV file is valid.")
+        logger.info("TSV file is valid.")
     except ValueError as e:
-        print(f"Error: {e}")
-        # Handle the error, such as displaying a message to the user or exiting the script
+        logger.error(f"Error: {e}")
 
 
 def single_subcommand(args):
     """Single subcommand function."""
-    print("Running single subcommand...")
-    print(f"Analysis ID: {args.id}")
-    print(f"Analysis type: {args.type}")
+    logger.info("Running single subcommand...")
+    logger.info(f"Analysis ID: {args.id}")
+    logger.info(f"Analysis type: {args.type}")
     if args.type == 'illumina':
-        print(f"Illumina R1 file: {args.r1}")
+        logger.info(f"Illumina R1 file: {args.r1}")
         if args.r2:
-            print(f"Illumina R2 file: {args.r2}")
+            logger.info(f"Illumina R2 file: {args.r2}")
     else:
-        print(f"Read file: {args.read}")
+        logger.info(f"Read file: {args.read}")
 
 
 def parse_arguments():
@@ -108,7 +94,7 @@ def main():
     elif args.subcommand == 'single':
         single_subcommand(args)
     else:
-        print("No subcommand provided. Use --help for usage information.")
+        logger.error("No subcommand provided. Use --help for usage information.")
 
 
 if __name__ == "__main__":
