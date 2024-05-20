@@ -2,17 +2,17 @@
 params.config = loadYaml("config.yaml")
 
 // Access Conda-related parameters
-params.condaToolsBakta = params.config.condaToolsBakta
-params.condaEnvBakta = params.config.condaEnvBakta
+params.condatoolsbakta = params.config.condaToolsBakta
+params.condaenvbakta = params.config.condaEnvBakta
 
 // Define Conda environment names based on the Conda tools
 conda_bakta_name = params.condaToolsBakta.replace("=", "-").replace(":", "-").replace(" ", "-")
 
 // Define Conda environments based on the defined Conda environment name
-conda_bakta_env = file("${params.condadir}/${conda_bakta_name}").exists() ? "${params.condadir}/${conda_bakta_name}" : params.condaEnvBakta
+conda_bakta_env = file("${params.condadir}/${conda_bakta_name}").exists() ? "${params.condadir}/${conda_bakta_name}" : params.condaenvbakta
 
 // Process to create Conda environment if it doesn't exist
-process Create_Conda_Env {
+process create_conda_env{
     label 'create_conda_env'
 
     // Only execute this process if the Conda environment doesn't exist
@@ -27,7 +27,7 @@ process Create_Conda_Env {
 }
 
 // Process to install Bakta using Conda environment
-process BAKTA_Install {
+process bakta_install {
     label 'install_bakta'
 
     // Define output directory for BAKTA installation
@@ -41,12 +41,12 @@ process BAKTA_Install {
     source activate ${conda_bakta_env} || conda activate ${conda_bakta_env}
 
     # Install BAKTA using Conda
-    conda install --yes ${params.condaToolsBakta} || exit 1
+    conda install --yes ${params.condatoolsbakta} || exit 1
     """
 }
 
 workflow {
     // Execute processes sequentially
-    Create_Conda_Env() // Create Conda environment if necessary
-    BAKTA_Install()    // Install Bakta
+    create_conda_env() // Create Conda environment if necessary
+    bakta_install()    // Install Bakta
 }
