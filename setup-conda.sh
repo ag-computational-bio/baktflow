@@ -5,7 +5,7 @@ mamba create --yes --quiet -p conda/qc-ill fastp=0.23.4
 mamba create --yes --quiet -p conda/qc-ill-plot fastqc=0.12.1
 mamba create --yes --quiet -p conda/qc-ont pigz porechop=0.2.4 filtlong=0.2.1
 mamba create --yes --quiet -p conda/qc-ont-plot nanoplot=1.41.0
-mamba create --yes --quiet -p conda/assembly-long flye=2.9.2 biopython=1.80
+mamba create --yes --quiet -p conda/assembly-long flye=2.9.4 biopython=1.80
 mamba create --yes --quiet -p conda/polish-long-racon minimap2=2.24 racon=1.5.0
 mamba create --yes --quiet -p conda/polish-long-medaka medaka=1.11.1
 mamba create --yes --quiet -p conda/polish-short-pypolca pypolca=0.3.1
