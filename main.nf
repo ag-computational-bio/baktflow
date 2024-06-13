@@ -513,8 +513,8 @@ process  polishShortPolyPolish {
     bwa mem -t ${task.cpus} -a assembly.fna R1.fastq.gz > alignments_r1.sam
     bwa mem -t ${task.cpus} -a assembly.fna R2.fastq.gz > alignments_r2.sam
     bwa mem -t ${task.cpus} -a assembly.fna SE.fastq.gz > alignments_se.sam
-    polypolish_insert_filter.py --in1 alignments_r1.sam --in2 alignments_r2.sam --out1 filtered_r1.sam --out2 filtered_r2.sam
-    polypolish assembly.fna filtered_r1.sam filtered_r2.sam alignments_se.sam > ${sample}.polished.fna
+    polypolish filter --in1 alignments_r1.sam --in2 alignments_r2.sam --out1 filtered_r1.sam --out2 filtered_r2.sam
+    polypolish polish assembly.fna filtered_r1.sam filtered_r2.sam alignments_se.sam > ${sample}.polished.fna
     """
 
     stub:
