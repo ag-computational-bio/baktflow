@@ -1,52 +1,52 @@
-// Load YAML file to access Conda-related parameters
-params.config = loadYaml("config.yaml")
+#!/usr/bin/env nextflow
+nextflow.enable.dsl=2
 
-// Access Conda-related parameters
-params.condatoolsbakta = params.config.condaToolsBakta
-params.condaenvbakta = params.config.condaEnvBakta
+params.setupDir = "${baseDir}//bakta"
+params.bakta_db_type = "light"  // Changed to a valid option
+params.bakta_db = "${params.setupDir}/db"
+params.bakta_save_as_tarball = false
+params.publish_dir_mode = 'copy'
+params.enable_conda = true
 
-// Define Conda environment names based on the Conda tools
-conda_bakta_name = params.condaToolsBakta.replace("=", "-").replace(":", "-").replace(" ", "-")
+process installBakta {
+    label 'install'
+    tag "Install Bakta and Download DB"
 
-// Define Conda environments based on the defined Conda environment name
-conda_bakta_env = file("${params.condadir}/${conda_bakta_name}").exists() ? "${params.condadir}/${conda_bakta_name}" : params.condaenvbakta
+    conda "${params.setupDir}/environment.yaml"
 
-// Process to create Conda environment if it doesn't exist
-process create_conda_env{
-    label 'create_conda_env'
+    publishDir params.bakta_db, mode: params.publish_dir_mode, overwrite: true
 
-    // Only execute this process if the Conda environment doesn't exist
-    when: !file(conda_bakta_env).exists()
-
-    // Script to create Conda environment
-    script:
-    """
-    # Create Conda environment
-    conda create --name ${conda_bakta_env} ${params.condaToolsBakta} --yes || exit 1
-    """
-}
-
-// Process to install Bakta using Conda environment
-process bakta_install {
-    label 'install_bakta'
-
-    // Define output directory for BAKTA installation
     output:
-    path "${params.config.bakta_install_dir}" into bakta_install
+    path "bakta-${params.bakta_db_type}/*", emit: db, optional: true
+    path "bakta-${params.bakta_db_type}.tar.gz", emit: db_tarball, optional: true
+    path "*.{log,err}", emit: logs, optional: true
+    path ".command.*", emit: nf_logs
+    path "versions.yml", emit: versions
 
-    // Script to install BAKTA using Conda
     script:
     """
-    # Activate Conda environment
-    source activate ${conda_bakta_env} || conda activate ${conda_bakta_env}
+    echo "Installing Bakta..."
 
-    # Install BAKTA using Conda
-    conda install --yes ${params.condatoolsbakta} || exit 1
+    # Ensure the database directory exists
+    
+
+    # Create and activate the Conda environment
+    conda env create --prefix ${params.setupDir}/bakta_env --file ${params.setupDir}/environment.yaml
+    source activate ${params.setupDir}/bakta_env || conda activate ${params.setupDir}/bakta_env
+
+    # Download the Bakta databases
+    bakta_db download --type ${params.bakta_db_type} --output ${params.bakta_db}
+
+    # Handle the downloaded database
+    if [ '${params.bakta_save_as_tarball}' == 'true' ]; then
+        tar -czf ${params.bakta_db}/bakta-${params.bakta_db_type}.tar.gz -C ${params.bakta_db} .
+    else
+        mv ${params.bakta_db}/bakta ${params.bakta_db}/bakta-${params.bakta_db_type}
+    fi
+
+    echo "Bakta Installation Summary:"
+    echo "---------------------------------"
+    echo "Installation Directory: ${params.bakta_db}"
     """
 }
 
-workflow {
-    // Execute processes sequentially
-    create_conda_env() // Create Conda environment if necessary
-    bakta_install()    // Install Bakta
-}
