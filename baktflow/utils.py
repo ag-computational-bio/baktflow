@@ -55,11 +55,11 @@ def determine_analysis_type(files):
     else:
         raise ValueError("Unexpected number of files for determining the analysis type.")
 
-def convert_to_table_format(id, input_files, analysis_type, output_dir):
+def convert_to_table_format(id, analysis_type, input_files):
     """Convert input files to table format and save as a TSV file."""
-    tsv_file = os.path.join(output_dir, 'input_files.tsv')
+    tsv_file = "input_files.tsv"  
     with open(tsv_file, 'w') as f:
-        f.write("id\tfile_1\tfile_2\tfile_3\ttype\n")  # Header
+        
         
         # Prepare the row data
         file_1 = input_files[0] if len(input_files) > 0 else ""
@@ -67,13 +67,12 @@ def convert_to_table_format(id, input_files, analysis_type, output_dir):
         file_3 = input_files[2] if len(input_files) > 2 else ""
         
         # Write the row with the determined analysis type
-        f.write(f"{id}\t{file_1}\t{file_2}\t{file_3}\t{analysis_type}\n")
-    
+        f.write(f"{id}\t{analysis_type}\t{file_1}\t{file_2}\t{file_3}\n")
     return tsv_file
 
 def validate_tsv(tsv_file):
     """Validate the TSV file format."""
-    expected_headers = ['id', 'file_1', 'file_2', 'file_3', 'type']
+    expected_headers = ['id', 'type', 'file_1', 'file_2', 'file_3']
     with open(tsv_file, 'r') as file:
         reader = csv.DictReader(file, delimiter='\t')
         headers = reader.fieldnames
@@ -84,11 +83,11 @@ def validate_tsv(tsv_file):
             if not row['id'] or not row['type']:
                 raise ValueError("ID or type is missing in the TSV file.")
             if row['type'] == 'illumina':
-                if not row['file_2'] or not row['file_3']:
-                    raise ValueError("For illumina type, both file_2 and file_3 must be provided.")
+                if not row['file_1'] or not row['file_2']:
+                    raise ValueError("For illumina type, both file_1 and file_2 must be provided.")
             elif row['type'] == 'hybrid':
-                if not row['file_2'] or not row['file_3']:
-                    raise ValueError("For hybrid type, file_2 and file_3 must be provided.")
+                if not row['file_1'] or not row['file_2'] or not row['file_3']:
+                    raise ValueError("For hybrid type, file_1, file_2, and file_3 must be provided.")
             else:
                 if not row['file_1']:
                     raise ValueError("For long and assembly types, file_1 must be provided.")
