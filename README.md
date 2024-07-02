@@ -1,7 +1,7 @@
 
 
 
-# Baktaflow: Automated Bacterial Genome Analysis Pipeline
+# Baktaflow: Automated Bacterial Genome Analysis Pipeline:
 Baktflow is an automated pipeline designed for seamless assembly, annotation, and advanced analyses of bacterial genomes. With its modular architecture, Baktflow orchestrates the analysis process seamlessly, automatically executing each step without user intervention. 
 It efficiently preprocesses diverse sequence data types, saving time and addressing versatile genomic analysis needs.
 
