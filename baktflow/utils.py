@@ -1,21 +1,49 @@
-# utils.py
 import csv
 import os
 import sys
 from pathlib import Path
+import os
+import logging
+import shutil
+from pathlib import Path
+
+# Define color codes
+c_blue = "\033[1;34m"
+c_green = "\033[1;32m"
+c_reset = "\033[0m"
+
+logger = logging.getLogger(__name__)
+
+def create_directory_setup(directory):
+    """Create directory if it does not exist."""
+    if not directory.exists():
+        directory.mkdir(parents=True)
+        logger.info(f"{c_green}Created directory: {directory}{c_reset}")
+    else:
+        logger.info(f"{c_green}Directory already exists: {directory}{c_reset}")
+
+def move_setup_directory(src_dir, dst_dir):
+    """Move setup directory to a new location."""
+    src_dir.rename(dst_dir)
+    logger.info(f"{c_green}Moved setup directory to: {dst_dir}{c_reset}")
+
+def create_directory(directory_path):
+    """Create a directory if it doesn't exist."""
+    if not os.path.exists(directory_path):
+        os.makedirs(directory_path)
+        logger.info(f"Created directory: {directory_path}")
+    else:
+        logger.info(f"Directory already exists: {directory_path}")
 
 def check_existence(path: str) -> bool:
     """Check if the path exists."""
     return os.path.exists(path)
-
 def check_readability(path: str) -> bool:
     """Check if the path is readable."""
     return os.access(path, os.R_OK)
-
 def check_writability(path: str) -> bool:
     """Check if the path is writable."""
     return os.access(path, os.W_OK)
-
 def create_directory(output_path: str) -> None:
     """Create the output directory if it does not exist."""
     output_path = Path(output_path)
@@ -24,7 +52,6 @@ def create_directory(output_path: str) -> None:
             output_path.mkdir(parents=True, exist_ok=True)
         except Exception as e:
             sys.exit(f'ERROR: could not resolve or create output directory ({output_path})!')
-
 def determine_analysis_type(files):
     """
     Determine the type of sequencing analysis based on the file extensions and number of files.
@@ -55,12 +82,12 @@ def determine_analysis_type(files):
     else:
         raise ValueError("Unexpected number of files for determining the analysis type.")
 
+
+
 def convert_to_table_format(id, analysis_type, input_files):
     """Convert input files to table format and save as a TSV file."""
-    tsv_file = "input_files.tsv"  
+    tsv_file = "input_files.tsv"
     with open(tsv_file, 'w') as f:
-        
-        
         # Prepare the row data
         file_1 = input_files[0] if len(input_files) > 0 else ""
         file_2 = input_files[1] if len(input_files) > 1 else ""
@@ -69,6 +96,7 @@ def convert_to_table_format(id, analysis_type, input_files):
         # Write the row with the determined analysis type
         f.write(f"{id}\t{analysis_type}\t{file_1}\t{file_2}\t{file_3}\n")
     return tsv_file
+
 
 def validate_tsv(tsv_file):
     """Validate the TSV file format."""
