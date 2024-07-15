@@ -1,9 +1,9 @@
-name: bakta_env
+name: bakta
 channels:
   - conda-forge
   - bioconda
 dependencies:
-  - bakta
-  - mamba  
+  - bakta=1.9.3-0
+   
 
   
