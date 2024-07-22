@@ -21,13 +21,9 @@ workflow {
 
 
 workflow.onComplete {
-   
-
-    
     log.info "${ANSI_GREEN}${ANSI_BOLD}${''.center(60, '=')}${ANSI_RESET}"
     log.info "${ANSI_GREEN}${ANSI_BOLD}Check Conda Environment Directory: ${params.CONDA_ENVS_PATH}${ANSI_RESET}"
     log.info "${ANSI_GREEN}${ANSI_BOLD}Check Database Directory: ${params.DATABASE_DIR}${ANSI_RESET}"
-    // log.info "${ANSI_GREEN}${ANSI_BOLD}FastQC Version: ${fastqc_version}${ANSI_RESET}"
     log.info "${ANSI_GREEN}${ANSI_BOLD}Duration: ${workflow.duration}${ANSI_RESET}"
     log.info "${ANSI_GREEN}${ANSI_BOLD}Success: ${workflow.success}${ANSI_RESET}"
     log.info "${ANSI_GREEN}${ANSI_BOLD}Error Report: ${workflow.errorReport ?: '-'}${ANSI_RESET}"
