@@ -4,8 +4,8 @@ import logging
 from pathlib import Path
 import argparse
 import subprocess
-from nextflow import start
-from utils import check_existence, check_readability, check_writability, determine_analysis_type,convert_to_table_format, validate_tsv, create_directory,create_directory_setup, move_setup_directory
+from baktflow.nextflow import start
+import os
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -27,13 +27,28 @@ def setup_subcommand(args):
 
     # Create default setup directories if they don't exist
     setup_subdir = default_setup_dir
-    create_directory_setup(setup_subdir)
+    if not setup_subdir.exists():
+        setup_subdir.mkdir(parents=True)
+        logger.info(f"{c_green}Created directory: {setup_subdir}{c_reset}")
+    else:
+        logger.info(f"{c_green}Directory already exists: {setup_subdir}{c_reset}")
 
     # Define paths for Conda and database directories
-    conda_dir = setup_subdir.joinpath('conda_envs')
-    database_dir = setup_subdir.joinpath('databases')
-    create_directory_setup(conda_dir)
-    create_directory_setup(database_dir)
+    conda_dir = setup_subdir / 'conda_envs'
+    database_dir = setup_subdir / 'databases'
+
+    if not conda_dir.exists():
+        conda_dir.mkdir(parents=True)
+        logger.info(f"{c_green}Created directory: {conda_dir}{c_reset}")
+    else:
+        logger.info(f"{c_green}Directory already exists: {conda_dir}{c_reset}")
+
+
+    if not database_dir.exists():
+        database_dir.mkdir(parents=True)
+        logger.info(f"{c_green}Created directory: {database_dir}{c_reset}")
+    else:
+        logger.info(f"{c_green}Directory already exists: {database_dir}{c_reset}")
 
     # Check if the user provided a different directory
     if args.directory:
@@ -41,15 +56,15 @@ def setup_subcommand(args):
 
         # If user provided directory is different, confirm moving setup
         if user_dir != default_setup_dir:
-            response = input(f"Do you want to move the setup to {user_dir.joinpath('setup')}? [Y/N]: ")
+            response = input(f"Do you want to move the setup to {user_dir / 'setup'}? [Y/N]: ")
             if response.lower() == 'y':
-                logger.info(f"{c_blue}Moving setup to specified directory: {user_dir.joinpath('setup')}{c_reset}")
-                move_setup_directory(setup_subdir, user_dir.joinpath('setup'))
-                setup_subdir = user_dir.joinpath('setup')  # Update setup_subdir to user-provided directory
-            else:
-                logger.info(f"{c_blue}Setup will proceed in the default directory: {setup_subdir}{c_reset}")
+                logger.info(f"{c_blue}Moving setup to specified directory: {user_dir / 'setup'}{c_reset}")
+                setup_subdir.rename(user_dir / 'setup')
+                logger.info(f"{c_green}Moved setup directory to: {user_dir / 'setup'}{c_reset}")
+                setup_subdir = user_dir / 'setup'  # Update setup_subdir to user-pr
     # Path to the Nextflow script
     setup_script = Path('nextflow','setup.nf').resolve()
+
 
 # Start Nextflow setup using the specified setup script and directory
     try:
@@ -119,8 +134,7 @@ def parse_arguments():
 
     # Setup subcommand
     setup_parser = subparsers.add_parser('setup', help='Setup baktflow pipeline')
-    setup_parser.add_argument('directory', nargs='?', default=os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'nextflow',  'setup.nf')),
-                              help='Home directory for the pipeline setup')
+    setup_parser.add_argument('--directory', help='Home directory for the pipeline setup')
     setup_parser.add_argument('-c', '--config', help='Configuration file for setup parameters')
     setup_parser.add_argument('--nextflow_path', default=None, help='Path to Nextflow installation')
     
