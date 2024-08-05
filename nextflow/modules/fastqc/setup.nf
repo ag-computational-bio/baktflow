@@ -10,7 +10,7 @@ process SETUP_FASTQC {
 
     conda "${params.FASTQC_ENV_FILE}"
 
-    publishDir "${params.CONDA_DIR}", mode: 'copy'
+    publishDir "${params._ENVS_PATH}", mode: 'copy'
 
     script:
     """
