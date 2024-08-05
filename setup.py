@@ -6,8 +6,8 @@ setup(
     description="Bacterial ",
     long_description=open('README.md').read(),
     long_description_content_type="text/markdown",
-    author="",
-    author_email="hellonaouel@gmail.com",
+    author="Oliver Schwengers",
+    author_email="oliver.schwengers@cb.jlug.de",
     
     packages=find_packages(),
    
@@ -29,5 +29,5 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.8',
 )
