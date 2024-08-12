@@ -24,6 +24,29 @@ def setup_subcommand(args):
     # Log user-provided directory and configuration file
     logger.info(f"{c_reset}Setup directory: {args.directory}{c_reset}")
     logger.info(f"{c_reset}Configuration file: {args.config}{c_reset}")
+     # Create default setup directories if they don't exist
+    setup_subdir = default_setup_dir
+    if not setup_subdir.exists():
+        setup_subdir.mkdir(parents=True)
+        logger.info(f"{c_green}Created directory: {setup_subdir}{c_reset}")
+    else:
+        logger.info(f"{c_green}Directory already exists: {setup_subdir}{c_reset}")
+
+    # Define paths for Conda and database directories
+    conda_dir = setup_subdir / 'conda_envs'
+    database_dir = setup_subdir / 'databases'
+
+    if not conda_dir.exists():
+        conda_dir.mkdir(parents=True)
+        logger.info(f"{c_green}Created directory: {conda_dir}{c_reset}")
+    else:
+        logger.info(f"{c_green}Directory already exists: {conda_dir}{c_reset}")
+
+    if not database_dir.exists():
+        database_dir.mkdir(parents=True)
+        logger.info(f"{c_green}Created directory: {database_dir}{c_reset}")
+    else:
+        logger.info(f"{c_green}Directory already exists: {database_dir}{c_reset}")
 
     # Create default setup directories if they don't exist
     setup_subdir = default_setup_dir
@@ -62,6 +85,34 @@ def setup_subcommand(args):
                 setup_subdir.rename(user_dir / 'setup')
                 logger.info(f"{c_green}Moved setup directory to: {user_dir / 'setup'}{c_reset}")
                 setup_subdir = user_dir / 'setup'  # Update setup_subdir to user-pr
+
+     # Check if required databases exist
+    required_databases = ['bakta_db']
+    existing_databases = [db for db in required_databases if (database_dir / db).exists()]
+
+    if existing_databases:
+        response = input(f"{c_blue}The following databases already exist: {', '.join(existing_databases)}. Do you want to reinstall them? [Y/N]: ").strip().lower()
+        if response == 'n':
+            logger.info(f"{c_blue}Exiting setup.{c_reset}")
+            return  # Exit the setup if the user declines
+
+    # Check for Conda environments
+    conda_patterns = {
+        'fastqc': r'^fastqc-',
+        'fastp': r'^fastp-',
+        'bakta': r'^bakta-'
+    }
+    existing_conda_envs = {name for name, pattern in conda_patterns.items() if any(re.match(pattern, p.name) for p in conda_dir.iterdir() if p.is_dir())}
+
+    if existing_conda_envs:
+        response = input(f"{c_blue}The following Conda environments already exist: {', '.join(existing_conda_envs)}. Do you want to reinstall them? [Y/N]: ").strip().lower()
+        if response == 'n':
+            logger.info(f"{c_blue}Exiting setup.{c_reset}")
+            return  # Exit the setup if the user declines
+
+    # Proceed with the rest of the setup if needed
+    logger.info(f"{c_green}Proceeding with the setup...{c_reset}")
+
     # Path to the Nextflow script
     setup_script = Path('nextflow','setup.nf').resolve()
 
