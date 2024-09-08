@@ -2,12 +2,14 @@ import os
 import argparse
 import logging
 from pathlib import Path
+import pandas as pd
+import re
 import argparse
 import subprocess
 import shutil
 from utils import check_existence, check_readability, check_writability, determine_analysis_type, convert_to_table_format, validate_tsv
 from nextflow import start, run
-import os
+
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -233,7 +235,81 @@ def single_subcommand(args):
         logger.error(f"Nextflow pipeline failed: {e}")
         return
 
+def batch_subcommand(args):
+    """Run baktflow batch analysis."""
+    logger.info("Running baktflow batch...")
+    logger.info(f"Input directory for TSV file: {args.input_tsv}")
+    logger.info(f"Output directory: {args.output}")
 
+    input_dir = Path(args.input_tsv)
+    if not input_dir.is_dir():
+        logger.error(f"The input path {args.input_tsv} is not a directory.")
+        return
+
+    tsv_file = None
+    for file in os.listdir(input_dir):
+        if file.endswith('.tsv'):
+            tsv_file = input_dir / file
+            break
+
+    if tsv_file is None:
+        logger.error("No TSV file found in the provided directory.")
+        return
+
+    logger.info(f"Found TSV file: {tsv_file}")
+
+    try:
+        df = pd.read_csv(tsv_file, sep='\t', header=None)
+        logger.info("TSV file successfully read into DataFrame.")
+    except Exception as e:
+        logger.error(f"Error reading TSV file: {e}")
+        return
+
+    logger.info(f"DataFrame contents:\n{df}")
+
+    main_script = Path('nextflow', 'main.nf').resolve()
+
+    for index, row in df.iterrows():
+        sample_id = row[0]
+        files = []
+
+        for col in row[2:]:
+            split_files = col.split() if pd.notna(col) and col.strip() else []
+            for file in split_files:
+                if file:
+                    files.append(input_dir / file.strip())
+
+        sample_output_path = Path(args.output) / sample_id
+
+        logger.info(f"Processing batch sample ID: {sample_id}")
+        logger.info(f"Files to process: {files}")
+
+        if not sample_output_path.exists():
+            sample_output_path.mkdir(parents=True)
+            logger.info(f"Created directory: {sample_output_path}")
+        else:
+            logger.info(f"Directory already exists: {sample_output_path}")
+
+        if not check_writability(sample_output_path):
+            logger.error(f"Output directory {sample_output_path} is not writable")
+            continue
+
+        try:
+            for file_path in files:
+                if not check_existence(file_path):
+                    raise FileNotFoundError(f"Input file {file_path} does not exist")
+                if not check_readability(file_path):
+                    raise PermissionError(f"Input file {file_path} is not readable")
+        except (FileNotFoundError, PermissionError) as e:
+            logger.error(e)
+            continue
+
+        logger.info("Executing Nextflow pipeline...")
+        try:
+            run(main_script, str(tsv_file), str(sample_output_path), str(input_dir))
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Nextflow pipeline failed: {e}")
+            continue
 
 
 
@@ -253,6 +329,10 @@ def parse_arguments():
     single_parser.add_argument('--input_dir', help='Input file(s) for single analysis')
     single_parser.add_argument('--id', help='ID for a specific single analysis')
     single_parser.add_argument('--output', help='Output directory for single analysis')
+    # Batch subcommand
+    batch_parser = subparsers.add_parser('batch', help='Run baktflow batch analysis')
+    batch_parser.add_argument('--input_tsv', help='Output directory for batch analysis', required=True)
+    batch_parser.add_argument('--output', help='Output directory for batch analysis', required=True)
 
     return parser.parse_args()
 def main():
@@ -262,6 +342,8 @@ def main():
         setup_subcommand(args)
     elif args.subcommand == 'single':
         single_subcommand(args)
+    elif args.subcommand == 'batch':
+        batch_subcommand(args)
     else:
         logger.error("No subcommand provided. Use --help for usage information.")
 
