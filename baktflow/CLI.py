@@ -4,6 +4,7 @@ import logging
 from pathlib import Path
 import argparse
 import subprocess
+import shutil
 from utils import check_existence, check_readability, check_writability, determine_analysis_type, convert_to_table_format, validate_tsv
 from nextflow import start, run
 import os
@@ -18,112 +19,132 @@ c_reset = "\033[0m"
 # Define the root setup directory for baktflow
 default_setup_dir = Path('./setup').resolve()
 
+
+
 def setup_subcommand(args):
-    """Setup baktflow pipeline."""
-    logger.info(f"{c_reset}Setting up baktflow pipeline...{c_reset}")
+    """Setup Baktflow pipeline."""
+    logger.info("Setting up Baktflow pipeline...")
 
     # Log user-provided directory and configuration file
-    logger.info(f"{c_reset}Setup directory: {args.directory}{c_reset}")
-    logger.info(f"{c_reset}Configuration file: {args.config}{c_reset}")
-     # Create default setup directories if they don't exist
-    setup_subdir = default_setup_dir
-    if not setup_subdir.exists():
-        setup_subdir.mkdir(parents=True)
-        logger.info(f"{c_green}Created directory: {setup_subdir}{c_reset}")
-    else:
-        logger.info(f"{c_green}Directory already exists: {setup_subdir}{c_reset}")
+    logger.info(f"Setup directory: {args.directory}")
+    logger.info(f"Configuration file: {args.config}")
 
     # Define paths for Conda and database directories
+    setup_subdir = default_setup_dir
     conda_dir = setup_subdir / 'conda_envs'
     database_dir = setup_subdir / 'databases'
 
-    if not conda_dir.exists():
-        conda_dir.mkdir(parents=True)
-        logger.info(f"{c_green}Created directory: {conda_dir}{c_reset}")
-    else:
-        logger.info(f"{c_green}Directory already exists: {conda_dir}{c_reset}")
-
-    if not database_dir.exists():
-        database_dir.mkdir(parents=True)
-        logger.info(f"{c_green}Created directory: {database_dir}{c_reset}")
-    else:
-        logger.info(f"{c_green}Directory already exists: {database_dir}{c_reset}")
-
-    # Create default setup directories if they don't exist
-    setup_subdir = default_setup_dir
-    if not setup_subdir.exists():
-        setup_subdir.mkdir(parents=True)
-        logger.info(f"{c_green}Created directory: {setup_subdir}{c_reset}")
-    else:
-        logger.info(f"{c_green}Directory already exists: {setup_subdir}{c_reset}")
-
-    # Define paths for Conda and database directories
-    conda_dir = setup_subdir / 'conda_envs'
-    database_dir = setup_subdir / 'databases'
-
-    if not conda_dir.exists():
-        conda_dir.mkdir(parents=True)
-        logger.info(f"{c_green}Created directory: {conda_dir}{c_reset}")
-    else:
-        logger.info(f"{c_green}Directory already exists: {conda_dir}{c_reset}")
-
-
-    if not database_dir.exists():
-        database_dir.mkdir(parents=True)
-        logger.info(f"{c_green}Created directory: {database_dir}{c_reset}")
-    else:
-        logger.info(f"{c_green}Directory already exists: {database_dir}{c_reset}")
-
-    # Check if the user provided a different directory
     if args.directory:
         user_dir = Path(args.directory).resolve()
+        setup_subdir = user_dir / 'setup'
+        conda_dir = setup_subdir / 'conda_envs'
+        database_dir = setup_subdir / 'databases'
 
-        # If user provided directory is different, confirm moving setup
         if user_dir != default_setup_dir:
-            response = input(f"Do you want to move the setup to {user_dir / 'setup'}? [Y/N]: ")
-            if response.lower() == 'y':
-                logger.info(f"{c_blue}Moving setup to specified directory: {user_dir / 'setup'}{c_reset}")
-                setup_subdir.rename(user_dir / 'setup')
-                logger.info(f"{c_green}Moved setup directory to: {user_dir / 'setup'}{c_reset}")
-                setup_subdir = user_dir / 'setup'  # Update setup_subdir to user-pr
+            response = input(f"Do you want to move the setup to {setup_subdir}? [Y/N]: ").strip().lower()
+            if response == 'y':
+                if setup_subdir.exists():
+                    shutil.rmtree(setup_subdir)
+                shutil.move(str(default_setup_dir), str(setup_subdir))
+                logger.info(f"Moved setup directory to: {setup_subdir}")
 
-     # Check if required databases exist
-    required_databases = ['bakta_db']
-    existing_databases = [db for db in required_databases if (database_dir / db).exists()]
+    # Create the main directories if they don't exist
+    for directory in [conda_dir, database_dir]:
+        try:
+            if not directory.exists():
+                directory.mkdir(parents=True)
+                logger.info(f"Created directory: {directory}")
+        except OSError as e:
+            logger.error(f"Failed to create directory {directory}: {e}")
+            return  # Exit the setup if directory creation fails
 
-    if existing_databases:
-        response = input(f"{c_blue}The following databases already exist: {', '.join(existing_databases)}. Do you want to reinstall them? [Y/N]: ").strip().lower()
-        if response == 'n':
-            logger.info(f"{c_blue}Exiting setup.{c_reset}")
-            return  # Exit the setup if the user declines
-
-    # Check for Conda environments
+    # Define patterns for Conda environments and databases
     conda_patterns = {
         'fastqc': r'^fastqc-',
         'fastp': r'^fastp-',
-        'bakta': r'^bakta-'
+        # Add more patterns as needed
     }
-    existing_conda_envs = {name for name, pattern in conda_patterns.items() if any(re.match(pattern, p.name) for p in conda_dir.iterdir() if p.is_dir())}
+    database_patterns = {
+        'baktadb': r'^bakt-db-',
+        # Add more patterns as needed
+    }
 
-    if existing_conda_envs:
-        response = input(f"{c_blue}The following Conda environments already exist: {', '.join(existing_conda_envs)}. Do you want to reinstall them? [Y/N]: ").strip().lower()
-        if response == 'n':
-            logger.info(f"{c_blue}Exiting setup.{c_reset}")
-            return  # Exit the setup if the user declines
+    # Initialize flags for missing environments and databases
+    environment_missing = False
+    database_missing = False
+    existing_envs = {}
+    existing_dbs = {}
 
-    # Proceed with the rest of the setup if needed
-    logger.info(f"{c_green}Proceeding with the setup...{c_reset}")
+    # Check Conda environments
+    for env_name, pattern in conda_patterns.items():
+        env_dir = next((p for p in conda_dir.iterdir() if p.is_dir() and re.match(pattern, p.name)), None)
+        if env_dir and any(env_dir.iterdir()):
+            yaml_files = list(env_dir.glob('*.yaml'))
+            if yaml_files:
+                yaml_filenames = [yaml_file.name for yaml_file in yaml_files]
+                logger.info(f"Environment '{env_name}' already exists and contains the following YAML files: {', '.join(yaml_filenames)}.")
+                existing_envs[env_name] = {'env_dir': env_dir, 'yaml_files': yaml_files}
+            else:
+                logger.info(f"Environment '{env_name}' already exists but contains no YAML files.")
+        else:
+            logger.info(f"Environment '{env_name}' not found or is empty.")
+            environment_missing = True
 
-    # Path to the Nextflow script
-    setup_script = Path('nextflow','setup.nf').resolve()
+    # Check databases
+    for db_name, pattern in database_patterns.items():
+        db_dir = next((p for p in database_dir.iterdir() if p.is_dir() and re.match(pattern, p.name)), None)
+        if db_dir:
+            logger.info(f"Database '{db_name}' already exists.")
+            existing_dbs[db_name] = db_dir
+        else:
+            logger.info(f"Database '{db_name}' not found.")
+            database_missing = True
 
+    # If any environment or database is missing, reinstall everything
+    if environment_missing:
+        logger.info("Some environments or databases are missing or empty. Reinstalling all environments and databases...")
 
-# Start Nextflow setup using the specified setup script and directory
-    try:
-        start(setup_script, setup_subdir, conda_dir, database_dir) 
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Nextflow setup failed: {e}")
+        confirm = input(f"Are you sure you want to delete {conda_dir}? This will remove all environments. [y/N]: ").strip().lower()
+        if confirm == 'y':
+            if conda_dir.exists():
+                shutil.rmtree(conda_dir)
+            conda_dir.mkdir(parents=True)
 
+        # Proceed with Nextflow setup
+        setup_script = Path('nextflow', 'setup.nf').resolve()
+        try:
+            subprocess.run(['nextflow', 'run', str(setup_script), '-params-file', str(setup_subdir)], check=True)
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Nextflow setup failed: {e}")
+            return
+
+        logger.info("Reinstallation complete.")
+    else:
+        # If all environments and databases are present, ask whether to reinstall or update
+        response = input("All environments and databases already exist. Do you want to:\n1. Reinstall everything\n2. Update existing environments\n3. Skip the setup\nPlease enter 'reinstall', 'update', or 'skip': ").strip().lower()
+        
+        if response == 'reinstall':
+            logger.info("Reinstalling all environments and databases...")
+
+            # Directly remove existing environments and databases
+            confirm = input(f"Are you sure you want to delete {conda_dir} and {database_dir}? [y/N]: ").strip().lower()
+            if confirm == 'y':
+                if conda_dir.exists():
+                    shutil.rmtree(conda_dir)
+                if database_dir.exists():
+                    shutil.rmtree(database_dir)
+                conda_dir.mkdir(parents=True)
+                database_dir.mkdir(parents=True)
+
+                # Reinstall environments and databases via Nextflow setup
+                setup_script = Path('nextflow', 'setup.nf').resolve()
+                try:
+                    subprocess.run(['nextflow', 'run', str(setup_script), '-params-file', str(setup_subdir)], check=True)
+                except subprocess.CalledProcessError as e:
+                    logger.error(f"Nextflow setup failed: {e}")
+                    return
+
+            logger.info("Reinstallation complete.")
  
 def single_subcommand(args):
     """Run baktflow single analysis."""
