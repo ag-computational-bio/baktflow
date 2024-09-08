@@ -6,7 +6,7 @@ nextflow.enable.dsl=2
 params.INPUT_TSV = params.INPUT_TSV ?: 'input_files.tsv'
 params.OUTPUT_DIR = params.OUTPUT_DIR ?: '.'
 params.BASE_PATH = params.BASE_PATH ?: '.'
-params.CONDA_ENV_DIR = params.CONDA_ENV_DIR ?: "./setup/conda_envs"
+
 
 include { SETUP_FASTQC } from './modules/fastqc/setup.nf'
 
@@ -24,31 +24,29 @@ println """\
 // Define the input channel from the TSV file
 Channel
     .fromPath(params.INPUT_TSV)
-    .splitCsv(header: false, sep: '\t')
+    .splitCsv(header: false, sep: '\t')  // Read TSV file without header
     .map { row ->
-        def id = row[0]
-        def type = row[1]
-        def file_1 = row.size() > 2 && row[2] ? file("${params.BASE_PATH}/${row[2]}") : null
-        def file_2 = row.size() > 3 && row[3] ? file("${params.BASE_PATH}/${row[3]}") : null
-        def file_3 = row.size() > 4 && row[4] ? file("${params.BASE_PATH}/${row[4]}") : null
-        return [id, type, [file_1, file_2, file_3].findAll { it != null }]
-    }
-    .filter { row ->
-        // Ensure at least one file path is not null
-        def (id, type, files) = row
-        return files.size() > 0
+        def id = row.size() > 0 ? row[0] : null
+        def type = row.size() > 1 ? row[1] : null
+        
+        // Collect all non-null and non-empty files starting from column 2 onward
+        def files = row[2..-1].findAll { it != null && it.trim() }
+
+        // Convert to file paths and ensure each is trimmed properly
+        def file_paths = files.collect { file("${params.BASE_PATH}/${it.trim()}") }
+
+        // Debugging: Print sample ID and file paths
+        println "Sample ID: ${id}, File paths: ${file_paths*.toString()}"
+
+        // Return structured output for Nextflow processing
+        return [id, type, file_paths]
     }
     .set { INPUT_CHANNEL }
-
-
-
-
 
 // Define the workflow
 workflow {
     // Run FASTQC analysis on parsed input
     fastqc_results = FASTQC_ANALYSIS(INPUT_CHANNEL)
 
-    // Pass the output directory from fastqcAnalysis to getVersionInfo
-    GET_VERSION_FASTQC(fastqc_results)
+    
 }
