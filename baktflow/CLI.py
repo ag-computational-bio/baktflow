@@ -152,7 +152,9 @@ def single_subcommand(args):
     logger.info(f"Analysis ID: {args.id}")
     logger.info(f"Input file(s): {args.input}")
     logger.info(f"Output directory: {args.output}")
-
+    # Define the file extensions to search for
+    valid_extensions = ('.fastq', '.fq', '.fastq.gz', '.fq.gz')
+    
     # Construct the TSV file path
     tsv_file = Path(args.input_dir) / 'input_files.tsv'
 
@@ -164,9 +166,8 @@ def single_subcommand(args):
     
     logger.info(f"Found input files: {input_files}")
     if not input_files:
-        logger.error("No valid FASTQ files found in the input directory.")
+        logger.error(f"Make sure files have one of the following extensions: {', '.join(valid_extensions)}")
         return
-     
     
     # Check file existence, readability, and writability
     try:
