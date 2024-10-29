@@ -543,7 +543,7 @@ process  polishShortPOLCA {
     script:
     """
     pypolca run -a assembly.fna -1 R1.fastq.gz -2 R2.fastq.gz --threads ${task.cpus} --output output
-    mv output/polca_corrected.fasta ${sample}.polished.fna
+    mv output/pypolca_corrected.fasta ${sample}.polished.fna
     """
 
     stub:
