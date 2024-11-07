@@ -163,7 +163,7 @@ chInputOntBranch
 process qcIll {
 
     tag "${sample}"
-    cpus 3
+    cpus 4
     memory { 4.GB * task.attempt }
     conda "${params.containerdir}/qc-ill"
 
@@ -496,7 +496,7 @@ process  polishShortPolyPolish {
 
     tag "${sample}"
     cpus 2
-    memory { 8.GB * task.attempt }
+    memory { 16.GB * task.attempt }
     conda "${params.containerdir}/polish-short-polypolish"
     scratch = { params.scratch ? params.scratch != null : false }
 
