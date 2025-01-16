@@ -640,7 +640,7 @@ process  assemblyQC {
 
 
 chAssemblyQCEnd
-    .into( { chAssemblyMash; chAssemblyAni; chAssemblyGTDBtk; chAssemblySka; chAssemblyBakta; chAssemblyPlaton; chAssemblyCardRGI; chAssemblyMlst } )
+    .into( { chAssemblyMash; chAssemblyAni; chAssemblyGTDBtk; chAssemblySka; chAssemblyBakta; chAssemblyPlaton; chAssemblyMobSuite; chAssemblyCardRGI; chAssemblyMlst } )
 
 
 process mash {
@@ -673,7 +673,7 @@ process taxAni {
 
     tag "${sample}"
     cpus 8
-    memory { 2.GB * task.attempt }
+    memory { 8.GB * task.attempt }
     conda "${params.containerdir}/tax-ani"
     
     input:
@@ -927,6 +927,35 @@ process platon {
     stub:
     """
     touch ${sample}.tsv
+    """
+}
+
+
+process mobsuite {
+
+    tag "${sample}"
+    cpus 4
+    memory { 8.GB * task.attempt }
+    conda "${params.containerdir}/mobsuite"
+    
+    input:
+    tuple val(sample), path(assembly) from chAssemblyMobSuite
+
+    output:
+    path("results/${sample}.*") into chEndMobSuite
+    publishDir pattern: "${sample}.*", path: "${pathOutput}/${sample}/mobsuite/", mode: 'copy'
+
+    script:
+    """
+    mob_recon --database_directory ${params.mobsuitedb} --infile ${assembly} --num_threads ${task.cpus} --outdir results --prefix ${sample} 
+    """
+
+    stub:
+    """
+    touch results/${sample}.test.mge_report.txt
+    touch results/${sample}.test.contig_report.txt
+    touch results/${sample}.test.mobtyper_results.txt
+    touch results/${sample}.plasmid_XX.fasta
     """
 }
 
