@@ -943,7 +943,7 @@ process mobsuite {
 
     output:
     path("results/${sample}.*") into chEndMobSuite
-    publishDir pattern: "${sample}.*", path: "${pathOutput}/${sample}/mobsuite/", mode: 'copy'
+    publishDir pattern: "results/${sample}.*", path: "${pathOutput}/${sample}/mobsuite/", mode: 'copy'
 
     script:
     """
@@ -952,9 +952,10 @@ process mobsuite {
 
     stub:
     """
-    touch results/${sample}.test.mge_report.txt
-    touch results/${sample}.test.contig_report.txt
-    touch results/${sample}.test.mobtyper_results.txt
+    mkdir results
+    touch results/${sample}.mge_report.txt
+    touch results/${sample}.contig_report.txt
+    touch results/${sample}.mobtyper_results.txt
     touch results/${sample}.plasmid_XX.fasta
     """
 }
