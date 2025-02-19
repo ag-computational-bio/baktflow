@@ -42,7 +42,7 @@ process BAKTA {
         --db "${params.DATABASE_PATH}" \\
         --output bakta_output \\
         --prefix ${meta.sample_id} \\
-        --threads 8 \\
+        --threads $task.cpus \\
         --force \\
         ${assembly}
 
