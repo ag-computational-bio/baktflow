@@ -19,7 +19,7 @@ process MEDAKA {
     conda "${params.CONDA_ENV_PATH}"
     errorStrategy { task.attempt <= 3 ? 'retry' : 'ignore' }  // Retry up to 3 times, then ignore
     maxRetries 3  // Ensure maxRetries is set to allow up to 3 retries
-
+    
     script:
     def prefix = meta.sample_id
     """
@@ -50,7 +50,7 @@ process MEDAKA {
         -i "\$reads_bgzip_out" \\
         -d "\$assembly_bgzip_out" \\
         -o medaka_output \\
-        -t 8
+        -t ${task.cpus}
 
     # Move the polished assembly to the output location
     mv medaka_output/consensus.fasta ${meta.sample_id}_polished_assembly.fasta
