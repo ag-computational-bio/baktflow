@@ -22,7 +22,7 @@ process FLYE {
 
     script:
     """
-    flye --pacbio-raw ${filtered_long_reads} --genome-size 4.6m --out-dir flye_output --threads 8
+    flye --pacbio-raw ${filtered_long_reads} --genome-size 4.6m --out-dir flye_output --threads $task.cpus
 
     cp flye_output/assembly.fasta ${meta.sample_id}_assembly.fasta
     cp flye_output/assembly_graph.gfa ${meta.sample_id}_assembly_graph.gfa
