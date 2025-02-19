@@ -5,8 +5,8 @@ channels:
   - defaults
 dependencies:
 
-  - polypolish
-  - bwa
+  - polypolish=0.6.0
+  - bwa=0.7.17
 
 
 
