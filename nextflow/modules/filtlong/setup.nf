@@ -3,7 +3,6 @@ nextflow.enable.dsl=2
 
 // Define parameters for tools
 params.FILTLONG_ENV_FILE = "${baseDir}/modules/filtlong/environment.yaml"
-
 params.FILTLONG_ENV_PATH = "${baseDir}/../setup/conda_envs/filtlong"
 
 
