@@ -43,7 +43,7 @@ process DNAAPLER {
     dnaapler all \\
         -i "${temp_fasta}" \\
         -o "${prefix}_dnaapler_output" \\
-        -t 8 \\
+        -t $task.cpus \\
         -p "${prefix}" \\
         --force
 
