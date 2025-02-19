@@ -5,8 +5,10 @@ params.CONDA_ENV_DIR = "$baseDir/../setup/conda_envs"
 params.CONDA_ENV_PATH = "${params.CONDA_ENV_DIR}/filtlong"
 params.OUTPUT_DIR = "$baseDir/../output"
 
-// Process: fastp_analysis
-params.filtlong_keep_percent = 80  // Example value, adjust as needed
+// Process parameters
+params.filtlong_keep_percent = 80  
+params.filtlong_min_length = 1000  
+params.filtlong_target_bases = 500000000  
 
 // Process for FiltLong (long reads)
 process FILTLONG {
@@ -25,8 +27,12 @@ process FILTLONG {
 
     script:
     """
-    # Run filtlong with specified parameters and capture verbose output
-    filtlong --min_length 1000 --keep_percent 90 --target_bases 500000000 --verbose ${long_reads} 2> ${meta.sample_id}_filtlong.log | gzip > ${meta.sample_id}_filtered.fastq.gz
+    # Run filtlong with configurable parameters
+    filtlong \\
+        --min_length ${params.filtlong_min_length} \\
+        --keep_percent ${params.filtlong_keep_percent} \\
+        --target_bases ${params.filtlong_target_bases} \\
+        --verbose ${long_reads} 2> ${meta.sample_id}_filtlong.log | gzip > ${meta.sample_id}_filtered.fastq.gz
     """
 }
 
