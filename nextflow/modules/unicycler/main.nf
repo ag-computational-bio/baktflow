@@ -33,7 +33,7 @@ process UNICYCLER {
         $short_reads \\
         $long_reads_option \\
         --out output \\
-        --threads 8
+        --threads $task.cpus
 
     mv output/assembly.fasta ${prefix}.scaffolds.fa
     gzip -n ${prefix}.scaffolds.fa
