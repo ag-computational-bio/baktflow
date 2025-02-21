@@ -15,7 +15,10 @@ process FLYE {
     tuple val(meta), path("${meta.sample_id}_assembly_info.txt"), emit: info
 
     publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/flye", mode: 'copy'
-    conda "${params.CONDA_ENV_PATH}" 
+    conda "${params.CONDA_ENV_PATH}"
+    // Resource allocation
+    cpus 8
+    memory '16GB' 
 
     errorStrategy { task.attempt <= 3 ? 'retry' : 'ignore' }  // Retry up to 3 times, then ignore
     maxRetries 3  // Ensure maxRetries is set to allow up to 3 retries
