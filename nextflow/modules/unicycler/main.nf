@@ -19,6 +19,8 @@ process UNICYCLER {
 
     publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/unicycler", mode: 'copy'
     conda "${params.CONDA_ENV_PATH}"
+    cpus 8
+    memory '16GB'
     errorStrategy { task.attempt <= 3 ? 'retry' : 'ignore' }  // Retry up to 3 times, then ignore
     maxRetries 3  // Ensure maxRetries is set to allow up to 3 retries
 
@@ -34,6 +36,7 @@ process UNICYCLER {
         $long_reads_option \\
         --out output \\
         --threads $task.cpus
+        
 
     mv output/assembly.fasta ${prefix}.scaffolds.fa
     gzip -n ${prefix}.scaffolds.fa
