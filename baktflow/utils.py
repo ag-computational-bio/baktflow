@@ -6,6 +6,12 @@ import os
 import logging
 import shutil
 from pathlib import Path
+# Define expected file counts for each sample type
+sample_types = {'illumina', 'long', 'assembly', 'hybrid'}
+illumina_files = 2  # Expecting R1 and R2 files
+long_files = 1      # Expecting one long-read file
+assembly_files = 1  # Expecting one assembly file
+hybrid_files = 3    # Expecting three files for hybrid samples
 
 # Define color codes
 c_blue = "\033[1;34m"
@@ -140,3 +146,122 @@ def create_tsv(sample_id, r1=None, r2=None, long=None, assembly=None, analysis_t
         print(f"Debug: Row to write: {row}")
         
         writer.writerow(row)
+
+
+
+# ------------------------------
+# BATCH PROCESSING FUNCTION
+# ------------------------------
+def process_tsv(input_tsv, input_dir):
+    """Process the TSV file and generate a modified version with absolute file paths.
+    
+    Args:
+        input_tsv (str): Path to the input TSV file containing sample information.
+        input_dir (str): Directory where the raw sequence files are located.
+
+    Returns:
+        str or None: Path to the modified TSV file if successful, otherwise None.
+    """
+    
+    # Create a temporary folder inside the main 'baktflow' directory for storing modified TSV files
+    temp_folder = os.path.join(os.path.dirname(os.path.dirname(input_tsv)), 'temp')
+    os.makedirs(temp_folder, exist_ok=True)
+
+    # Define the output file path for the processed TSV
+    output_file = os.path.join(temp_folder, 'modified_tsv.tsv')
+
+    # Read the contents of the input TSV file
+    try:
+        with open(input_tsv, 'r') as infile:
+            reader = infile.readlines()
+    except Exception as e:
+        print(f"Error reading the input TSV file: {e}")
+        return None
+
+    # List to store processed rows that will be written to the new TSV file
+    processed_rows = []
+
+    # Process each row from the input TSV file
+    for idx, row in enumerate(reader, start=1):
+        # Strip whitespace and split by spaces or tabs
+        row = [col.strip() for col in row.split()]
+        
+        # Skip rows that do not contain the minimum required number of columns
+        if len(row) < 3:
+            print(f"Skipping incomplete row (Line {idx}): {row}")
+            user_input = input(f"Incomplete row on Line {idx}: {row}. Do you want to skip this line? (y/n): ")
+            if user_input.lower() == 'y':
+                print(f"Skipping line {idx}...")
+                continue
+            else:
+                print(f"Please check the data for line {idx}.")
+                return None  
+
+        # Extract sample ID, sample type, and associated file names
+        sample_id = row[0]  # First column: Sample ID
+        sample_type = row[1]  # Second column: Sample type
+        files = row[2:]  # Remaining columns: File names
+
+        # Initialize a new row for the processed data
+        new_row = [sample_id, sample_type]
+
+        # Check if the sample type is valid
+        if sample_type not in sample_types:
+            print(f"Invalid sample type '{sample_type}' in row (Line {idx}): {row}")
+            user_input = input(f"Invalid sample type in Line {idx}: {row}. Do you want to skip this line? (y/n): ")
+            if user_input.lower() == 'y':
+                print(f"Skipping line {idx}...")
+                continue
+            else:
+                print(f"Please check the data for line {idx}.")
+                return None  
+
+        # Process the files according to the sample type
+        if sample_type == 'illumina':
+            # Illumina samples require exactly two files: R1 and R2
+            if len(files) == illumina_files:
+                new_row.append(os.path.join(input_dir, files[0]))  # R1 file
+                new_row.append(os.path.join(input_dir, files[1]))  # R2 file
+            else:
+                continue  # Skip row if file count is incorrect
+
+        elif sample_type == 'long':
+            # Long-read samples require exactly one file
+            if len(files) == long_files:
+                new_row.extend(['', '', os.path.join(input_dir, files[0])])  # Add long-read file
+            else:
+                continue  # Skip row if file count is incorrect
+
+        elif sample_type == 'assembly':
+            # Assembly samples require exactly one file
+            if len(files) == assembly_files:
+                new_row.extend(['', '', '', os.path.join(input_dir, files[0])])  # Add assembly file
+            else:
+                continue  # Skip row if file count is incorrect
+
+        elif sample_type == 'hybrid':
+            # Hybrid samples require at least three files
+            if len(files) >= hybrid_files:
+                new_row.append(os.path.join(input_dir, files[0]))  # First file
+                new_row.append(os.path.join(input_dir, files[1]))  # Second file
+                new_row.append(os.path.join(input_dir, files[2]))  # Third file
+            else:
+                continue  # Skip row if file count is incorrect
+
+        # Add the processed row to the list
+        processed_rows.append(new_row)
+
+    # If no valid rows are found, return None
+    if not processed_rows:
+        print("No valid rows to write to the output file.")
+        return None
+
+    # Write the processed data to a new TSV file
+    try:
+        with open(output_file, 'w', newline='') as outfile:
+            writer = csv.writer(outfile, delimiter='\t')
+            writer.writerows(processed_rows)
+        return output_file  # Return the path of the modified TSV
+    except Exception as e:
+        print(f"Error writing the processed TSV file: {e}")
+        return None
