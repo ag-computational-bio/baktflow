@@ -7,7 +7,7 @@ import re
 import argparse
 import subprocess
 import shutil
-from utils import check_existence,check_directory_accessibility, check_writability, determine_sample_type,create_tsv,process_tsv,get_baktflow_parent_dir
+from utils import check_existence,check_directory_accessibility, check_writability, determine_sample_type,create_tsv,process_tsv,get_baktflow_parent_dir,check_tsv_readability
 from nextflow import start, run
 
 
@@ -257,23 +257,31 @@ def batch_subcommand(args):
     logger.info("Running baktflow batch...")
     logger.info(f"Input directory for TSV file: {args.input_tsv}")
     logger.info(f"Output directory: {args.output}")
+    # Convert input arguments to Path objects for easier handling
+    tsv_file = Path(args.input_tsv)
+    input_dir = Path(args.input_dir)
+    output_dir = Path(args.output)
 
-    input_dir = Path(args.input_tsv)
-    if not input_dir.is_dir():
-        logger.error(f"The input path {args.input_tsv} is not a directory.")
+    # Validate the existence and accessibility of the TSV file
+    if not check_tsv_readability(tsv_file):
+        logger.error(f"The TSV file {args.input_tsv} does not exist or is not readable.")
         return
 
-    tsv_file = None
-    for file in os.listdir(input_dir):
-        if file.endswith('.tsv'):
-            tsv_file = input_dir / file
-            break
-
-    if tsv_file is None:
-        logger.error("No TSV file found in the provided directory.")
+    # Validate the input directory
+    if not check_existence(input_dir):
+        logger.error(f"The input directory {args.input_dir} does not exist.")
+        return
+    if not check_directory_accessibility(input_dir):
+        logger.error(f"The input directory {args.input_dir} is not readable.")
         return
 
-    logger.info(f"Found TSV file: {tsv_file}")
+    # Validate the output directory
+    if not check_existence(output_dir):
+        logger.error(f"The output directory {args.output} does not exist.")
+        return
+    if not check_writability(output_dir):
+        logger.error(f"The output directory {args.output} is not writable.")
+        return
 
     try:
         df = pd.read_csv(tsv_file, sep='\t', header=None)
@@ -281,53 +289,44 @@ def batch_subcommand(args):
     except Exception as e:
         logger.error(f"Error reading TSV file: {e}")
         return
+    
+     # Ensure the output directory exists
+    output_dir.mkdir(parents=True, exist_ok=True)
+    logger.info(f"Using output directory: {output_dir}")
 
-    logger.info(f"DataFrame contents:\n{df}")
+    # Process the TSV file and generate a temporary TSV file
+    temp_tsv = process_tsv(args.input_tsv, args.input_dir)
+    if temp_tsv is None:
+        logger.error("Error processing TSV: Unable to generate temp TSV file. Aborting.")
+        return
+    
+    temp_tsv = Path(temp_tsv)  # Ensure it's a Path object
+    temp_folder = temp_tsv.parent  # Get the parent directory (temporary folder)
 
+    logger.info(f"Temporary TSV file saved at {temp_tsv}")
+    # Path to the Nextflow main script
     main_script = Path('nextflow', 'main.nf').resolve()
+    # Run the Nextflow pipeline
+    try:
+        run(main_script, temp_tsv, output_dir, args.input_dir)
+        logger.info("Nextflow pipeline executed successfully.")
+    except Exception as e:
+        logger.error(f"Error executing Nextflow pipeline: {e}")
+        return
 
-    for index, row in df.iterrows():
-        sample_id = row[0]
-        files = []
+    # Cleanup: Remove the temporary TSV file and its folder
+    try:
+        if temp_tsv.exists():
+            temp_tsv.unlink()  # Delete the TSV file
+            logger.info(f"Temporary TSV file {temp_tsv} deleted after execution.")
 
-        for col in row[2:]:
-            split_files = col.split() if pd.notna(col) and col.strip() else []
-            for file in split_files:
-                if file:
-                    files.append(input_dir / file.strip())
+        if temp_folder.exists() and temp_folder.name == "temp":  # Ensure it's the expected temp folder
+            shutil.rmtree(temp_folder)  # Delete the whole folder
+            logger.info(f"Temporary folder {temp_folder} removed successfully.")
+    except Exception as e:
+        logger.error(f"Error cleaning up temporary files: {e}")
 
-        sample_output_path = Path(args.output) / sample_id
-
-        logger.info(f"Processing batch sample ID: {sample_id}")
-        logger.info(f"Files to process: {files}")
-
-        if not sample_output_path.exists():
-            sample_output_path.mkdir(parents=True)
-            logger.info(f"Created directory: {sample_output_path}")
-        else:
-            logger.info(f"Directory already exists: {sample_output_path}")
-
-        if not check_writability(sample_output_path):
-            logger.error(f"Output directory {sample_output_path} is not writable")
-            continue
-
-        try:
-            for file_path in files:
-                if not check_existence(file_path):
-                    raise FileNotFoundError(f"Input file {file_path} does not exist")
-                if not check_readability(file_path):
-                    raise PermissionError(f"Input file {file_path} is not readable")
-        except (FileNotFoundError, PermissionError) as e:
-            logger.error(e)
-            continue
-
-        logger.info("Executing Nextflow pipeline...")
-        try:
-            run(main_script, str(tsv_file), str(sample_output_path), str(input_dir))
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Nextflow pipeline failed: {e}")
-            continue
-
+    
 
 
 def parse_arguments():
@@ -353,6 +352,7 @@ def parse_arguments():
     # Batch subcommand
     batch_parser = subparsers.add_parser('batch', help='Run baktflow batch analysis')
     batch_parser.add_argument('--input_tsv', help='Output directory for batch analysis', required=True)
+    batch_parser.add_argument('--input_dir', help='Output directory for batch analysis', required=True)
     batch_parser.add_argument('--output', help='Output directory for batch analysis', required=True)
 
     return parser.parse_args()
