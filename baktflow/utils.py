@@ -94,38 +94,49 @@ def determine_sample_type(r1=None, r2=None, long=None, assembly=None):
 
 
 
-def convert_to_table_format(id, analysis_type, input_files):
-    """Convert input files to table format and save as a TSV file."""
-    tsv_file = "input_files.tsv"
-    with open(tsv_file, 'w') as f:
-        # Prepare the row data
-        file_1 = input_files[0] if len(input_files) > 0 else ""
-        file_2 = input_files[1] if len(input_files) > 1 else ""
-        file_3 = input_files[2] if len(input_files) > 2 else ""
+def create_tsv(sample_id, r1=None, r2=None, long=None, assembly=None, analysis_type=None, output_path='temp/temp_tsv.tsv'):
+    """
+    Create a TSV file containing sample information without headers.
+    
+    Parameters:
+    - sample_id (str): The sample identifier.
+    - r1 (str, optional): Path to the first read file.
+    - r2 (str, optional): Path to the second read file.
+    - long (str, optional): Path to the long-read file.
+    - assembly (str, optional): Path to the assembly file.
+    - analysis_type (str, optional): The determined sequencing type. If not provided, it will be inferred.
+    - output_path (str): Path to save the output TSV file.
+    
+    Output:
+    - Writes a TSV file to the specified location with the format:
+      sample_id, sequencing_type, R1_file, R2_file, long_read_file, assembly_file
+    """
+    # Determine sample type if not provided
+    if not analysis_type:
+        sample_type = determine_sample_type(r1, r2, long, assembly)
+    else:
+        sample_type = analysis_type
+
+    print(f"Debug: Sample ID: {sample_id}")
+    print(f"Debug: Sequencing Type: {sample_type}")
+
+    # Open the output file in write mode
+    with open(output_path, 'w', newline='') as f:
+        writer = csv.writer(f, delimiter='\t')
+
+        # Prepare the row to write
+        if sample_type == 'hybrid':
+            row = [sample_id, sample_type, r1 or '', r2 or '', long or '', '']
+        elif sample_type == 'illumina':
+            row = [sample_id, sample_type, r1 or '', r2 or '', '', '']
+        elif sample_type == 'long':
+            row = [sample_id, sample_type, '', '', long or '', '']
+        elif sample_type == 'assembly':
+            row = [sample_id, sample_type, '', '', '', assembly or '']
+        else:  # Default to single-end
+            row = [sample_id, 'single-end', r1 or '', '', '', '']
+
+        # Debug: Print the row that will be written
+        print(f"Debug: Row to write: {row}")
         
-        # Write the row with the determined analysis type
-        f.write(f"{id}\t{analysis_type}\t{file_1}\t{file_2}\t{file_3}\n")
-    return tsv_file
-
-
-def validate_tsv(tsv_file):
-    """Validate the TSV file format."""
-    expected_headers = ['id', 'type', 'file_1', 'file_2', 'file_3']
-    with open(tsv_file, 'r') as file:
-        reader = csv.DictReader(file, delimiter='\t')
-        headers = reader.fieldnames
-        if headers != expected_headers:
-            raise ValueError(
-                f"TSV file headers do not match expected format. Expected: {expected_headers}, Actual: {headers}")
-        for row in reader:
-            if not row['id'] or not row['type']:
-                raise ValueError("ID or type is missing in the TSV file.")
-            if row['type'] == 'illumina':
-                if not row['file_1'] or not row['file_2']:
-                    raise ValueError("For illumina type, both file_1 and file_2 must be provided.")
-            elif row['type'] == 'hybrid':
-                if not row['file_1'] or not row['file_2'] or not row['file_3']:
-                    raise ValueError("For hybrid type, file_1, file_2, and file_3 must be provided.")
-            else:
-                if not row['file_1']:
-                    raise ValueError("For long and assembly types, file_1 must be provided.")
+        writer.writerow(row)
