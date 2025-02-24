@@ -306,10 +306,15 @@ def batch_subcommand(args):
 
     logger.info(f"Temporary TSV file saved at {temp_tsv}")
     # Path to the Nextflow main script
-    main_script = Path('nextflow', 'main.nf').resolve()
+    root_path = Path(__file__).resolve().parent.parent
     # Run the Nextflow pipeline
     try:
-        run(main_script, temp_tsv, output_dir, args.input_dir)
+        run(
+            Path(root_path, 'nextflow', 'main.nf').resolve(),  # Pass main script as the first argument
+            temp_tsv,
+            output_dir,
+            args.input_dir
+        )
         logger.info("Nextflow pipeline executed successfully.")
     except Exception as e:
         logger.error(f"Error executing Nextflow pipeline: {e}")
