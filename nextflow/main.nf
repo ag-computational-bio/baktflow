@@ -2,7 +2,7 @@
 
 nextflow.enable.dsl=2
 
-params.INPUT_TSV = params.INPUT_TSV ?:  "$baseDir/../temp/modified_input.tsv"
+params.INPUT_TSV = params.INPUT_TSV ?:  "$baseDir/../temp/temp_tsv.tsv"
 
 params.OUTPUT_DIR = params.OUTPUT_DIR ?: '.'
 params.BASE_PATH = params.BASE_PATH ?: '.'
