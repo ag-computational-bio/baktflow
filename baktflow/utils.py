@@ -55,35 +55,42 @@ def check_tsv_readability(tsv_file):
         return False
     
     return True
-def determine_analysis_type(files):
-    """
-    Determine the type of sequencing analysis based on the file extensions and number of files.
+def get_baktflow_parent_dir():
+    """Dynamically get the parent directory of the 'baktflow' folder."""
+    # Get the absolute path to the current script
+    current_script_path = Path(__file__).resolve()
     
-    Args:
-        files (list): List of input file paths.
-        
-    Returns:
-        str: The inferred analysis type ('illumina', 'long', 'assembly', 'hybrid').
+    # Navigate one level up from the 'baktflow' directory to get the parent directory
+    baktflow_parent_dir = current_script_path.parent.parent  # Going up two levels from the script
+    
+    return baktflow_parent_dir
+# ------------------------------
+# SINGLE SAMPLE PROCESSING FUNCTIONS
+# ------------------------------
+
+def determine_sample_type(r1=None, r2=None, long=None, assembly=None):
     """
-    if len(files) == 1:
-        if files[0].endswith(('.fastq', '.fq', '.fastq.gz', '.fq.gz')):
-            return 'long'
-        elif files[0].endswith(('.fasta', '.fa', '.fasta.gz', '.fa.gz')):
-            return 'assembly'
-        else:
-            raise ValueError(f"Could not determine the analysis type for file: {files[0]}")
-    elif len(files) == 2:
-        if all(f.endswith(('.fastq', '.fq', '.fastq.gz', '.fq.gz')) for f in files):
-            return 'illumina'
-        else:
-            raise ValueError("Paired files should both have fastq or fq extensions.")
-    elif len(files) == 3:
-        if all(f.endswith(('.fastq', '.fq', '.fastq.gz', '.fq.gz')) for f in files):
-            return 'hybrid'
-        else:
-            raise ValueError("All three files should have fastq or fq extensions.")
+    Determine the type of sequencing data based on file names.
+    
+    Parameters:
+    - r1 (str, optional): Path to the first read file.
+    - r2 (str, optional): Path to the second read file.
+    - long (str, optional): Path to the long-read file.
+    - assembly (str, optional): Path to the assembly file.
+    
+    Returns:
+    - str: The determined sequencing type (illumina, Long, Hybrid, Assembly, or Unknown).
+    """
+    if r1 and r2 and long:
+        return 'hybrid'
+    elif r1 and r2:
+        return 'illumina'
+    elif long:
+        return 'long'
+    elif assembly:
+        return 'assembly'
     else:
-        raise ValueError("Unexpected number of files for determining the analysis type.")
+        return None
 
 
 
