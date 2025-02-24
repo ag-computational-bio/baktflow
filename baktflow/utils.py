@@ -14,44 +14,47 @@ c_reset = "\033[0m"
 
 logger = logging.getLogger(__name__)
 
-def create_directory_setup(directory):
-    """Create directory if it does not exist."""
-    if not directory.exists():
-        directory.mkdir(parents=True)
-        logger.info(f"{c_green}Created directory: {directory}{c_reset}")
-    else:
-        logger.info(f"{c_green}Directory already exists: {directory}{c_reset}")
-
-def move_setup_directory(src_dir, dst_dir):
-    """Move setup directory to a new location."""
-    src_dir.rename(dst_dir)
-    logger.info(f"{c_green}Moved setup directory to: {dst_dir}{c_reset}")
-
-def create_directory(directory_path):
-    """Create a directory if it doesn't exist."""
-    if not os.path.exists(directory_path):
-        os.makedirs(directory_path)
-        logger.info(f"Created directory: {directory_path}")
-    else:
-        logger.info(f"Directory already exists: {directory_path}")
 
 def check_existence(path: str) -> bool:
     """Check if the path exists."""
     return os.path.exists(path)
-def check_readability(path: str) -> bool:
-    """Check if the path is readable."""
-    return os.access(path, os.R_OK)
-def check_writability(path: str) -> bool:
-    """Check if the path is writable."""
-    return os.access(path, os.W_OK)
-def create_directory(output_path: str) -> None:
-    """Create the output directory if it does not exist."""
-    output_path = Path(output_path)
-    if not output_path.exists():
-        try:
-            output_path.mkdir(parents=True, exist_ok=True)
-        except Exception as e:
-            sys.exit(f'ERROR: could not resolve or create output directory ({output_path})!')
+def check_directory_accessibility(directory_path):
+    """Check if a directory exists and is accessible."""
+    directory_path = Path(directory_path)
+    return directory_path.is_dir() and directory_path.exists()
+def check_writability(directory_path):
+    """Check if a directory is writable."""
+    directory_path = Path(directory_path)  # Convert to Path object
+    test_file = directory_path / 'test_writable'
+    try:
+        # Create a test file to check writability
+        with test_file.open('w') as f:
+            pass
+        test_file.unlink()  # Remove the test file
+        return True
+    except IOError:
+        return False
+def check_tsv_readability(tsv_file):
+    """Check if the TSV file exists, is accessible, and can be read."""
+    tsv_file = Path(tsv_file)
+    
+    # Check if the file exists and is a valid file
+    if not tsv_file.exists() or not tsv_file.is_file():
+        return False
+    
+    # Try opening the file to check if it can be read
+    try:
+        with tsv_file.open('r') as f:
+            # Attempt to read the first line (simple check for file contents)
+            first_line = f.readline()
+            if not first_line:  # If the file is empty
+                return False
+    except Exception as e:
+        # If there's an error opening the file, return False
+        print(f"Error reading the TSV file: {e}")
+        return False
+    
+    return True
 def determine_analysis_type(files):
     """
     Determine the type of sequencing analysis based on the file extensions and number of files.
