@@ -231,10 +231,11 @@ def single_subcommand(args):
         return
 
     base_path = Path(__file__).parent
+    root_path = Path(__file__).resolve().parent.parent 
 
     try:
         run(
-            main=Path('nextflow', 'main.nf').resolve(),
+            main=Path(root_path,'nextflow', 'main.nf').resolve(),
             temp_tsv=tsv_path,
             sample_output_path=sample_output_path,
             base_path=base_path,
