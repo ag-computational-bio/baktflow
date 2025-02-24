@@ -7,7 +7,7 @@ import re
 import argparse
 import subprocess
 import shutil
-from utils import check_existence, check_readability, check_writability, determine_analysis_type, convert_to_table_format, validate_tsv
+from utils import check_existence, check_readability, check_writability, determine_analysis_type,create_tsv,process_tsv
 from nextflow import start, run
 
 
@@ -24,7 +24,7 @@ default_setup_dir = Path('./setup').resolve()
 
 
 def setup_subcommand(args):
-    """Setup Baktflow pipeline."""
+    """Setup Baktflow pipeline by managing Conda environments and databases"""
     logger.info("Setting up Baktflow pipeline...")
 
     # Log user-provided directory and configuration file
@@ -32,7 +32,7 @@ def setup_subcommand(args):
     logger.info(f"Configuration file: {args.config}")
 
     # Define paths for Conda and database directories
-    setup_subdir = default_setup_dir
+    setup_subdir =  Path(args.directory).resolve() if args.directory else default_setup_dir
     conda_dir = setup_subdir / 'conda_envs'
     database_dir = setup_subdir / 'databases'
 
@@ -50,103 +50,116 @@ def setup_subcommand(args):
                 shutil.move(str(default_setup_dir), str(setup_subdir))
                 logger.info(f"Moved setup directory to: {setup_subdir}")
 
-    # Create the main directories if they don't exist
+     # Ensure required directories exist; create them if they don't
     for directory in [conda_dir, database_dir]:
-        try:
-            if not directory.exists():
-                directory.mkdir(parents=True)
-                logger.info(f"Created directory: {directory}")
-        except OSError as e:
-            logger.error(f"Failed to create directory {directory}: {e}")
-            return  # Exit the setup if directory creation fails
+        if not directory.exists():
+            directory.mkdir(parents=True)
+            logger.info(f"Created directory: {directory}")
+    
+     # Check if any YAML configuration files exist in the Conda environments directory
+        yaml_files_found = False
+        for env_dir in conda_dir.iterdir():
+            if env_dir.is_dir() and list(env_dir.glob('*.yaml')):  # Look for YAML files inside each Conda env folder
+                yaml_files_found = True
+                logger.info(f"Found YAML files in: {env_dir}")
+    
+    # List existing files in Conda and database directories
+    conda_files = [file.name for file in conda_dir.iterdir() if conda_dir.exists() and any(conda_dir.iterdir())]
+    database_files = [file.name for file in database_dir.iterdir() if database_dir.exists() and any(database_dir.iterdir())]
+    
+    
+    if conda_files or database_files:
+        # Log detected existing environments and databases
+        logger.info("Existing files found:")
+        if conda_files:
+            logger.info(f"Conda Environments found: {', '.join(conda_files)}")
+        if database_files:
+            logger.info(f"Databases found: {', '.join(database_files)}")
 
-    # Define patterns for Conda environments and databases
-    conda_patterns = {
-        'fastqc': r'^fastqc-',
-        'fastp': r'^fastp-',
-        # Add more patterns as needed
-    }
-    database_patterns = {
-        'baktadb': r'^bakt-db-',
-        # Add more patterns as needed
-    }
+        # Prompt user for action: reinstall, update, or skip setup
+        response = input("Do you want to reinstall or update these environments and databases? [reinstall/update/skip]: ").strip().lower()
 
-    # Initialize flags for missing environments and databases
-    environment_missing = False
-    database_missing = False
-    existing_envs = {}
-    existing_dbs = {}
+        if response == 'reinstall':
+            # Reinstall: remove and recreate the directories
+            logger.info("Reinstalling all environments and databases...")
+            shutil.rmtree(conda_dir, ignore_errors=True)  # Delete existing Conda environments
+            conda_dir.mkdir(parents=True)  # Recreate the directory
 
-    # Check Conda environments
-    for env_name, pattern in conda_patterns.items():
-        env_dir = next((p for p in conda_dir.iterdir() if p.is_dir() and re.match(pattern, p.name)), None)
-        if env_dir and any(env_dir.iterdir()):
-            yaml_files = list(env_dir.glob('*.yaml'))
-            if yaml_files:
-                yaml_filenames = [yaml_file.name for yaml_file in yaml_files]
-                logger.info(f"Environment '{env_name}' already exists and contains the following YAML files: {', '.join(yaml_filenames)}.")
-                existing_envs[env_name] = {'env_dir': env_dir, 'yaml_files': yaml_files}
-            else:
-                logger.info(f"Environment '{env_name}' already exists but contains no YAML files.")
-        else:
-            logger.info(f"Environment '{env_name}' not found or is empty.")
-            environment_missing = True
+            shutil.rmtree(database_dir, ignore_errors=True)  # Delete existing database files
+            database_dir.mkdir(parents=True)  # Recreate the directory
+              # Run the Nextflow setup script to reinstall everything
+            try:
+                subprocess.run([
+                    'nextflow', 'run', 'setup.nf', 
+                    '--conda_dir', str(conda_dir), 
+                    '--database_dir', str(database_dir)
+                ], check=True)
+            except subprocess.CalledProcessError as e:
+                logger.error(f"Nextflow setup failed: {e}")
+                return
+            logger.info("Reinstallation complete.")
 
-    # Check databases
-    for db_name, pattern in database_patterns.items():
-        db_dir = next((p for p in database_dir.iterdir() if p.is_dir() and re.match(pattern, p.name)), None)
-        if db_dir:
-            logger.info(f"Database '{db_name}' already exists.")
-            existing_dbs[db_name] = db_dir
-        else:
-            logger.info(f"Database '{db_name}' not found.")
-            database_missing = True
+        elif response == 'update':
+            # Update: Preserve YAML files and reinstall while keeping configurations
+            logger.info("Updating environments and databases while preserving user configuration...")
 
-    # If any environment or database is missing, reinstall everything
-    if environment_missing:
-        logger.info("Some environments or databases are missing or empty. Reinstalling all environments and databases...")
+            temp_dir = Path(setup_subdir, 'temp_configs')  # Temporary directory for storing YAML files
+            temp_dir.mkdir(parents=True, exist_ok=True)
+            preserved_configs = {}
 
-        confirm = input(f"Are you sure you want to delete {conda_dir}? This will remove all environments. [y/N]: ").strip().lower()
-        if confirm == 'y':
-            if conda_dir.exists():
-                shutil.rmtree(conda_dir)
+            # Backup YAML configuration files before removal
+            for env_dir in conda_dir.iterdir():
+                if env_dir.is_dir():
+                    for yaml_file in env_dir.glob('*.yaml'):
+                        temp_file = temp_dir / yaml_file.name
+                        shutil.copy(yaml_file, temp_file)  # Copy YAML file to temp directory
+                        preserved_configs.setdefault(env_dir, []).append(temp_file)
+                        logger.info(f"Preserved YAML file '{yaml_file.name}' from '{env_dir}' to '{temp_dir}'")
+
+            # Remove old directories and reinstall everything
+            shutil.rmtree(conda_dir, ignore_errors=True)
+            shutil.rmtree(database_dir, ignore_errors=True)
             conda_dir.mkdir(parents=True)
+            database_dir.mkdir(parents=True)
 
-        # Proceed with Nextflow setup
-        setup_script = Path('nextflow', 'setup.nf').resolve()
+            try:
+                subprocess.run([
+                    'nextflow', 'run', 'setup.nf', 
+                    '--conda_dir', str(conda_dir), 
+                    '--database_dir', str(database_dir)
+                ], check=True)
+            except subprocess.CalledProcessError as e:
+                logger.error(f"Nextflow setup failed: {e}")
+                return
+
+            # Restore preserved YAML files back to the respective environment directories
+            for env_dir, yaml_files in preserved_configs.items():
+                for temp_file in yaml_files:
+                    shutil.copy(temp_file, env_dir / temp_file.name)
+                    logger.info(f"Restored YAML file '{temp_file.name}' to '{env_dir}'")
+
+            # Clean up temporary storage for YAML files
+            shutil.rmtree(temp_dir)
+            logger.info(f"Deleted temporary configuration files from '{temp_dir}'")
+
+        elif response == 'skip':
+            # Skip the setup process
+            logger.info("Skipping setup process.")
+    else:
+        # No existing files found: Install everything from scratch
+        logger.info("No existing environments or databases found. Installing from scratch...")
+
         try:
-            subprocess.run(['nextflow', 'run', str(setup_script), '-params-file', str(setup_subdir)], check=True)
+            subprocess.run([
+                'nextflow', 'run', 'setup.nf', 
+                '--conda_dir', str(conda_dir), 
+                '--database_dir', str(database_dir)
+            ], check=True)
         except subprocess.CalledProcessError as e:
             logger.error(f"Nextflow setup failed: {e}")
             return
 
-        logger.info("Reinstallation complete.")
-    else:
-        # If all environments and databases are present, ask whether to reinstall or update
-        response = input("All environments and databases already exist. Do you want to:\n1. Reinstall everything\n2. Update existing environments\n3. Skip the setup\nPlease enter 'reinstall', 'update', or 'skip': ").strip().lower()
-        
-        if response == 'reinstall':
-            logger.info("Reinstalling all environments and databases...")
 
-            # Directly remove existing environments and databases
-            confirm = input(f"Are you sure you want to delete {conda_dir} and {database_dir}? [y/N]: ").strip().lower()
-            if confirm == 'y':
-                if conda_dir.exists():
-                    shutil.rmtree(conda_dir)
-                if database_dir.exists():
-                    shutil.rmtree(database_dir)
-                conda_dir.mkdir(parents=True)
-                database_dir.mkdir(parents=True)
-
-                # Reinstall environments and databases via Nextflow setup
-                setup_script = Path('nextflow', 'setup.nf').resolve()
-                try:
-                    subprocess.run(['nextflow', 'run', str(setup_script), '-params-file', str(setup_subdir)], check=True)
-                except subprocess.CalledProcessError as e:
-                    logger.error(f"Nextflow setup failed: {e}")
-                    return
-
-            logger.info("Reinstallation complete.")
  
 def single_subcommand(args):
     """Run baktflow single analysis."""
