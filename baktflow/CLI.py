@@ -7,7 +7,7 @@ import re
 import argparse
 import subprocess
 import shutil
-from utils import check_existence, check_readability, check_writability, determine_analysis_type,create_tsv,process_tsv
+from utils import check_existence,check_directory_accessibility, check_writability, determine_sample_type,create_tsv,process_tsv,get_baktflow_parent_dir
 from nextflow import start, run
 
 
@@ -167,86 +167,90 @@ def single_subcommand(args):
     logger.info(f"Analysis ID: {args.id}")
     logger.info(f"Input file(s): {args.input}")
     logger.info(f"Output directory: {args.output}")
-    # Define the file extensions to search for
-    valid_extensions = ('.fastq', '.fq', '.fastq.gz', '.fq.gz')
-    
-    # Construct the TSV file path
-    tsv_file = Path(args.input_dir) / 'input_files.tsv'
 
-    # Get the list of input files as Path objects and filter only fastq/fq files
-    input_files = [
-        Path(args.input_dir) / f for f in os.listdir(args.input_dir)
-        if (Path(args.input_dir) / f).is_file() and f.endswith(('.fastq', '.fq', '.fastq.gz', '.fq.gz'))
-    ]
-    
-    logger.info(f"Found input files: {input_files}")
-    if not input_files:
-        logger.error(f"Make sure files have one of the following extensions: {', '.join(valid_extensions)}")
+    if not args.id or not args.output:
+        logger.error("Analysis ID and output directory are required.")
         return
+
+    input_files = [f for f in [args.r1, args.r2, args.long, args.assembly] if f]
+    if not input_files:
+        logger.error("At least one input file must be provided.")
+        return
+
+    valid_extensions = ('.fastq', '.fq', '.fastq.gz', '.fq.gz', '.fasta', '.fa', '.fa.gz')
+    for file in input_files:
+        if not file.endswith(valid_extensions):
+            logger.error(f"Invalid file extension: {file}")
+            return
     
-    # Check file existence, readability, and writability
+    
+    # Check existence, readability, and writability of input files
     try:
         for file_path in input_files:
-            if not check_existence(file_path):
+            path = Path(file_path)
+            if not check_existence(path):
                 raise FileNotFoundError(f"Input file {file_path} does not exist")
-            if not check_readability(file_path):
+            if not check_directory_accessibility(path):
                 raise PermissionError(f"Input file {file_path} is not readable")
+            if not check_writability(path):
+                raise PermissionError(f"Input file {file_path} is not writable")
     except (FileNotFoundError, PermissionError) as e:
         logger.error(e)
         return
 
-    # Create output directory if it doesn't exist
     output_path = Path(args.output)
-    if not output_path.exists():
-        output_path.mkdir(parents=True)
-        logger.info(f"{c_green}Created directory: {output_path}{c_reset}")
-    else:
-        logger.info(f"{c_green}Directory already exists: {output_path}{c_reset}")
-    # Create subdirectory for the sample ID
+    if not check_directory_accessibility(output_path):
+        logger.error(f"The output directory {args.output} does not exist or is not accessible.")
+        return
+    if not check_writability(output_path):
+        logger.error(f"The output directory {args.output} is not writable.")
+        return
+    
     sample_output_path = output_path / args.id
-    if not sample_output_path.exists():
-        sample_output_path.mkdir(parents=True)
-        logger.info(f"{c_green}Created sample directory: {sample_output_path}{c_reset}")
-    else:
-        logger.info(f"{c_green}Sample directory already exists: {sample_output_path}{c_reset}")
-    # Check if output directory is writable
-    if not check_writability(args.output):
-        logger.error(f"Output directory {args.output} is not writable")
-        return
+    sample_output_path.mkdir(parents=True, exist_ok=True)
 
-    # Determine analysis type
-    try:
-        analysis_type = determine_analysis_type(input_files)
-        logger.info(f"Analysis type: {analysis_type}")
-    except ValueError as e:
-        logger.error(f"Error determining analysis type: {e}")
-        return
 
-    # Convert input files to table format
+    temp_tsv_path = get_baktflow_parent_dir() / 'temp'
+    temp_tsv_path.mkdir(parents=True, exist_ok=True)
+    logger.info(f"Temporary directory for TSV created: {temp_tsv_path}")
+
+    sample_type = determine_sample_type(args.r1, args.r2, args.long, args.assembly)
+    tsv_path = temp_tsv_path / 'temp_tsv.tsv'  
+
     try:
-        tsv_file = convert_to_table_format(args.id, analysis_type, input_files, args.input_dir, args.output)
-        logger.info(f"Converted input to table format and saved as: {tsv_file}")
+        create_tsv(args.id, args.r1, args.r2, args.long, args.assembly, sample_type, tsv_path)
+
+        
+        if not check_existence(tsv_path):
+            logger.error(f"Failed to create the TSV file at: {tsv_path}")
+            return
+        logger.info(f"temp TSV file saved at: {tsv_path}")
+    
     except Exception as e:
-        logger.error(f"Error converting input files to table format: {e}")
+        logger.error(f"Error creating TSV: {e}")
         return
 
-    # Validate TSV
+    base_path = Path(__file__).parent
+
     try:
-        validate_tsv(tsv_file)
-    except ValueError as e:
-        logger.error(f"TSV validation failed: {e}")
-        return
+        run(
+            main=Path('nextflow', 'main.nf').resolve(),
+            temp_tsv=tsv_path,
+            sample_output_path=sample_output_path,
+            base_path=base_path,
+            nextflow_path=None  
+        )
+    except Exception as e:
+        logger.error(f"Error running Nextflow pipeline: {e}")
+    finally:
+        # Remove temp folder after Nextflow finishes
+        try:
+            shutil.rmtree(temp_tsv_path)
+            logger.info(f"Temporary directory {temp_tsv_path} removed successfully.")
+        except Exception as e:
+            logger.error(f"Failed to remove temporary directory {temp_tsv_path}: {e}")
 
-    # Path to Nextflow main script
-    main_script = Path('nextflow', 'main.nf').resolve()
 
-    # Run the Nextflow pipeline
-    logger.info("Executing Nextflow pipeline...")
-    try:
-        run(main_script, tsv_file, sample_output_path, args.input_dir)
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Nextflow pipeline failed: {e}")
-        return
 
 def batch_subcommand(args):
     """Run baktflow batch analysis."""
@@ -339,9 +343,13 @@ def parse_arguments():
     
     # Single subcommand
     single_parser = subparsers.add_parser('single', help='Run baktflow single analysis')
-    single_parser.add_argument('--input_dir', help='Input file(s) for single analysis')
-    single_parser.add_argument('--id', help='ID for a specific single analysis')
-    single_parser.add_argument('--output', help='Output directory for single analysis')
+    single_parser.add_argument('--r1', help='Input file for R1 sequencing reads (FASTQ format)', required=False)
+    single_parser.add_argument('--r2', help='Input file for R2 sequencing reads (FASTQ format)', required=False)
+    single_parser.add_argument('--long', help='Input file for long reads (FASTQ format)', required=False)
+    single_parser.add_argument('--assembly', help='Input assembly file (FASTQ format)', required=False)
+    single_parser.add_argument('--id', help='ID for a specific single analysis', required=True)
+    single_parser.add_argument('--output', help='Output directory for single analysis', required=True)
+
     # Batch subcommand
     batch_parser = subparsers.add_parser('batch', help='Run baktflow batch analysis')
     batch_parser.add_argument('--input_tsv', help='Output directory for batch analysis', required=True)
