@@ -1,0 +1,10 @@
+name: assembly_tools
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+
+  - filtlong=0.2.1  
+
+

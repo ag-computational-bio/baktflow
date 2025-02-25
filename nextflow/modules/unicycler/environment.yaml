@@ -1,0 +1,10 @@
+name: unicycler
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - unicycler=0.5.1
+
+
+
