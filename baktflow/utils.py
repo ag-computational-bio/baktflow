@@ -88,15 +88,16 @@ def determine_sample_type(r1=None, r2=None, long=None, assembly=None):
     - str: The determined sequencing type (illumina, Long, Hybrid, Assembly, or Unknown).
     """
     if r1 and r2 and long:
-        return 'hybrid'
+        sample_type = 'hybrid'
     elif r1 and r2:
-        return 'illumina'
+        sample_type = 'illumina'
     elif long:
-        return 'long'
+        sample_type = 'long'
     elif assembly:
-        return 'assembly'
+        sample_type = 'assembly'
     else:
         return None
+    return sample_type
 
 
 
