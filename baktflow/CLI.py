@@ -7,8 +7,19 @@ import re
 import argparse
 import subprocess
 import shutil
-from utils import check_existence,check_directory_accessibility, check_writability, determine_sample_type,create_tsv,process_tsv,get_baktflow_parent_dir,check_tsv_readability
-from nextflow import start, run
+
+from baktflow.utils import (
+    check_existence,
+    check_writability,
+    check_directory_accessibility,
+    determine_sample_type,
+    process_tsv,
+    create_tsv,
+    check_tsv_readability,
+    get_baktflow_parent_dir
+)
+from baktflow.nextflow import start, run
+
 
 
 logger = logging.getLogger(__name__)
