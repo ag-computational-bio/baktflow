@@ -4,6 +4,7 @@ nextflow.enable.dsl=2
 params.CONDA_ENV_DIR = "$baseDir/../setup/conda_envs"
 params.CONDA_ENV_PATH = "${params.CONDA_ENV_DIR}/unicycler"
 params.OUTPUT_DIR = "$baseDir/../output"
+params.REPORT_SCRIPT = "${workflow.projectDir}/nextflow/modules/unicycler/report.py"
 
 
 process UNICYCLER {
@@ -43,8 +44,15 @@ process UNICYCLER {
 
     mv output/assembly.gfa ${prefix}.graph.gfa
     gzip -n ${prefix}.graph.gfa
-
     mv output/unicycler.log ${meta.sample_id}_unicycler.log
+    
+    # Run report.py
+    gunzip -c ${prefix}.scaffolds.fa.gz > ${prefix}.scaffolds.fa
+
+    python ${params.Report} \\
+    --fasta ${prefix}.scaffolds.fa \\
+    --log ${meta.sample_id}_unicycler.log \\
+    --output ${params.OUTPUT_DIR}/${meta.sample_id}/unicycler
     """
 }
 
