@@ -159,7 +159,7 @@ def process_tsv(input_tsv, input_dir):
     os.makedirs(temp_folder, exist_ok=True)
 
     # Define the output file path for the processed TSV
-    output_file = os.path.join(temp_folder, 'modified_tsv.tsv')
+    output_file = os.path.join(temp_folder, 'temp_tsv.tsv')
 
     # Read the contents of the input TSV file
     try:
@@ -188,60 +188,34 @@ def process_tsv(input_tsv, input_dir):
                 print(f"Please check the data for line {idx}.")
                 return None  
 
-        # Extract sample ID, sample type, and associated file names
-        sample_id = row[0]  # First column: Sample ID
-        sample_type = row[1]  # Second column: Sample type
-        files = row[2:]  # Remaining columns: File names
-
-        # Initialize a new row for the processed data
+        sample_id, sample_type, *files = row
         new_row = [sample_id, sample_type]
 
-        # Check if the sample type is valid
         if sample_type not in sample_types:
-            print(f"Invalid sample type '{sample_type}' in row (Line {idx}): {row}")
-            user_input = input(f"Invalid sample type in Line {idx}: {row}. Do you want to skip this line? (y/n): ")
-            if user_input.lower() == 'y':
-                print(f"Skipping line {idx}...")
-                continue
-            else:
-                print(f"Please check the data for line {idx}.")
-                return None  
+            logger.warning(f"Invalid sample type '{sample_type}' in row {idx}: {row}")
+            continue  
 
-        # Process the files according to the sample type
-        if sample_type == 'illumina':
-            # Illumina samples require exactly two files: R1 and R2
-            if len(files) == illumina_files:
-                new_row.append(os.path.join(input_dir, files[0]))  # R1 file
-                new_row.append(os.path.join(input_dir, files[1]))  # R2 file
-            else:
-                continue  # Skip row if file count is incorrect
+        # Debugging: Print file paths
+        logger.debug(f"Processing row {idx}: {row}")
 
-        elif sample_type == 'long':
-            # Long-read samples require exactly one file
-            if len(files) == long_files:
-                new_row.extend(['', '', os.path.join(input_dir, files[0])])  # Add long-read file
-            else:
-                continue  # Skip row if file count is incorrect
+        # Process different sample types
+        if sample_type == 'illumina' and len(files) == illumina_files:
+            new_row.append(os.path.join(input_dir, files[0]))  # R1
+            new_row.append(os.path.join(input_dir, files[1]))  # R2
+        elif sample_type == 'long' and len(files) == long_files:
+            new_row.extend(['', '', os.path.join(input_dir, files[0])])  # Long-read file
+        elif sample_type == 'assembly' and len(files) == assembly_files:
+            new_row.extend(['', '', '', os.path.join(input_dir, files[0])])  # Assembly file
+        elif sample_type == 'hybrid' and len(files) >= hybrid_files:
+            new_row.append(os.path.join(input_dir, files[0]))
+            new_row.append(os.path.join(input_dir, files[1]))
+            new_row.append(os.path.join(input_dir, files[2]))
+        else:
+            logger.warning(f"Skipping row {idx}: Incorrect file count for type '{sample_type}'")
+            continue
 
-        elif sample_type == 'assembly':
-            # Assembly samples require exactly one file
-            if len(files) == assembly_files:
-                new_row.extend(['', '', '', os.path.join(input_dir, files[0])])  # Add assembly file
-            else:
-                continue  # Skip row if file count is incorrect
-
-        elif sample_type == 'hybrid':
-            # Hybrid samples require at least three files
-            if len(files) >= hybrid_files:
-                new_row.append(os.path.join(input_dir, files[0]))  # First file
-                new_row.append(os.path.join(input_dir, files[1]))  # Second file
-                new_row.append(os.path.join(input_dir, files[2]))  # Third file
-            else:
-                continue  # Skip row if file count is incorrect
-
-        # Add the processed row to the list
+        logger.info(f"Processed row {idx}: {new_row}")
         processed_rows.append(new_row)
-
     # If no valid rows are found, return None
     if not processed_rows:
         print("No valid rows to write to the output file.")
