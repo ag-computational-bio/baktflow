@@ -29,8 +29,11 @@ c_blue = "\033[1;34m"
 c_green = "\033[1;32m"
 c_reset = "\033[0m"
 
-# Define the root setup directory for baktflow
+# ---- Subcommand: Setup ----
 default_setup_dir = Path('./setup').resolve()
+nextflow_dir = Path(__file__).resolve().parent.parent /'nextflow_interface'
+setup_script = (nextflow_dir / 'setup.nf').resolve()
+
 
 
 
@@ -100,11 +103,7 @@ def setup_subcommand(args):
             database_dir.mkdir(parents=True)  # Recreate the directory
               # Run the Nextflow setup script to reinstall everything
             try:
-                subprocess.run([
-                    'nextflow', 'run', 'setup.nf', 
-                    '--conda_dir', str(conda_dir), 
-                    '--database_dir', str(database_dir)
-                ], check=True)
+                start(setup_script, setup_subdir, conda_dir, database_dir)
             except subprocess.CalledProcessError as e:
                 logger.error(f"Nextflow setup failed: {e}")
                 return
@@ -134,11 +133,7 @@ def setup_subcommand(args):
             database_dir.mkdir(parents=True)
 
             try:
-                subprocess.run([
-                    'nextflow', 'run', 'setup.nf', 
-                    '--conda_dir', str(conda_dir), 
-                    '--database_dir', str(database_dir)
-                ], check=True)
+                start(setup_script, setup_subdir, conda_dir, database_dir)
             except subprocess.CalledProcessError as e:
                 logger.error(f"Nextflow setup failed: {e}")
                 return
@@ -161,11 +156,7 @@ def setup_subcommand(args):
         logger.info("No existing environments or databases found. Installing from scratch...")
 
         try:
-            subprocess.run([
-                'nextflow', 'run', 'setup.nf', 
-                '--conda_dir', str(conda_dir), 
-                '--database_dir', str(database_dir)
-            ], check=True)
+            start(setup_script, setup_subdir, conda_dir, database_dir)
         except subprocess.CalledProcessError as e:
             logger.error(f"Nextflow setup failed: {e}")
             return
