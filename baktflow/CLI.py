@@ -34,6 +34,11 @@ default_setup_dir = Path('./setup').resolve()
 nextflow_dir = Path(__file__).resolve().parent.parent /'nextflow_interface'
 setup_script = (nextflow_dir / 'setup.nf').resolve()
 
+# ---- Subcommand: Single ----
+valid_extensions = ('.fastq', '.fq', '.fastq.gz', '.fq.gz', '.fasta', '.fa', '.fa.gz')
+# ---- Paths for Subcommands (Single and Batch) ----
+main_script = Path(nextflow_dir / 'main.nf').resolve()
+base_path = Path(__file__).parent
 
 
 
@@ -179,13 +184,14 @@ def single_subcommand(args):
         logger.error("At least one input file must be provided.")
         return
 
-    valid_extensions = ('.fastq', '.fq', '.fastq.gz', '.fq.gz', '.fasta', '.fa', '.fa.gz')
+    
     for file in input_files:
         if not file.endswith(valid_extensions):
             logger.error(f"Invalid file extension: {file}")
             return
+        logger.info(f"Valid file detected: {file}")
     
-    
+    sample_type = determine_sample_type(args.r1, args.r2, args.long, args.assembly)
     # Check existence, readability, and writability of input files
     try:
         for file_path in input_files:
@@ -232,17 +238,9 @@ def single_subcommand(args):
         logger.error(f"Error creating TSV: {e}")
         return
 
-    base_path = Path(__file__).parent
-    root_path = Path(__file__).resolve().parent.parent 
 
     try:
-        run(
-            main=Path(root_path,'nextflow', 'main.nf').resolve(),
-            temp_tsv=tsv_path,
-            sample_output_path=sample_output_path,
-            base_path=base_path,
-            nextflow_path=None  
-        )
+        run(main_script, tsv_path, sample_output_path, base_path)
     except Exception as e:
         logger.error(f"Error running Nextflow pipeline: {e}")
     finally:
