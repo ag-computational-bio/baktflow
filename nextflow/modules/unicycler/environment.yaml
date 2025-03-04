@@ -5,6 +5,7 @@ channels:
   - defaults
 dependencies:
   - unicycler=0.5.1
+  - python=3.8 
 
 
 
