@@ -13,11 +13,18 @@ setup(
    
     include_package_data=True,
     package_data={
-        'baktflow': ['nextflow/*']
+        'baktflow': [
+            'nextflow_baktflow/setup.nf',
+            'nextflow_baktflow/main.nf',
+            'nextflow_baktflow/modules/*',
+            'nextflow_baktflow/subworkflow/*',
+        ]
     },
     install_requires=[
-        "nextflow"
-        # Add other dependencies
+        'nextflow',
+        'pandas>=1.0.0',
+        'jinja2>=2.10',
+        'plotly>=4.0.0',
     ],
     entry_points={
         'console_scripts': [
