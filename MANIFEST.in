@@ -1,8 +1,5 @@
 include README.md
-include setup.py
-include baktflow/CLI.py
-include baktflow/__init__.py
-include baktflow/nextflow.py
-include baktflow/utils.py
-recursive-include nextflow *
+include requirements.txt
+graft nextflow_baktflow
+recursive-include baktflow *
 
