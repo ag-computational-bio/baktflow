@@ -127,27 +127,17 @@ def create_tsv(sample_id, r1=None, r2=None, long=None, assembly=None, analysis_t
     print(f"Debug: Sample ID: {sample_id}")
     print(f"Debug: Sequencing Type: {sample_type}")
 
-    # Open the output file in write mode
-    with open(output_path, 'w', newline='') as f:
-        writer = csv.writer(f, delimiter='\t')
+    row = [sample_id, sample_type, r1 or '', r2 or '', long or '', assembly or '']
+    
+    logger.info(f"TSV Row Content: {row}")
 
-        # Prepare the row to write
-        if sample_type == 'hybrid':
-            row = [sample_id, sample_type, r1 or '', r2 or '', long or '', '']
-        elif sample_type == 'illumina':
-            row = [sample_id, sample_type, r1 or '', r2 or '', '', '']
-        elif sample_type == 'long':
-            row = [sample_id, sample_type, '', '', long or '', '']
-        elif sample_type == 'assembly':
-            row = [sample_id, sample_type, '', '', '', assembly or '']
-        else:  # Default to single-end
-            row = [sample_id, 'single-end', r1 or '', '', '', '']
-
-        # Debug: Print the row that will be written
-        print(f"Debug: Row to write: {row}")
-        
-        writer.writerow(row)
-
+    try:
+        with open(output_path, 'w', newline='') as f:
+            writer = csv.writer(f, delimiter='\t')
+            writer.writerow(row)
+        logger.info(f"TSV file successfully written at: {output_path}")
+    except Exception as e:
+        logger.error(f"Error writing TSV file: {e}")
 
 
 # ------------------------------
