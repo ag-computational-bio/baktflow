@@ -1,6 +1,5 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
-include { FASTQC} from '../modules/fastqc/main.nf' 
 include { FASTP} from '../modules/fastp/main.nf' 
 include { FILTLONG} from '../modules/filtlong/main.nf' 
 include { UNICYCLER} from '../modules/unicycler/main.nf' 
@@ -16,12 +15,8 @@ workflow HYBRID_READ_PROCESSING_SUBWORKFLOW {
 
     main:
     // Perform FastQC analysis on hybrid reads
-        def ch_fastqc_results = ch_hybrid_reads.flatMap { sample ->
-            def fastqc_inputs = [tuple(sample.meta, sample.r1), tuple(sample.meta, sample.r2)]
-            if (!sample.long_reads.isEmpty()) {
-               fastqc_inputs += sample.long_reads.collect { long_read -> tuple(sample.meta, long_read) }
-            }
-            return fastqc_inputs
+        def ch_fastqc_results =ch_hybrid_reads.flatMap { sample -> 
+            [tuple(sample.meta, sample.r1), tuple(sample.meta, sample.r2)]
         } | FASTQC
 
         // Separate short and long reads
