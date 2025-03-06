@@ -14,8 +14,8 @@ process UNICYCLER {
     tuple val(meta), path(r1), path(r2), path(long_reads)
 
     output:
-    tuple val(meta), path("${meta.sample_id}_assembly.scaffolds.fa.gz"), emit: scaffolds
-    tuple val(meta), path("${meta.sample_id}_assembly.graph.gfa.gz"), emit: gfa
+    tuple val(meta), path("${meta.sample_id}_assembly.fasta"), emit: scaffolds
+    tuple val(meta), path("${meta.sample_id}_assembly.graph.gfa"), emit: gfa
     tuple val(meta), path("${meta.sample_id}_unicycler.log"), emit: log
 
     publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/unicycler", mode: 'copy'
@@ -28,29 +28,18 @@ process UNICYCLER {
 
     script:
     def prefix = "${meta.sample_id}_assembly"
-    def short_reads = "--short1 ${r1} --short2 ${r2}"
     def long_reads_option = (long_reads && long_reads.size() > 0) ? "--long ${long_reads[0]}" : ""
 
     """
-    unicycler \\
-        $short_reads \\
-        $long_reads_option \\
-        --out output \\
-        --threads $task.cpus
+    unicycler --short1 ${r1} --short2 ${r2} ${long_reads_option} --out ./ --threads 8
         
 
-    mv output/assembly.fasta ${prefix}.scaffolds.fa
-    gzip -n ${prefix}.scaffolds.fa
-
-    mv output/assembly.gfa ${prefix}.graph.gfa
-    gzip -n ${prefix}.graph.gfa
-    mv output/unicycler.log ${meta.sample_id}_unicycler.log
-    
-    # Run report.py
-    gunzip -c ${prefix}.scaffolds.fa.gz > ${prefix}.scaffolds.fa
+    mv ./assembly.fasta ${prefix}_assembly.fasta
+    mv ./assembly.gfa ${prefix}_assembly.gfa
+    mv ./unicycler.log ${prefix}_unicycler.log
 
     python ${params.REPORT_SCRIPT} \\
-    --fasta ${prefix}.scaffolds.fa \\
+    --fasta ${prefix}_assembly.fasta \\
     --log ${meta.sample_id}_unicycler.log \\
     --output ${params.OUTPUT_DIR}/${meta.sample_id}/unicycler
     """
