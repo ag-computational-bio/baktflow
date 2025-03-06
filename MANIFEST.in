@@ -2,6 +2,7 @@ include README.md
 include requirements.txt
 recursive-include nextflow_interface *.nf
 recursive-include nextflow_interface *.yaml
+recursive-include nextflow_interface *.config
 include baktflow/dashboard_template.html
 global-exclude __pycache__
 global-exclude *.pyc
