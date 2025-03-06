@@ -215,16 +215,23 @@ def single_subcommand(args):
         logger.error(e)
         return
 
+     # Output directory checks
     output_path = Path(args.output)
+    if not output_path.exists():
+        try:
+            output_path.mkdir(parents=True)
+            logger.info(f"Created output directory: {output_path}")
+        except Exception as e:
+            logger.error(f"Failed to create output directory {output_path}: {e}")
+            return
+
     if not check_directory_accessibility(output_path):
-        logger.error(f"The output directory {args.output} does not exist or is not accessible.")
+        logger.error(f"The output directory {args.output} is not accessible.")
         return
+
     if not check_writability(output_path):
         logger.error(f"The output directory {args.output} is not writable.")
         return
-    
-    sample_output_path = output_path / args.id
-    sample_output_path.mkdir(parents=True, exist_ok=True)
 
 
     temp_tsv_path = get_baktflow_parent_dir() / 'temp'
@@ -249,7 +256,7 @@ def single_subcommand(args):
 
 
     try:
-        run(main_script, tsv_path, sample_output_path, base_path)
+        run(main_script, tsv_path, output_path,base_path)
     except Exception as e:
         logger.error(f"Error running Nextflow pipeline: {e}")
     finally:
