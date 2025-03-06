@@ -8,9 +8,18 @@ import argparse
 import subprocess
 import shutil
 
-from utils import check_existence,check_directory_accessibility, check_writability, determine_sample_type,create_tsv,process_tsv,get_baktflow_parent_dir,check_tsv_readability
+from baktflow.utils import (
+    check_existence,
+    check_writability,
+    check_directory_accessibility,
+    determine_sample_type,
+    process_tsv,
+    create_tsv,
+    check_tsv_readability,
+    get_baktflow_parent_dir
+)
 from baktflow.aggregated_report import find_json_reports, generate_html_report
-from nextflow import start, run
+from baktflow.nextflow import start, run
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -20,7 +29,10 @@ c_green = "\033[1;32m"
 c_reset = "\033[0m"
 
 # ---- Subcommand: Setup ----
-default_setup_dir = Path('./setup').resolve()
+default_setup_dir = Path(__file__).resolve().parent.parent /'setup'
+nextflow_dir = Path(__file__).resolve().parent.parent /'nextflow_interface'
+setup_script = (nextflow_dir / 'setup.nf').resolve()
+
 
 # ---- Subcommand: Report ----
 current_script_path = os.path.abspath(__file__)
