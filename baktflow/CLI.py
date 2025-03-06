@@ -8,19 +8,9 @@ import argparse
 import subprocess
 import shutil
 
-from baktflow.utils import (
-    check_existence,
-    check_writability,
-    check_directory_accessibility,
-    determine_sample_type,
-    process_tsv,
-    create_tsv,
-    check_tsv_readability,
-    get_baktflow_parent_dir
-)
-from baktflow.nextflow import start, run
-
-
+from utils import check_existence,check_directory_accessibility, check_writability, determine_sample_type,create_tsv,process_tsv,get_baktflow_parent_dir,check_tsv_readability
+from baktflow.aggregated_report import find_json_reports, generate_html_report
+from nextflow import start, run
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -31,6 +21,12 @@ c_reset = "\033[0m"
 
 # ---- Subcommand: Setup ----
 default_setup_dir = Path('./setup').resolve()
+
+# ---- Subcommand: Report ----
+current_script_path = os.path.abspath(__file__)
+baktflow_dir = os.path.dirname(os.path.dirname(current_script_path))  
+aggregated_report_path = os.path.join(baktflow_dir, "baktflow", "aggregated_report.py")
+
 nextflow_dir = Path(__file__).resolve().parent.parent /'nextflow_interface'
 setup_script = (nextflow_dir / 'setup.nf').resolve()
 
@@ -39,6 +35,7 @@ valid_extensions = ('.fastq', '.fq', '.fastq.gz', '.fq.gz', '.fasta', '.fa', '.f
 # ---- Paths for Subcommands (Single and Batch) ----
 main_script = Path(nextflow_dir / 'main.nf').resolve()
 base_path = Path(__file__).parent
+
 
 
 
@@ -332,6 +329,38 @@ def batch_subcommand(args):
     except Exception as e:
         logger.error(f"Error cleaning up temporary files: {e}")
 
+
+def report_subcommand(input_dir, output_dir):
+    logger = logging.getLogger(__name__)
+
+    logger.info("Running baktflow batch...")
+    logger.info(f"Input directory: {input_dir}")
+    logger.info(f"Output directory: {output_dir}")
+
+    if not os.path.exists(aggregated_report_path):
+        logger.error(f"aggregated_report.py not found at {aggregated_report_path}")
+        return
+
+    logger.info(f"Running aggregated report from {input_dir} to {output_dir}...")
+
+    try:
+        subprocess.run(["python", aggregated_report_path, "--input_dir", input_dir, "--output_dir", output_dir], check=True)
+        logger.info("Report generation completed successfully.")
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Error while running report: {e}")
+
+    # Load the sample reports
+    sample_reports = find_json_reports(input_dir)
+
+    # If no reports are found, log and exit
+    if not sample_reports:
+        logger.warning("No sample reports found!")
+        return
+
+    # Generate the report
+    output_file = os.path.join(output_dir, "aggregated_report.html")
+    generate_html_report(sample_reports, output_file)
+
     
 
 
@@ -360,6 +389,12 @@ def parse_arguments():
     batch_parser.add_argument('--input_tsv', help='Output directory for batch analysis', required=True)
     batch_parser.add_argument('--input_dir', help='Output directory for batch analysis', required=True)
     batch_parser.add_argument('--output', help='Output directory for batch analysis', required=True)
+     
+    # Subcommand for processing aggregated reports
+    report_parser = subparsers.add_parser('report', help='Generate an aggregated report from output directory')
+    report_parser.add_argument('--input_dir', required=True, help='Path to the input directory containing report files')
+    report_parser.add_argument('--output_dir', required=True, help='Path to the output directory for the report')
+  
 
     return parser.parse_args()
 def main():
@@ -371,6 +406,9 @@ def main():
         single_subcommand(args)
     elif args.subcommand == 'batch':
         batch_subcommand(args)
+    elif args.subcommand == 'report':
+        # Pass all required arguments to report_subcommand
+        report_subcommand(args.input_dir, args.output_dir)
     else:
         logger.error("No subcommand provided. Use --help for usage information.")
 

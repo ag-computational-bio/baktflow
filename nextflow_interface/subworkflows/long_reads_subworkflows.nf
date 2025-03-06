@@ -11,8 +11,7 @@ workflow LONG_READ_PROCESSING_SUBWORKFLOW {
     ch_long_reads
 
     main:
-    
-    // Step 1: Filter long reads
+  // Step 1: Filter long reads
     def ch_filtered_long_reads = FILTLONG(ch_long_reads.flatMap { it.long_reads.collect { long_file -> tuple(it.meta, long_file) } })
     def long_reads_for_assembly = ch_filtered_long_reads.filtered_long_reads
 

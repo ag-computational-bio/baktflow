@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sample Report Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            text-align: center;
+        }
+        .container {
+            margin: 20px;
+        }
+        h2 {
+            color: #007bff;
+        }
+        table {
+            width: 100%;
+            margin: 20px 0;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f1f1f1;
+        }
+        .module-summary {
+            margin-top: 40px;
+        }
+        .plot-container {
+            text-align: center;
+        }
+        .unicycler-table {
+            width: 100%;
+            border: 1px solid #ddd;
+        }
+        .gc-histogram, .gc-fastp-plot, .gc-fastqc-plot {
+            width: 80%;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Sample Report Dashboard</h1>
+    </header>
+
+    <div class="container">
+        <!-- Sample and Module Select Dropdowns -->
+        <div>
+            <label for="sample-select">Select Sample:</label>
+            <select id="sample-select">
+                <option value="">-- Select Sample --</option>
+                {% for sample in sample_reports %}
+                    <option value="{{ sample.sample_name }}">{{ sample.sample_name }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="module-select">Select Module:</label>
+            <select id="module-select">
+                <option value="">-- Select Module --</option>
+            </select>
+        </div>
+
+        <div id="sample-reports">
+            {% for sample in sample_reports %}
+                <section class="sample" data-sample="{{ sample.sample_name }}" style="display: none;">
+                    <h2>Sample: {{ sample.sample_name }}</h2>
+
+                    {% for module, module_data in sample.modules.items() %}
+                        <div class="module" data-module="{{ module }}">
+                            <div class="module-summary">
+                                <h3>Module: {{ module }}</h3>
+                                
+                                {% if module_data.before_after_filtering_summary %}
+                                    <h4>FastP Summary (Before and After Filtering)</h4>
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Metric</th>
+                                                <th>Before Filtering</th>
+                                                <th>After Filtering</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for metric, before, after in module_data.zipped_fastp_summary %}
+                                                <tr>
+                                                    <td>{{ metric }}</td>
+                                                    <td>{{ before }}</td>
+                                                    <td>{{ after }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                {% endif %}
+
+                                {% if module_data.gc_fastp_plot %}
+                                    <h4>GC Content Histogram (FastP)</h4>
+                                    <div class="plot-container">
+                                        <div class="gc-fastp-plot">
+                                            {{ module_data.gc_fastp_plot|safe }}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                
+                                {% if module_data.filtering_summary %}
+                                    <h4>FastP Filtering Summary</h4>
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Metric</th>
+                                                <th>Count</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for entry in module_data.filtering_summary %}
+                                                <tr>
+                                                    <td>{{ entry.Metric }}</td>
+                                                    <td>{{ entry.Count }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                {% endif %}
+
+                                {% if module_data.unicycler_table %}
+                                    <h4>Unicycler Contig Table</h4>
+                                    <div class="table-container">
+                                        {{ module_data.unicycler_table|safe }}
+                                    </div>
+                                {% endif %}
+
+                                {% if module_data.unicycler_summary %}
+                                    <h4>Unicycler Summary</h4>
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Metric</th>
+                                                <th>Value</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>N50</td>
+                                                <td>{{ module_data.unicycler_summary.n50 }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Total Contigs</td>
+                                                <td>{{ module_data.unicycler_summary['Total Contigs'] }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                {% endif %}
+
+                                {% if module_data.unicycler_gc_plot %}
+                                    <h4>GC Content Histogram (Unicycler)</h4>
+                                    <div class="plot-container">
+                                        <div class="gc-histogram">
+                                            {{ module_data.unicycler_gc_plot|safe }}
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                                <!-- FastQC Summary Section -->
+                                {% if module_data.fastqc_summary %}
+                                    <h4>FastQC Summary</h4>
+                                    <div class="table-container">
+                                        {{ module_data.fastqc_summary | replace("\n", "") | safe }}
+                                    </div>
+                                {% endif %}
+
+                            </div>
+                        </div>
+                    {% endfor %}
+                </section>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const sampleSelect = document.getElementById("sample-select");
+            const moduleSelect = document.getElementById("module-select");
+            const samples = document.querySelectorAll(".sample");
+
+            sampleSelect.addEventListener("change", function () {
+                let selectedSample = this.value;
+                moduleSelect.innerHTML = '<option value="">-- Select Module --</option>';
+
+                samples.forEach(sample => {
+                    if (sample.getAttribute("data-sample") === selectedSample) {
+                        sample.style.display = "block";
+                        let modules = sample.querySelectorAll(".module");
+                        modules.forEach(module => {
+                            let moduleName = module.getAttribute("data-module");
+                            let option = document.createElement("option");
+                            option.value = moduleName;
+                            option.textContent = moduleName;
+                            moduleSelect.appendChild(option);
+                        });
+                    } else {
+                        sample.style.display = "none";
+                    }
+                });
+            });
+
+            moduleSelect.addEventListener("change", function () {
+                let selectedModule = this.value;
+                samples.forEach(sample => {
+                    let modules = sample.querySelectorAll(".module");
+                    modules.forEach(module => {
+                        module.style.display = module.getAttribute("data-module") === selectedModule ? "block" : "none";
+                    });
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>
