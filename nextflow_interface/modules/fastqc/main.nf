@@ -23,6 +23,8 @@ process FASTQC {
     conda "${params.CONDA_ENV_PATH}"
     errorStrategy { task.attempt <= 3 ? 'retry' : 'ignore' }  // Retry up to 3 times, then ignore
     maxRetries 3  // Ensure maxRetries is set to allow up to 3 retries 
+    cpus 8
+    memory '16GB'
 
     script:
     """
@@ -30,7 +32,7 @@ process FASTQC {
     fastqc ${reads} -o fastqc
     cp fastqc/*_fastqc.html ${reads.baseName}_fastqc.html
     cp fastqc/*_fastqc.zip ${reads.baseName}_fastqc.zip
-     # Run report.py with correct arguments
+    # Run report.py with correct arguments
     python ${params.REPORT_SCRIPT} --zip ${reads.baseName}_fastqc.zip --output ${params.OUTPUT_DIR}/${meta.sample_id}/fastqc
     """
 }
