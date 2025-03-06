@@ -39,11 +39,15 @@ def create_json_report(input_filename, fastqc_txt_content, output_dir):
         'Filename': input_filename  # Set the input filename in the JSON report
     }
 
-    # Create the output directory if it doesn't exist
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    # Clean base filename and remove '_fastqc' suffix
+    base_filename = os.path.basename(input_filename).replace('_fastqc', '').replace('.zip', '')
+
+     # Normalize sample names for paired-end reads 
+    if base_filename.endswith("_1") or base_filename.endswith("_2"):
+        base_filename = base_filename.rsplit("_", 1)[0]
+
     
-    # Save the JSON report with the full filename (e.g., 7620_1.fastq_fastqc.json)
+    # Save the JSON report with the full filename 
     json_output_path = os.path.join(output_dir, f'{input_filename}.json')
     
     # Save the JSON report
@@ -77,11 +81,11 @@ def process_zip_files(zip_files, output_dir):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--zips', nargs='+', required=True, help='List of FastQC ZIP files to process')
+    parser.add_argument('--zip', nargs='+', required=True, help='List of FastQC ZIP files to process')
     parser.add_argument('--output', required=True, help='Directory to save the JSON reports')
     args = parser.parse_args()
 
-    zip_files = args.zips
+    zip_files = args.zip
     output_dir = args.output
     
     process_zip_files(zip_files, output_dir)
