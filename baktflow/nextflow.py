@@ -1,6 +1,7 @@
 import subprocess
 import logging
 import os
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 c_blue = "\033[1;34m"
@@ -8,9 +9,8 @@ c_green = "\033[1;32m"
 c_reset = "\033[0m"
 
 
-def start(setup_script, config_file=None, nextflow_path=None):
-    """Run the Nextflow setup script."""
-    logger.info("Running Nextflow setup script...")
+def start(setup_script, setup_dir, conda_dir, database_dir, nextflow_path=None):
+    """Run Nextflow setup script."""
     
     # Use a default nextflow_path if not provided
     if nextflow_path is None:
@@ -25,16 +25,33 @@ def start(setup_script, config_file=None, nextflow_path=None):
         logger.error(f"Nextflow not found at {nextflow_path}. Please provide a valid path.")
         return
     
-    nextflow_cmd = f"{nextflow_path} run {setup_script}"
-    if config_file:
-        nextflow_cmd += f" -c {config_file}"
+    root_path = Path(__file__).resolve().parent.parent 
+            
+    # Dynamically determine the path to the setup.nf script
+    setup_script_path = os.path.join(root_path, 'nextflow', setup_script)  # Pointing to 'nextflow/setup.nf'
     
+    if not os.path.exists(setup_script_path):
+        logger.error(f"Cannot find script file: {setup_script_path}")
+        return
+    
+    # Construct the Nextflow command
+    nextflow_cmd = f"{nextflow_path} run {setup_script_path} -profile standard"
+
     try:
-        subprocess.run(nextflow_cmd, check=True, shell=True)
-        logger.info("Nextflow setup script completed successfully.")
+        # Set up Conda and database directories
+        env = os.environ.copy()
+        env['CONDA_ENVS_PATH'] = str(conda_dir)
+        env['DATABASE_DIR'] = str(database_dir)
+
+        # Execute the Nextflow command
+        subprocess.run(nextflow_cmd, check=True, shell=True, cwd=str(setup_dir), env=env)
+        
     except subprocess.CalledProcessError as e:
         logger.error(f"Nextflow setup script failed: {e}")
         raise
+
+
+
 
 def run(main, temp_tsv, sample_output_path, base_path,nextflow_path=None):
     """Run Nextflow pipeline script."""
