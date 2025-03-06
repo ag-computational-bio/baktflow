@@ -88,15 +88,16 @@ def determine_sample_type(r1=None, r2=None, long=None, assembly=None):
     - str: The determined sequencing type (illumina, Long, Hybrid, Assembly, or Unknown).
     """
     if r1 and r2 and long:
-        return 'hybrid'
+        sample_type = 'hybrid'
     elif r1 and r2:
-        return 'illumina'
+        sample_type = 'illumina'
     elif long:
-        return 'long'
+        sample_type = 'long'
     elif assembly:
-        return 'assembly'
+        sample_type = 'assembly'
     else:
         return None
+    return sample_type
 
 
 
@@ -126,27 +127,17 @@ def create_tsv(sample_id, r1=None, r2=None, long=None, assembly=None, analysis_t
     print(f"Debug: Sample ID: {sample_id}")
     print(f"Debug: Sequencing Type: {sample_type}")
 
-    # Open the output file in write mode
-    with open(output_path, 'w', newline='') as f:
-        writer = csv.writer(f, delimiter='\t')
+    row = [sample_id, sample_type, r1 or '', r2 or '', long or '', assembly or '']
+    
+    logger.info(f"TSV Row Content: {row}")
 
-        # Prepare the row to write
-        if sample_type == 'hybrid':
-            row = [sample_id, sample_type, r1 or '', r2 or '', long or '', '']
-        elif sample_type == 'illumina':
-            row = [sample_id, sample_type, r1 or '', r2 or '', '', '']
-        elif sample_type == 'long':
-            row = [sample_id, sample_type, '', '', long or '', '']
-        elif sample_type == 'assembly':
-            row = [sample_id, sample_type, '', '', '', assembly or '']
-        else:  # Default to single-end
-            row = [sample_id, 'single-end', r1 or '', '', '', '']
-
-        # Debug: Print the row that will be written
-        print(f"Debug: Row to write: {row}")
-        
-        writer.writerow(row)
-
+    try:
+        with open(output_path, 'w', newline='') as f:
+            writer = csv.writer(f, delimiter='\t')
+            writer.writerow(row)
+        logger.info(f"TSV file successfully written at: {output_path}")
+    except Exception as e:
+        logger.error(f"Error writing TSV file: {e}")
 
 
 # ------------------------------
@@ -168,7 +159,7 @@ def process_tsv(input_tsv, input_dir):
     os.makedirs(temp_folder, exist_ok=True)
 
     # Define the output file path for the processed TSV
-    output_file = os.path.join(temp_folder, 'modified_tsv.tsv')
+    output_file = os.path.join(temp_folder, 'temp_tsv.tsv')
 
     # Read the contents of the input TSV file
     try:
@@ -197,60 +188,34 @@ def process_tsv(input_tsv, input_dir):
                 print(f"Please check the data for line {idx}.")
                 return None  
 
-        # Extract sample ID, sample type, and associated file names
-        sample_id = row[0]  # First column: Sample ID
-        sample_type = row[1]  # Second column: Sample type
-        files = row[2:]  # Remaining columns: File names
-
-        # Initialize a new row for the processed data
+        sample_id, sample_type, *files = row
         new_row = [sample_id, sample_type]
 
-        # Check if the sample type is valid
         if sample_type not in sample_types:
-            print(f"Invalid sample type '{sample_type}' in row (Line {idx}): {row}")
-            user_input = input(f"Invalid sample type in Line {idx}: {row}. Do you want to skip this line? (y/n): ")
-            if user_input.lower() == 'y':
-                print(f"Skipping line {idx}...")
-                continue
-            else:
-                print(f"Please check the data for line {idx}.")
-                return None  
+            logger.warning(f"Invalid sample type '{sample_type}' in row {idx}: {row}")
+            continue  
 
-        # Process the files according to the sample type
-        if sample_type == 'illumina':
-            # Illumina samples require exactly two files: R1 and R2
-            if len(files) == illumina_files:
-                new_row.append(os.path.join(input_dir, files[0]))  # R1 file
-                new_row.append(os.path.join(input_dir, files[1]))  # R2 file
-            else:
-                continue  # Skip row if file count is incorrect
+        # Debugging: Print file paths
+        logger.debug(f"Processing row {idx}: {row}")
 
-        elif sample_type == 'long':
-            # Long-read samples require exactly one file
-            if len(files) == long_files:
-                new_row.extend(['', '', os.path.join(input_dir, files[0])])  # Add long-read file
-            else:
-                continue  # Skip row if file count is incorrect
+        # Process different sample types
+        if sample_type == 'illumina' and len(files) == illumina_files:
+            new_row.append(os.path.join(input_dir, files[0]))  # R1
+            new_row.append(os.path.join(input_dir, files[1]))  # R2
+        elif sample_type == 'long' and len(files) == long_files:
+            new_row.extend(['', '', os.path.join(input_dir, files[0])])  # Long-read file
+        elif sample_type == 'assembly' and len(files) == assembly_files:
+            new_row.extend(['', '', '', os.path.join(input_dir, files[0])])  # Assembly file
+        elif sample_type == 'hybrid' and len(files) >= hybrid_files:
+            new_row.append(os.path.join(input_dir, files[0]))
+            new_row.append(os.path.join(input_dir, files[1]))
+            new_row.append(os.path.join(input_dir, files[2]))
+        else:
+            logger.warning(f"Skipping row {idx}: Incorrect file count for type '{sample_type}'")
+            continue
 
-        elif sample_type == 'assembly':
-            # Assembly samples require exactly one file
-            if len(files) == assembly_files:
-                new_row.extend(['', '', '', os.path.join(input_dir, files[0])])  # Add assembly file
-            else:
-                continue  # Skip row if file count is incorrect
-
-        elif sample_type == 'hybrid':
-            # Hybrid samples require at least three files
-            if len(files) >= hybrid_files:
-                new_row.append(os.path.join(input_dir, files[0]))  # First file
-                new_row.append(os.path.join(input_dir, files[1]))  # Second file
-                new_row.append(os.path.join(input_dir, files[2]))  # Third file
-            else:
-                continue  # Skip row if file count is incorrect
-
-        # Add the processed row to the list
+        logger.info(f"Processed row {idx}: {new_row}")
         processed_rows.append(new_row)
-
     # If no valid rows are found, return None
     if not processed_rows:
         print("No valid rows to write to the output file.")

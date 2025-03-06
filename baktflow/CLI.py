@@ -7,10 +7,10 @@ import re
 import argparse
 import subprocess
 import shutil
+
 from utils import check_existence,check_directory_accessibility, check_writability, determine_sample_type,create_tsv,process_tsv,get_baktflow_parent_dir,check_tsv_readability
 from baktflow.aggregated_report import find_json_reports, generate_html_report
 from nextflow import start, run
-
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -19,12 +19,24 @@ c_blue = "\033[1;34m"
 c_green = "\033[1;32m"
 c_reset = "\033[0m"
 
-# Define the root setup directory for baktflow
+# ---- Subcommand: Setup ----
 default_setup_dir = Path('./setup').resolve()
+
 # ---- Subcommand: Report ----
 current_script_path = os.path.abspath(__file__)
 baktflow_dir = os.path.dirname(os.path.dirname(current_script_path))  
 aggregated_report_path = os.path.join(baktflow_dir, "baktflow", "aggregated_report.py")
+
+nextflow_dir = Path(__file__).resolve().parent.parent /'nextflow_interface'
+setup_script = (nextflow_dir / 'setup.nf').resolve()
+
+# ---- Subcommand: Single ----
+valid_extensions = ('.fastq', '.fq', '.fastq.gz', '.fq.gz', '.fasta', '.fa', '.fa.gz')
+# ---- Paths for Subcommands (Single and Batch) ----
+main_script = Path(nextflow_dir / 'main.nf').resolve()
+base_path = Path(__file__).parent
+
+
 
 
 def setup_subcommand(args):
@@ -93,11 +105,7 @@ def setup_subcommand(args):
             database_dir.mkdir(parents=True)  # Recreate the directory
               # Run the Nextflow setup script to reinstall everything
             try:
-                subprocess.run([
-                    'nextflow', 'run', 'setup.nf', 
-                    '--conda_dir', str(conda_dir), 
-                    '--database_dir', str(database_dir)
-                ], check=True)
+                start(setup_script, setup_subdir, conda_dir, database_dir)
             except subprocess.CalledProcessError as e:
                 logger.error(f"Nextflow setup failed: {e}")
                 return
@@ -127,11 +135,7 @@ def setup_subcommand(args):
             database_dir.mkdir(parents=True)
 
             try:
-                subprocess.run([
-                    'nextflow', 'run', 'setup.nf', 
-                    '--conda_dir', str(conda_dir), 
-                    '--database_dir', str(database_dir)
-                ], check=True)
+                start(setup_script, setup_subdir, conda_dir, database_dir)
             except subprocess.CalledProcessError as e:
                 logger.error(f"Nextflow setup failed: {e}")
                 return
@@ -154,11 +158,7 @@ def setup_subcommand(args):
         logger.info("No existing environments or databases found. Installing from scratch...")
 
         try:
-            subprocess.run([
-                'nextflow', 'run', 'setup.nf', 
-                '--conda_dir', str(conda_dir), 
-                '--database_dir', str(database_dir)
-            ], check=True)
+            start(setup_script, setup_subdir, conda_dir, database_dir)
         except subprocess.CalledProcessError as e:
             logger.error(f"Nextflow setup failed: {e}")
             return
@@ -181,13 +181,14 @@ def single_subcommand(args):
         logger.error("At least one input file must be provided.")
         return
 
-    valid_extensions = ('.fastq', '.fq', '.fastq.gz', '.fq.gz', '.fasta', '.fa', '.fa.gz')
+    
     for file in input_files:
         if not file.endswith(valid_extensions):
             logger.error(f"Invalid file extension: {file}")
             return
+        logger.info(f"Valid file detected: {file}")
     
-    
+    sample_type = determine_sample_type(args.r1, args.r2, args.long, args.assembly)
     # Check existence, readability, and writability of input files
     try:
         for file_path in input_files:
@@ -234,17 +235,9 @@ def single_subcommand(args):
         logger.error(f"Error creating TSV: {e}")
         return
 
-    base_path = Path(__file__).parent
-    root_path = Path(__file__).resolve().parent.parent 
 
     try:
-        run(
-            main=Path(root_path,'nextflow', 'main.nf').resolve(),
-            temp_tsv=tsv_path,
-            sample_output_path=sample_output_path,
-            base_path=base_path,
-            nextflow_path=None  
-        )
+        run(main_script, tsv_path, sample_output_path, base_path)
     except Exception as e:
         logger.error(f"Error running Nextflow pipeline: {e}")
     finally:
