@@ -18,7 +18,7 @@ process FASTP {
     tuple val(meta), path('*.html'), emit: html
     errorStrategy 'retry'  // Retry on failure
     publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/fastp", mode: 'copy'
-    conda params.CONDA_ENV_PATH
+    conda "${params.CONDA_ENV_PATH}"
     errorStrategy { task.attempt <= 3 ? 'retry' : 'ignore' }  // Retry up to 3 times, then ignore
     maxRetries 3  // Ensure maxRetries is set to allow up to 3 retries
     cpus 8
