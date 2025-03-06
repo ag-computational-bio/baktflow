@@ -1,5 +1,9 @@
 include README.md
 include requirements.txt
-graft nextflow_baktflow
-recursive-include baktflow *
+recursive-include nextflow_interface *.nf
+recursive-include nextflow_interface *.yaml
+include baktflow/dashboard_template.html
+global-exclude __pycache__
+global-exclude *.pyc
+
 
