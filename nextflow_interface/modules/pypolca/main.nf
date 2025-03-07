@@ -22,7 +22,7 @@ process PYPOLCA {
 
     script:
     """
-    pypolca run -a ${input_fasta} -1 ${r1} -2 ${r2} -o ${meta.sample_id}_pypolca --prefix ${meta.sample_id}
+    pypolca run -a ${input_fasta} -1 ${r1} -2 ${r2} -o ${meta.sample_id}_pypolca --prefix ${meta.sample_id} --threads ${task.cpu}
     mv ${meta.sample_id}_pypolca/${meta.sample_id}_corrected.fasta ${meta.sample_id}_pypolca.fasta
     mv ${meta.sample_id}_pypolca/${meta.sample_id}.report ${meta.sample_id}_pypolca.report
     """
