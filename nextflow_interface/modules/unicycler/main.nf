@@ -4,7 +4,7 @@ nextflow.enable.dsl=2
 params.CONDA_ENV_DIR = "$baseDir/../setup/conda_envs"
 params.CONDA_ENV_PATH = "${params.CONDA_ENV_DIR}/unicycler"
 params.OUTPUT_DIR = "$baseDir/../output"
-params.REPORT_SCRIPT = "$baseDir/nextflow/modules/unicycler/report.py"
+params.REPORT_SCRIPT = "$baseDir/modules/unicycler/report.py"
 
 
 process UNICYCLER {
@@ -14,9 +14,9 @@ process UNICYCLER {
     tuple val(meta), path(r1), path(r2), path(long_reads)
 
     output:
-    tuple val(meta), path("${meta.sample_id}.fasta"), emit: scaffolds
-    tuple val(meta), path("${meta.sample_id}.gfa"), emit: gfa
-    tuple val(meta), path("${meta.sample_id}.log"), emit: log
+    tuple val(meta), path("${meta.sample_id}_assembly.fasta"), emit: scaffolds
+    tuple val(meta), path("${meta.sample_id}_assembly.gfa"), emit: gfa
+    tuple val(meta), path("${meta.sample_id}_assembly.log"), emit: log
 
     publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/unicycler", mode: 'copy'
     conda "${params.CONDA_ENV_PATH}"
