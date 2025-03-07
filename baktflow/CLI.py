@@ -21,6 +21,7 @@ from baktflow.utils import (
 from baktflow.aggregated_report import find_json_reports, generate_html_report
 from baktflow.nextflow import start, run
 
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 # Define color codes
@@ -181,7 +182,7 @@ def single_subcommand(args):
     """Run baktflow single analysis."""
     logger.info("Running baktflow single...")
     logger.info(f"Analysis ID: {args.id}")
-    logger.info(f"Input file(s): {args.input}")
+
     logger.info(f"Output directory: {args.output}")
 
     if not args.id or not args.output:
@@ -207,10 +208,7 @@ def single_subcommand(args):
             path = Path(file_path)
             if not check_existence(path):
                 raise FileNotFoundError(f"Input file {file_path} does not exist")
-            if not check_directory_accessibility(path):
-                raise PermissionError(f"Input file {file_path} is not readable")
-            if not check_writability(path):
-                raise PermissionError(f"Input file {file_path} is not writable")
+
     except (FileNotFoundError, PermissionError) as e:
         logger.error(e)
         return
