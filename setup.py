@@ -15,12 +15,11 @@ setup(
         'jinja2>=2.10',
         'plotly>=4.0.0',
     ],
+    python_requires='>=3.6',
     entry_points={
         'console_scripts': [
             'baktflow = baktflow.CLI:main',
         ],
     },
 
-    
-    python_requires='>=3.8',
 )
