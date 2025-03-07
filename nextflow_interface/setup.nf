@@ -40,7 +40,7 @@ workflow {
     SETUP_BAKTA()
 
 
-
+}
 
 workflow.onComplete {
     log.info "${ANSI_GREEN}${ANSI_BOLD}${''.center(60, '=')}${ANSI_RESET}"
