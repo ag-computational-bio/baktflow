@@ -15,8 +15,8 @@ process FASTQC {
     tuple val(meta), path(reads)
 
     output:
-    tuple val(meta), path("${reads.baseName}_fastqc.html"), emit: html
-    tuple val(meta), path("${reads.baseName}_fastqc.zip"), emit: zip
+    tuple val(meta), path("${reads.baseName}.html"), emit: html
+    tuple val(meta), path("${reads.baseName}.zip"), emit: zip
 
     publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/fastqc", mode: 'copy'
 
@@ -29,7 +29,7 @@ process FASTQC {
     script:
     """
     
-    fastqc ${reads} -o ./ --threads ${task.cpu}
+    fastqc ${reads} -o ./ --threads $task.cpus
     mv *fastqc.html ${reads.baseName}.html
     mv *fastqc.zip ${reads.baseName}.zip
 
