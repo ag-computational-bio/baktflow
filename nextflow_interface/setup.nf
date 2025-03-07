@@ -1,5 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
+
 params.CONDA_ENVS_PATH = "$baseDir/../setup/conda_envs"
 params.DATABASE_DIR = "$baseDir/../setup/databases"
 
@@ -38,7 +39,7 @@ workflow {
     SETUP_DNAAPLER()
     SETUP_BAKTA()
 
-}
+
 
 
 workflow.onComplete {

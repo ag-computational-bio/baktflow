@@ -11,9 +11,10 @@ process SETUP_FASTP {
     script:
     """
     echo 'Starting mamba environment setup...'
-     echo "Conda environments path: ${params.FASTP_ENV_PATH}"
+    echo "Conda environments path: ${params.FASTP_ENV_PATH}"
     mamba env create -p ${params.FASTP_ENV_PATH} -f ${params.FASTP_ENV_FILE} -v
     echo 'Finished mamba environment setup.'
+
     """
 }
 
