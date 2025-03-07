@@ -7,9 +7,9 @@ params.INPUT_TSV = params.INPUT_TSV ?:  "$baseDir/../temp/modified_input.tsv"
 params.OUTPUT_DIR = params.OUTPUT_DIR ?: '.'
 params.BASE_PATH = params.BASE_PATH ?: '.'
 
-include { HYBRID_READ_PROCESSING_SUBWORKFLOW } from './subworkflow/hybrid_reads_subworkflows.nf'
-include { SHORT_READ_PROCESSING_SUBWORKFLOW } from './subworkflow/short_reads_subworkflows.nf'
-include { LONG_READ_PROCESSING_SUBWORKFLOW } from './subworkflow/long_reads_subworkflows.nf'
+include { HYBRID_READ_PROCESSING_SUBWORKFLOW } from './subworkflows/hybrid_reads_subworkflows.nf'
+include { SHORT_READ_PROCESSING_SUBWORKFLOW } from './subworkflows/short_reads_subworkflows.nf'
+include { LONG_READ_PROCESSING_SUBWORKFLOW } from './subworkflows/long_reads_subworkflows.nf'
 include {BAKTA} from './modules/bakta/main.nf' 
 log.info """
     BAKTFLOW   P I P E L I N E
