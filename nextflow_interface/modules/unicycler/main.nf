@@ -16,7 +16,7 @@ process UNICYCLER {
     output:
     tuple val(meta), path("${meta.sample_id}_assembly.fasta"), emit: scaffolds
     tuple val(meta), path("${meta.sample_id}_assembly.gfa"), emit: gfa
-    tuple val(meta), path("${meta.sample_id}_assembly.log"), emit: log
+    tuple val(meta), path("${meta.sample_id}_unicycler.log"), emit: log
 
     publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/unicycler", mode: 'copy'
     conda "${params.CONDA_ENV_PATH}"
