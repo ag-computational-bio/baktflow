@@ -298,16 +298,10 @@ def batch_subcommand(args):
         logger.error(f"The output directory {args.output} is not writable.")
         return
 
-    try:
-        df = pd.read_csv(tsv_file, sep='\t', header=None)
-        logger.info("TSV file successfully read into DataFrame.")
-    except Exception as e:
-        logger.error(f"Error reading TSV file: {e}")
-        return
-    
-     # Ensure the output directory exists
+     
     output_dir.mkdir(parents=True, exist_ok=True)
-    logger.info(f"Using output directory: {output_dir}")
+    logger.info(f"Sample Output Directory Created: {output_dir}")
+   
 
     # Process the TSV file and generate a temporary TSV file
     temp_tsv = process_tsv(args.input_tsv, args.input_dir)
@@ -319,12 +313,11 @@ def batch_subcommand(args):
     temp_folder = temp_tsv.parent  # Get the parent directory (temporary folder)
 
     logger.info(f"Temporary TSV file saved at {temp_tsv}")
-    # Path to the Nextflow main script
-    root_path = Path(__file__).resolve().parent.parent
+ 
     # Run the Nextflow pipeline
     try:
         run(
-            Path(root_path, 'nextflow', 'main.nf').resolve(),  # Pass main script as the first argument
+            main_script,
             temp_tsv,
             output_dir,
             args.input_dir
