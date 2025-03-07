@@ -34,7 +34,8 @@ process FILTLONG {
         --min_length ${params.filtlong_min_length} \\
         --keep_percent ${params.filtlong_keep_percent} \\
         --target_bases ${params.filtlong_target_bases} \\
-        --verbose ${long_reads} 2> ${meta.sample_id}_filtlong.log | gzip > ${meta.sample_id}_filtered.fastq.gz
+        --verbose ${long_reads}\\
+        --threads ${task.cpu} 2> ${meta.sample_id}_filtlong.log | gzip > ${meta.sample_id}_filtered.fastq.gz
     """
 }
 
