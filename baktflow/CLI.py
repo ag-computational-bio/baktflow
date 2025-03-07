@@ -214,23 +214,22 @@ def single_subcommand(args):
         return
 
      # Output directory checks
-    output_path = Path(args.output)
-    if not output_path.exists():
+    output = Path(args.output)   
+    if not output.exists():
         try:
-            output_path.mkdir(parents=True)
-            logger.info(f"Created output directory: {output_path}")
+            output.mkdir(parents=True)  # Create the directory if it doesn't exist
+            logger.info(f"Created output directory: {output}")
         except Exception as e:
-            logger.error(f"Failed to create output directory {output_path}: {e}")
+            logger.error(f"Failed to create output directory {output}: {e}")
             return
-
-    if not check_directory_accessibility(output_path):
-        logger.error(f"The output directory {args.output} is not accessible.")
-        return
-
-    if not check_writability(output_path):
+    elif not check_writability(output):
         logger.error(f"The output directory {args.output} is not writable.")
         return
+    else:
+        logger.info(f"Output directory already exists: {output}")
 
+    final_output_dir = output
+  
 
     temp_tsv_path = get_baktflow_parent_dir() / 'temp'
     temp_tsv_path.mkdir(parents=True, exist_ok=True)
@@ -254,7 +253,7 @@ def single_subcommand(args):
 
 
     try:
-        run(main_script, tsv_path, output_path,base_path)
+        run(main_script, tsv_path, output,base_path)
     except Exception as e:
         logger.error(f"Error running Nextflow pipeline: {e}")
     finally:
@@ -305,7 +304,7 @@ def batch_subcommand(args):
         logger.info(f"Output directory already exists: {output_dir}")
 
     final_output_dir = output_dir
-    logger.info(f"Sample Output Directory: {final_output_dir}")  # Log the directory here
+    
 
      # Process the TSV file and generate a temporary TSV file
     temp_tsv = process_tsv(args.input_tsv, args.input_dir)
