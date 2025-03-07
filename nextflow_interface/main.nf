@@ -76,7 +76,21 @@ workflow {
     BAKTA(combined_output)
 }
 
+workflow.onComplete {
+    def separator = "=".repeat(60) // Creates a 60-character separator line
+    
+    log.info "\n${separator}"
+    println "Pipeline completed at: ${workflow.complete ?: 'Unknown Completion Time'}"
+    log.info "Check Output Directory: ${params.OUTPUT_DIR ?: 'Unknown Output Directory'}"
+    log.info "Duration: ${workflow.duration ?: 'Unknown Duration'}"
+    log.info "Success: ${workflow.success ?: 'Unknown Status'}"
+    log.info "Launch Dir: ${workflow.launchDir ?: 'Unknown Launch Directory'}"
+    log.info "${separator}\n"
+}
 
+workflow.onError {
+    println "Oops... Pipeline execution stopped with the following message: ${workflow.errorMessage}".center(60, "=")
+}
 
 
 
