@@ -14,9 +14,9 @@ process UNICYCLER {
     tuple val(meta), path(r1), path(r2), path(long_reads)
 
     output:
-    tuple val(meta), path("${meta.sample_id}_assembly.fasta"), emit: scaffolds
-    tuple val(meta), path("${meta.sample_id}_assembly.graph.gfa"), emit: gfa
-    tuple val(meta), path("${meta.sample_id}_unicycler.log"), emit: log
+    tuple val(meta), path("${meta.sample_id}.fasta"), emit: scaffolds
+    tuple val(meta), path("${meta.sample_id}.gfa"), emit: gfa
+    tuple val(meta), path("${meta.sample_id}.log"), emit: log
 
     publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/unicycler", mode: 'copy'
     conda "${params.CONDA_ENV_PATH}"
@@ -27,11 +27,11 @@ process UNICYCLER {
 
 
     script:
-    def prefix = "${meta.sample_id}_assembly"
+    def prefix = "${meta.sample_id}"
     def long_reads_option = (long_reads && long_reads.size() > 0) ? "--long ${long_reads[0]}" : ""
 
     """
-    unicycler --short1 ${r1} --short2 ${r2} ${long_reads_option} --out ./ --threads ${task.cpu}
+    unicycler --short1 ${r1} --short2 ${r2} ${long_reads_option} --out ./ --threads ${task.cpus}
         
 
     mv ./assembly.fasta ${prefix}_assembly.fasta
