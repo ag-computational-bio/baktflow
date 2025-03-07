@@ -19,14 +19,14 @@ process FASTP {
     errorStrategy 'retry'  // Retry on failure
     publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/fastp", mode: 'copy'
     conda "${params.CONDA_ENV_PATH}"
-    errorStrategy { task.attempt <= 3 ? 'retry' : 'ignore' }  // Retry up to 3 times, then ignore
-    maxRetries 3  // Ensure maxRetries is set to allow up to 3 retries
+    // errorStrategy { task.attempt <= 3 ? 'retry' : 'ignore' }  // Retry up to 3 times, then ignore
+    // maxRetries 3  // Ensure maxRetries is set to allow up to 3 retries
     cpus 2
     memory '1GB'
 
     script:
     """
-    fastp --in1 ${r1} --in2 ${r2} --out1 ${meta.sample_id}_R1_processed.fastq.gz --out2 ${meta.sample_id}_R2_processed.fastq.gz --thread ${task.cpu}
+    fastp --in1 ${r1} --in2 ${r2} --out1 ${meta.sample_id}_R1_processed.fastq.gz --out2 ${meta.sample_id}_R2_processed.fastq.gz --thread  $task.cpus
     """
 }
 
