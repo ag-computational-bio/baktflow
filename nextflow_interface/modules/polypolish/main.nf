@@ -4,7 +4,7 @@ nextflow.enable.dsl=2
 params.CONDA_ENV_DIR = "$baseDir/../setup/conda_envs"
 params.CONDA_ENV_PATH = "${params.CONDA_ENV_DIR}/polypolish"
 params.OUTPUT_DIR = "$baseDir/../output"
-params.THREADS = 8
+
 
 process POLYPOLISH {
     input:
@@ -26,8 +26,8 @@ process POLYPOLISH {
     bwa index ${short_pypolca}
 
     # Step 2: Align short reads separately
-    bwa mem -t ${params.THREADS} -a ${short_pypolca} ${r1} > alignments_1.sam
-    bwa mem -t ${params.THREADS} -a ${short_pypolca} ${r2} > alignments_2.sam
+    bwa mem -t ${task.cpu} -a ${short_pypolca} ${r1} > alignments_1.sam
+    bwa mem -t ${task.cpu} -a ${short_pypolca} ${r2} > alignments_2.sam
 
     # Step 3: Filter low-quality alignments
     polypolish filter --in1 alignments_1.sam --in2 alignments_2.sam --out1 filtered_1.sam --out2 filtered_2.sam
