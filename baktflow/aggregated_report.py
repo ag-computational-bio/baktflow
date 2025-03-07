@@ -269,7 +269,7 @@ def find_json_reports(input_directory):
 
                             if "fastp.json" in file:
                                 process_fastp_json(data, report_data, module)
-                            elif "unicycler.json" in file:
+                            elif "unicycler_report.json" in file:
                                 process_unicycler_json(data, report_data, module)
                             elif file.endswith(("_1.fastq.json", "_2.fastq.json")):  # New check for .fastq.json
                                 process_fastqc_json(data, report_data, module)
