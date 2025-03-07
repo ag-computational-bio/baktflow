@@ -290,27 +290,31 @@ def batch_subcommand(args):
         logger.error(f"The input directory {args.input_dir} is not readable.")
         return
 
-    # Validate the output directory
-    if not check_existence(output_dir):
-        logger.error(f"The output directory {args.output} does not exist.")
-        return
-    if not check_writability(output_dir):
+      # Validate and create the output directory
+    if not output_dir.exists():
+        try:
+            output_dir.mkdir(parents=True)  # Create the directory if it doesn't exist
+            logger.info(f"Created output directory: {output_dir}")
+        except Exception as e:
+            logger.error(f"Failed to create output directory {output_dir}: {e}")
+            return
+    elif not check_writability(output_dir):
         logger.error(f"The output directory {args.output} is not writable.")
         return
+    else:
+        logger.info(f"Output directory already exists: {output_dir}")
 
-     
-    output_dir.mkdir(parents=True, exist_ok=True)
-    logger.info(f"Sample Output Directory Created: {output_dir}")
-   
+    final_output_dir = output_dir
+    logger.info(f"Sample Output Directory: {final_output_dir}")  # Log the directory here
 
-    # Process the TSV file and generate a temporary TSV file
+     # Process the TSV file and generate a temporary TSV file
     temp_tsv = process_tsv(args.input_tsv, args.input_dir)
     if temp_tsv is None:
         logger.error("Error processing TSV: Unable to generate temp TSV file. Aborting.")
         return
     
-    temp_tsv = Path(temp_tsv)  # Ensure it's a Path object
-    temp_folder = temp_tsv.parent  # Get the parent directory (temporary folder)
+    temp_tsv = Path(temp_tsv)  
+    temp_folder = temp_tsv.parent  
 
     logger.info(f"Temporary TSV file saved at {temp_tsv}")
  
@@ -319,7 +323,7 @@ def batch_subcommand(args):
         run(
             main_script,
             temp_tsv,
-            output_dir,
+            final_output_dir,
             args.input_dir
         )
         logger.info("Nextflow pipeline executed successfully.")
@@ -333,8 +337,8 @@ def batch_subcommand(args):
             temp_tsv.unlink()  # Delete the TSV file
             logger.info(f"Temporary TSV file {temp_tsv} deleted after execution.")
 
-        if temp_folder.exists() and temp_folder.name == "temp":  # Ensure it's the expected temp folder
-            shutil.rmtree(temp_folder)  # Delete the whole folder
+        if temp_folder.exists() and temp_folder.name == "temp": 
+            shutil.rmtree(temp_folder) 
             logger.info(f"Temporary folder {temp_folder} removed successfully.")
     except Exception as e:
         logger.error(f"Error cleaning up temporary files: {e}")
