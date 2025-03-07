@@ -28,12 +28,13 @@ process FASTQC {
 
     script:
     """
-    mkdir -p fastqc
-    fastqc ${reads} -o fastqc
-    cp fastqc/*_fastqc.html ${reads.baseName}_fastqc.html
-    cp fastqc/*_fastqc.zip ${reads.baseName}_fastqc.zip
+    
+    fastqc ${reads} -o ./
+    mv *fastqc.html ${reads.baseName}.html
+    mv *fastqc.zip ${reads.baseName}.zip
+
     # Run report.py with correct arguments
-    python ${params.REPORT_SCRIPT} --zip ${reads.baseName}_fastqc.zip --output ${params.OUTPUT_DIR}/${meta.sample_id}/fastqc
+    python ${params.REPORT_SCRIPT} --zip ${reads.baseName}.zip --output ${params.OUTPUT_DIR}/${meta.sample_id}/fastqc
     """
 }
 
