@@ -370,6 +370,11 @@ def report_subcommand(input_dir, output_dir):
     # Generate the report
     output_file = os.path.join(output_dir, "aggregated_report.html")
     generate_html_report(sample_reports, output_file)
+       # Check if the report file was created successfully
+    if os.path.exists(output_file):
+        logger.info("Aggregated report created successfully!")
+    else:
+        logger.error("Failed to create aggregated report.")
 
     
 
