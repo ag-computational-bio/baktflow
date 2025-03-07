@@ -1,9 +1,11 @@
-name: fastp
+name: dnaapler
 channels:
-  - conda-forge
   - bioconda
+  - conda-forge
   - defaults
 dependencies:
-- fastp=0.24.0
+
+  - dnaapler=1.1.0
+
 
 

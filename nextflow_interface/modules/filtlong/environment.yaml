@@ -1,11 +1,10 @@
-name: fastqc_env
+name: assembly_tools
 channels:
   - bioconda
   - conda-forge
   - defaults
 dependencies:
-  - fastqc=0.11.9
-  - python=3.8 
 
+  - filtlong=0.2.1  
 
 

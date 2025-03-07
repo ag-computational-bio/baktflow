@@ -1,9 +1,13 @@
-name: fastp
+name: pypolca
 channels:
-  - conda-forge
   - bioconda
+  - conda-forge
   - defaults
 dependencies:
-- fastp=0.24.0
+  - pypolca=0.3.1
+
+
+
+
 
 
