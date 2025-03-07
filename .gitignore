@@ -1,6 +1,9 @@
 .nextflow*
 trace.*
 work/
-results/
+output/
 baktflow.code-workspace
 conda
+setup/
+baktflow.egg-info
+dist
