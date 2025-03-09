@@ -6,5 +6,6 @@ recursive-include nextflow_interface *.config
 include baktflow/dashboard_template.html
 global-exclude __pycache__
 global-exclude *.pyc
+include requirements.txt
 
 
