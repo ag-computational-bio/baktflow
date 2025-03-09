@@ -23,16 +23,6 @@ The Baktflow pipeline is designed with the following key objectives in mind to e
 
 Before starting the installation, ensure you have the following prerequisites installed:
 
-- **Python**: Version 3.9 or higher
-- **Nextflow**: Version 23.3+ (or compatible version)
-- **Mamba**: Recommended for environment management (alternative to Conda for faster package management)
-
-## Installation Steps
-
-### Prerequisites
-
-Before starting the installation, ensure you have the following prerequisites installed:
-
 - **Python**: Version 3.8 or higher.You can download it from the [Python official website](https://www.python.org/downloads/).
 - **Mamba**: Recommended for environment management as an alternative to Conda, providing faster package management. For installation instructions, visit the [Mamba GitHub page](https://github.com/mamba-org/mamba).
 
