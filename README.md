@@ -33,7 +33,7 @@ Before starting the installation, ensure you have the following prerequisites in
 
 Before starting the installation, ensure you have the following prerequisites installed:
 
-- **Python**: Version 3.9 or higher.You can download it from the [Python official website](https://www.python.org/downloads/).
+- **Python**: Version 3.8 or higher.You can download it from the [Python official website](https://www.python.org/downloads/).
 - **Mamba**: Recommended for environment management as an alternative to Conda, providing faster package management. For installation instructions, visit the [Mamba GitHub page](https://github.com/mamba-org/mamba).
 
 ### Install the Baktflow Package
