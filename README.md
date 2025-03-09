@@ -14,7 +14,7 @@ The Baktflow pipeline is designed with the following key objectives in mind to e
 - **Sequencing Data Types**: Supports Paired-End Illumina Reads for high-coverage short-read applications, Long Reads (Nanopore) for structural variant analysis and complex genome assembly, Hybrid Data combining short and long reads for enhanced genome assemblies, and Assembled Genomes in FASTA format for downstream analysis like annotation or comparative genomics.
  - **Automated Preprocessing and Annotation** Baktflow handles preprocessing steps including quality checks,read trimming , and genome assembly . These steps prepare the data for downstream analysis, which includes genome annotation.
 
-- **Aggregated Report** Baktflow generates a summarized report that consolidates key analysis results across all samples, including quality assessments from FastQC, assembly statistics from Unicycler, and read trimming data from FastP. This report provides an overview of the entire analysis pipeline, summarizing results from different sequencing technologies and sample types.
+- **Aggregated Report** Baktflow generates a summarized report that consolidates key analysis results across all samples, including quality assessments from FastQC, assembly statistics from Unicycler, and read trimming data from Fastp. This report provides an overview of the entire analysis pipeline, summarizing results from different sequencing technologies and sample types.
 
 
 ## Installation
@@ -170,11 +170,11 @@ Once the analysis is complete, Baktflow organizes the results by sample ID and c
 ## Sequencing Data Types and Tools
 Baktflow supports multiple sequencing data types, each requiring specific preprocessing and analysis steps. The workflow includes quality control, read trimming, genome assembly, polishing, reorientation, and annotation to ensure high-quality genomic data for downstream applications.
 
-- **Paired-End** Illumina Reads undergo quality control (FastQC) [1], trimming (FastP) [2], and assembly (Unicycler) [3].Following the reorientation (Dnaapler) [4], the data is annotated (Bakta) [5].
+- **Paired-End** Illumina Reads undergo quality control (FastQC) [1], trimming (Fast) [2], and assembly (Unicycler) [3].Following the reorientation (Dnaapler) [4], the data is annotated (Bakta) [5].
 
 - **Long Reads** (Nanopore) are processed using quality control (FastQC), trimming (Filtlong) [6], assembly (Flye) [7], and polishing (Medaka) [8]. The final reoriented assembly (Dnaapler) is annotated with Bakta.
 
-- **Hybrid Data** combines Illumina (short-read) and Nanopore (long-read) technologies, integrating FastQC, FastP (Illumina), Filtlong (Nanopore), Unicycler (assembly), Medaka (long-read polishing), and Pypolca [9] / PolyPolish [110] (short-read polishing). After reorientation with Dnaapler, the data is annotated with Bakta.
+- **Hybrid Data** combines Illumina (short-read) and Nanopore (long-read) technologies, integrating FastQC, Fastp (Illumina), Filtlong (Nanopore), Unicycler (assembly), Medaka (long-read polishing), and Pypolca [9] / PolyPolish [110] (short-read polishing). After reorientation with Dnaapler, the data is annotated with Bakta.
 
 - **Assembled Genomes** skip trimming, assembly, and polishing steps, proceeding directly to annotation (Bakta).
 
@@ -182,9 +182,9 @@ Baktflow supports multiple sequencing data types, each requiring specific prepro
 ```
 | **Sequencing Technology**       | **Quality Control Tool**  | **Read Trimming Tool**                | **Assembly Tool**    | **Polishing Tool**                     | **Reorientation Tool**  | **Annotation Tool**  |
 |----------------------------------|---------------------------|---------------------------------------|----------------------|----------------------------------------|-------------------------|----------------------|
-| **Paired-End Illumina Reads**    | FastQC                    | FastP                                 | Unicycler            | None                                   | Dnaapler                | Bakta                |
+| **Paired-End Illumina Reads**    | FastQC                    | Fastp                                 | Unicycler            | None                                   | Dnaapler                | Bakta                |
 | **Long Reads (Nanopore)**        | FastQC                    | Filtlong                              | Flye                 | Medaka                                 | Dnaapler                | Bakta                |
-| **Hybrid Data**                  | FastQC                    | FastP Filtlong                        | Unicycler            | Medaka Pypolca / PolyPolish           | Dnaapler                | Bakta                |
+| **Hybrid Data**                  | FastQC                    | Fastp Filtlong                        | Unicycler            | Medaka Pypolca / PolyPolish           | Dnaapler                | Bakta                |
 | **Assembled Genomes (FASTA)**    |                           | No trimming                           | No assembly          | No polishing                                                     | Bakta                |
 
 
