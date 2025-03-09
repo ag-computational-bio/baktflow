@@ -58,7 +58,7 @@ def setup_subcommand(args):
 
     # Log user-provided directory and configuration file
     logger.info(f"Setup directory: {args.directory}")
-    logger.info(f"Configuration file: {args.config}")
+
 
     # Define paths for Conda and database directories
     setup_subdir =  Path(args.directory).resolve() if args.directory else default_setup_dir
@@ -390,7 +390,6 @@ def parse_arguments():
     # Setup subcommand
     setup_parser = subparsers.add_parser('setup', help='Setup baktflow pipeline')
     setup_parser.add_argument('--directory', help='Home directory for the pipeline setup')
-    setup_parser.add_argument('-c', '--config', help='Configuration file for setup parameters')
     setup_parser.add_argument('--nextflow_path', default=None, help='Path to Nextflow installation')
     
     # Single subcommand
