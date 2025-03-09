@@ -1,6 +1,6 @@
 # Baktflow: Automated Bacterial Genome Analysis Pipeline
 
-Welcome to the documentation for **Baktflow**, a user-friendly bacterial genome analysis pipeline built on Python and Nextflow. It is designed to handle both single and batch processing of genomic data. Baktflow ensures portability and reliability across diverse computing environments, making it ideal for both novice and advanced users.
+Welcome to the Baktflow documentation, a user-friendly pipeline for bacterial genome analysis. Built on Python and Nextflow, Baktflow focuses on preprocessing and annotation tasks, offering both single-sample and batch processing capabilities. Its design ensures portability and reliability across diverse computing environments, making it suitable for both novice and experienced users.
 
 ## Pipeline Objectives
 
@@ -27,33 +27,38 @@ Before starting the installation, ensure you have the following prerequisites in
 - **Nextflow**: Version 23.3+ (or compatible version)
 - **Mamba**: Recommended for environment management (alternative to Conda for faster package management)
 
-### Installation Steps
+## Installation Steps
 
-1. **Install Nextflow**  
-   Follow the installation instructions on the [Nextflow website](https://www.nextflow.io/).
+### Prerequisites
 
-2. **Install Python Dependencies**  
-   Install the required Python packages by running:
-   ```bash
-   pip install -r requirements.txt
-    ```
-   This will install the following dependencies:
+Before starting the installation, ensure you have the following prerequisites installed:
 
-    - **pandas>=1.0.0**: For reading and manipulating TSV files.
-    
-    - **jinja2>=2.10**: For generating reports from templates.
-                                                             
-    - **plotly>=4.0.0**: For visualizing data in reports.
+- **Python**: Version 3.9 or higher.You can download it from the [Python official website](https://www.python.org/downloads/).
+- **Mamba**: Recommended for environment management as an alternative to Conda, providing faster package management. For installation instructions, visit the [Mamba GitHub page](https://github.com/mamba-org/mamba).
 
+### Install the Baktflow Package
 
- 3. **Install Baktflow**
+Baktflow can easily be installed it using pip. This will automatically install all the required dependencies, including Nextflow and some essential Python libraries. Just run:
+```bash
+pip install baktflow
+```
 
-   The pipeline also requires the Baktflow package. You can install it using 
-    pip:
+This will install:
 
-   ```bash
-   pip install baktflow
-   ```
+-- **Nextflow**: Workflow management system that runs the tasks in the pipeline [Nextflow Documentation](https://www.nextflow.io/).
+
+-- **Pandas**: A Python library for handling and processing TSV files [Pandas Documentation](https://pandas.pydata.org/).
+
+-- **Jinja2**: Templating engine for generating reports[Jinja Documentation](https://jinja.palletsprojects.com/).
+
+--**Plotly**: For visualizing data in the reports[Plotly Documentation](https://plotly.com/).
+
+### Verify the Installation
+After installing Baktflow, you can verify the installation by running:
+
+```bash
+baktflow --help
+```
 
 
 ## Input
