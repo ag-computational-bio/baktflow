@@ -49,6 +49,33 @@ After installing Baktflow, you can verify the installation by running:
 ```bash
 baktflow --help
 ```
+Alternative Installation Methods
+Install from GitHub (Editable Mode)
+You can install Baktflow in an editable mode directly from the GitHub repository. This is useful if you plan to contribute to the development or modify the package.
+
+First, clone the repository and checkout the ma-ned-dev branch:
+
+```bash
+git clone https://github.com/oschwengers/baktflow.git
+cd baktflow
+git checkout ma-ned-dev
+```
+Then, install using pip in editable mode:
+
+```bash
+pip install -e .
+```
+This method installs the package from the local copy of the ma-ned-dev branch, allowing you to make changes and see them immediately without needing to reinstall.
+
+Install from Wheel
+If you'd prefer to install the package using the wheel file, download the appropriate wheel file for your system from the release page on GitHub.
+
+Once downloaded, install the wheel with pip:
+```bash
+pip install baktflow-version.whl
+```
+Replace baktflow-version.whl with the actual file name.
+
 
 
 ## Input
