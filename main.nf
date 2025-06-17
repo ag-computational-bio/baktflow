@@ -369,7 +369,7 @@ process polishLongMedaka {
 
     script:
     """
-    medaka_consensus -i ${reads} -d ${assembly} -o medaka -t ${task.cpus}
+    medaka_consensus -i ${reads} -d ${assembly} --bacteria -o medaka -t ${task.cpus}
     mv medaka/consensus.fasta ${sample}.long.polished.fna
     """
 
