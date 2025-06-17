@@ -172,9 +172,6 @@ process qcIll {
 
     output:
     tuple val(sample), val(type), path("${sample}.R1.fastq.gz"), path("${sample}.R2.fastq.gz"), path("${sample}.SE.fastq.gz") into chQcIll, chPolishShort
-    tuple val(sample), val(type), val('R1'), path("${sample}.R1.fastq.gz") into chQcIllPlotR1
-    tuple val(sample), val(type), val('R2'), path("${sample}.R2.fastq.gz") into chQcIllPlotR2
-    tuple val(sample), val(type), val('SE'), path("${sample}.SE.fastq.gz") into chQcIllPlotSE
     path("${sample}.fastp.*") into chEndQcIll
     
     publishDir pattern: "${sample}.*", path: "${pathOutput}/${sample}/qc/", mode: 'copy'
@@ -196,38 +193,6 @@ process qcIll {
     """
 }
 
-
-chQcIllPlot.concat( chQcIllPlotR1, chQcIllPlotR2, chQcIllPlotSE )
-.set{ chQcIllPlotConcat }
-
-
-process qcIllPlot {
-
-    tag "${sample}"
-    cpus 1
-    memory { 2.GB * task.attempt }
-    conda "${params.containerdir}/qc-ill-plot"
-
-    input:
-    tuple val(sample), val(type), val(frs), path("${sample}.${frs}.fastq.gz") from chQcIllPlotConcat
-
-    output:
-    path("${frs}/${sample}.${frs}_fastqc/Images/*.png") into chEndQcIllPlot
-    
-    publishDir path: "${pathOutput}/${sample}/qc/img/${frs}", mode: 'copy'
-
-    script:
-    """
-    mkdir ${frs}
-    fastqc --extract --format fastq --threads ${task.cpus} --outdir ${frs} ${sample}.${frs}.fastq.gz
-    """
-
-    stub:
-    """
-    mkdir -p ${frs}/${sample}.${frs}_fastqc/Images
-    touch ${frs}/${sample}.${frs}_fastqc/Images/mock.png
-    """
-}
 
 chQcIll
 .dump( { "chQcIll: sample=${it[0]}, type=${it[1]}" } )
