@@ -21,7 +21,7 @@ mamba create --yes --quiet -p conda/ska ska=1.0
 mamba create --yes --quiet -p conda/bakta bakta=1.12.0 ncbi-amrfinderplus=4.2.7
 mamba create --yes --quiet -p conda/tax-16-s blast=2.12.0
 mamba create --yes --quiet -p conda/vf diamond=2.0.14
-mamba create --yes --quiet -p conda/amrfinderplus ncbi-amrfinderplus=4.0.3
+mamba create --yes --quiet -p conda/amrfinderplus ncbi-amrfinderplus=4.2.7
 mamba create --yes --quiet -p conda/tax-ani referenceseeker=1.7.3
 mamba create --yes --quiet -p conda/platon platon=1.6
 mamba create --yes --quiet -p conda/mobsuite mob_suite=3.1.9
