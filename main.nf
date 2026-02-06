@@ -402,7 +402,11 @@ process assemblyShort {
 
     script:
     """
-    unicycler --short1 R1.fastq.gz --short2 R2.fastq.gz --unpaired SE.fastq.gz --out . --threads ${task.cpus}
+    if [ ! -s SE.fastq.gz ]
+        unicycler --short1 R1.fastq.gz --short2 R2.fastq.gz --out . --threads ${task.cpus}
+    else
+        unicycler --short1 R1.fastq.gz --short2 R2.fastq.gz --unpaired SE.fastq.gz --out . --threads ${task.cpus}
+    fi
     mv assembly.fasta ${sample}.short.fna
     mv assembly.gfa ${sample}.short.gfa
     mv unicycler.log ${sample}.short.log
