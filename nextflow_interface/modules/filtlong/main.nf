@@ -37,6 +37,12 @@ process FILTLONG {
         --verbose ${long_reads}\\
          2> ${meta.sample_id}_filtlong.log | gzip > ${meta.sample_id}_filtered.fastq.gz
     """
+
+    stub:
+    """
+    touch ${meta.sample_id}_filtered.fastq.gz
+    touch ${meta.sample_id}_filtlong.log
+    """
 }
 
 

@@ -32,7 +32,7 @@ process BAKTA {
     maxRetries 3  // Ensure maxRetries is set to allow up to 3 retries 
     // Resource allocation
     cpus 8
-    memory '16GB' 
+    memory '8GB'
     
     script:
     """
@@ -68,6 +68,20 @@ process BAKTA {
     mv bakta_output/${meta.sample_id}.txt ${meta.sample_id}.txt
 
     echo "Bakta run completed for sample: ${meta.sample_id}"
+    """
+
+    stub:
+    """
+    touch ${meta.sample_id}.embl
+    touch ${meta.sample_id}.faa
+    touch ${meta.sample_id}.ffn
+    touch ${meta.sample_id}.fna
+    touch ${meta.sample_id}.gbff
+    touch ${meta.sample_id}.gff3
+    touch ${meta.sample_id}.hypotheticals.tsv
+    touch ${meta.sample_id}.hypotheticals.faa
+    touch ${meta.sample_id}.tsv
+    touch ${meta.sample_id}.txt
     """
 }
 

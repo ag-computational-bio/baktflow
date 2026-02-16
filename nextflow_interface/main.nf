@@ -50,7 +50,7 @@ workflow {
         }
 
     // Classify samples based on sample_type
-    def ch_short_reads = ch_samples.filter { it.meta.sample_type == 'illumina' }
+    def ch_short_reads = ch_samples.filter { it.meta.sample_type == 'short' }
     def ch_long_reads = ch_samples.filter { it.meta.sample_type == 'long' }
     def ch_hybrid_reads = ch_samples.filter { it.meta.sample_type == 'hybrid' }
      def ch_assemblies = ch_samples.filter { it.meta.sample_type == 'assembly' }
@@ -91,12 +91,3 @@ workflow.onComplete {
 workflow.onError {
     println "Oops... Pipeline execution stopped with the following message: ${workflow.errorMessage}".center(60, "=")
 }
-
-
-
-
-
-
-
-
-

@@ -21,7 +21,7 @@ process UNICYCLER {
     publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/unicycler", mode: 'copy'
     conda "${params.CONDA_ENV_PATH}"
     cpus 8
-    memory '16GB'
+    memory '8GB'
     errorStrategy { task.attempt <= 3 ? 'retry' : 'ignore' }  // Retry up to 3 times, then ignore
     maxRetries 3  // Ensure maxRetries is set to allow up to 3 retries
 
@@ -42,6 +42,13 @@ process UNICYCLER {
     --fasta ${prefix}_assembly.fasta \\
     --log ${meta.sample_id}_unicycler.log \\
     --output ${params.OUTPUT_DIR}/${meta.sample_id}/unicycler
+    """
+
+    stub:
+    """
+    touch ${meta.sample_id}_assembly.fasta
+    touch ${meta.sample_id}_assembly.gfa
+    touch ${meta.sample_id}_unicycler.log
     """
 }
 

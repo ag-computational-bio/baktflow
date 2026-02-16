@@ -1,9 +1,9 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
-include { FASTQC} from '../modules/fastqc/main.nf' 
-include { FASTP} from '../modules/fastp/main.nf' 
-include { FILTLONG} from '../modules/filtlong/main.nf' 
-include { UNICYCLER} from '../modules/unicycler/main.nf' 
+include {FASTQC} from '../modules/fastqc/main.nf'
+include {FASTP} from '../modules/fastp/main.nf'
+include {FILTLONG} from '../modules/filtlong/main.nf'
+include {UNICYCLER} from '../modules/unicycler/main.nf'
 include {MEDAKA} from '../modules/medaka/main.nf' 
 include {POLYPOLISH} from '../modules/polypolish/main.nf'
 include {PYPOLCA} from '../modules/pypolca/main.nf'
@@ -97,39 +97,5 @@ workflow HYBRID_READ_PROCESSING_SUBWORKFLOW {
         
         def ch_reoriented = DNAAPLER(ch_final_polished_assembly)
         emit:
-        final_output=ch_reoriented 
-      
-
-        
+        final_output=ch_reoriented
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

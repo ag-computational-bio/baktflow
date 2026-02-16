@@ -1,8 +1,8 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
-include { FASTQC} from '../modules/fastqc/main.nf' 
-include { FASTP} from '../modules/fastp/main.nf' 
-include { UNICYCLER} from '../modules/unicycler/main.nf'
+include {FASTQC} from '../modules/fastqc/main.nf'
+include {FASTP} from '../modules/fastp/main.nf'
+include {UNICYCLER} from '../modules/unicycler/main.nf'
 include {DNAAPLER} from '../modules/dnaapler/main.nf' 
 
 workflow SHORT_READ_PROCESSING_SUBWORKFLOW {
@@ -15,7 +15,7 @@ workflow SHORT_READ_PROCESSING_SUBWORKFLOW {
     } | FASTQC
 
     // Process the short reads with FASTP
-    def ch_processed_reads = FASTP(ch_short_reads.map { sample -> 
+    def ch_processed_reads = FASTP(ch_short_reads.map { sample ->
         tuple(sample.meta, sample.r1, sample.r2)
     })
     def short_reads_for_assembly = ch_processed_reads.processed_reads
@@ -36,33 +36,3 @@ workflow SHORT_READ_PROCESSING_SUBWORKFLOW {
     emit:
     final_output = ch_reoriented
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

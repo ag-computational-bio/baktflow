@@ -28,6 +28,15 @@ process FASTP {
     """
     fastp --in1 ${r1} --in2 ${r2} --out1 ${meta.sample_id}_R1_processed.fastq.gz --out2 ${meta.sample_id}_R2_processed.fastq.gz --thread  $task.cpus
     """
+
+    stub:
+    """
+    touch ${meta.sample_id}_R1_processed.fastq.gz
+    touch ${meta.sample_id}_R2_processed.fastq.gz
+    touch ${meta.sample_id}.SE.fastq.gz
+    touch ${meta.sample_id}.fastp.json
+    touch ${meta.sample_id}.fastp.html
+    """
 }
 
 

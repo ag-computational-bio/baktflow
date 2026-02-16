@@ -7,8 +7,8 @@ import logging
 import shutil
 from pathlib import Path
 # Define expected file counts for each sample type
-sample_types = {'illumina', 'long', 'assembly', 'hybrid'}
-illumina_files = 2  # Expecting R1 and R2 files
+sample_types = {'short', 'long', 'assembly', 'hybrid'}
+short_files = 2  # Expecting R1 and R2 files
 long_files = 1      # Expecting one long-read file
 assembly_files = 1  # Expecting one assembly file
 hybrid_files = 3    # Expecting three files for hybrid samples
@@ -90,7 +90,7 @@ def determine_sample_type(r1=None, r2=None, long=None, assembly=None):
     if r1 and r2 and long:
         sample_type = 'hybrid'
     elif r1 and r2:
-        sample_type = 'illumina'
+        sample_type = 'short'
     elif long:
         sample_type = 'long'
     elif assembly:
@@ -199,7 +199,7 @@ def process_tsv(input_tsv, input_dir):
         logger.debug(f"Processing row {idx}: {row}")
 
         # Process different sample types
-        if sample_type == 'illumina' and len(files) == illumina_files:
+        if sample_type == 'short' and len(files) == short_files:
             new_row.append(os.path.join(input_dir, files[0]))  # R1
             new_row.append(os.path.join(input_dir, files[1]))  # R2
         elif sample_type == 'long' and len(files) == long_files:

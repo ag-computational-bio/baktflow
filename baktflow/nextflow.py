@@ -51,8 +51,6 @@ def start(setup_script, setup_dir, conda_dir, database_dir, nextflow_path=None):
         raise
 
 
-
-
 def run(main, temp_tsv, sample_output_path, base_path,nextflow_path=None):
     """Run Nextflow pipeline script."""
     
@@ -75,8 +73,8 @@ def run(main, temp_tsv, sample_output_path, base_path,nextflow_path=None):
         '--INPUT_TSV', temp_tsv,
         '--OUTPUT_DIR', sample_output_path,
         '--BASE_PATH', base_path,
-       
-        '-profile', 'standard'
+        '-profile', 'standard',
+        '-stub-run'
     ]
 
     try:

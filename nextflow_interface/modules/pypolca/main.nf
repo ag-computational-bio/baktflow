@@ -18,13 +18,19 @@ process PYPOLCA {
     errorStrategy { task.attempt <= 3 ? 'retry' : 'ignore' }  // Retry up to 3 times, then ignore
     maxRetries 3  // Ensure maxRetries is set to allow up to 3 retries
     cpus 8
-    memory '16GB'
+    memory '8GB'
 
     script:
     """
     pypolca run -a ${input_fasta} -1 ${r1} -2 ${r2} -o ${meta.sample_id}_pypolca --prefix ${meta.sample_id} --threads $task.cpus
     mv ${meta.sample_id}_pypolca/${meta.sample_id}_corrected.fasta ${meta.sample_id}_pypolca.fasta
     mv ${meta.sample_id}_pypolca/${meta.sample_id}.report ${meta.sample_id}_pypolca.report
+    """
+
+    stub:
+    """
+    touch ${meta.sample_id}_pypolca.fasta
+    touch ${meta.sample_id}_pypolca.report
     """
 }
 

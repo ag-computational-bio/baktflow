@@ -58,6 +58,11 @@ process MEDAKA {
     # Move the polished assembly to the output location
     mv medaka_output/consensus.fasta ${meta.sample_id}_polished_assembly.fasta
     """
+
+    stub:
+    """
+    touch ${meta.sample_id}_polished_assembly.fasta
+    """
 }
 
 

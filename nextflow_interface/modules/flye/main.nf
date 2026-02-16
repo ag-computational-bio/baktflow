@@ -18,7 +18,7 @@ process FLYE {
     conda "${params.CONDA_ENV_PATH}"
     // Resource allocation
     cpus 8
-    memory '16GB' 
+    memory '8GB'
 
     errorStrategy { task.attempt <= 3 ? 'retry' : 'ignore' }  // Retry up to 3 times, then ignore
     maxRetries 3  // Ensure maxRetries is set to allow up to 3 retries
@@ -30,6 +30,13 @@ process FLYE {
     cp flye_output/assembly.fasta ${meta.sample_id}_assembly.fasta
     cp flye_output/assembly_graph.gfa ${meta.sample_id}_assembly_graph.gfa
     cp flye_output/assembly_info.txt ${meta.sample_id}_assembly_info.txt
+    """
+
+    stub:
+    """
+    touch ${meta.sample_id}_assembly.fasta
+    touch ${meta.sample_id}_assembly_graph.gfa
+    touch ${meta.sample_id}_assembly_info.txt
     """
 }
 
