@@ -1,6 +1,3 @@
-hyb-m1	m1_R1.fastq.gz	m1_R2.fastq.gz	m1.fastq.gz
-hyb-m2	m2_R2.fastq.gz	m2_R2.fastq.gz	m2.fastq.gz
-ill-m1	m1_R1.fastq.gz	m1_R2.fastq.gz	-
-ill-m2	m2_R2.fastq.gz	m2_R2.fastq.gz	-
-ont-m1	-	-	m1.fastq.gz
-ont-m2	-	-	m2.fastq.gz
+version https://git-lfs.github.com/spec/v1
+oid sha256:4100d9012c060a2999b49443448078864039338837e8d703c4e73e4f92bb778b
+size 223
