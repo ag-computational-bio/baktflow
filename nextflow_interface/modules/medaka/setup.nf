@@ -10,7 +10,8 @@ params.MEDAKA_ENV_FILE = "${baseDir}/modules/medaka/environment.yaml"
 process SETUP_MEDAKA {
     tag "SETUP_MEDAKA"
     memory '4GB'
-    cpus 2
+    cpus (params.threads >= 2 ? 2 : params.threads)
+
     script:
     """
     echo 'Starting Medaka environment setup...'

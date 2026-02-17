@@ -20,7 +20,7 @@ process SETUP_BAKTA {
     publishDir path: params.BAKTA_DB_DIR, mode: 'copy'
     
     memory '4GB'
-    cpus 2
+    cpus (params.threads >= 2 ? 2 : params.threads)
 
     // Script section for installing Bakta and handling databases
     script:

@@ -10,7 +10,8 @@ params.POLYPOLISH_ENV_PATH = "${baseDir}/../setup/conda_envs/polypolish"
 process SETUP_POLYPOLISH {
     tag "SETUP_POLYPOLISH"
     memory '4GB'
-    cpus 2
+    cpus (params.threads >= 2 ? 2 : params.threads)
+
     script:
     """
     echo 'Starting Polypolish environment setup...'

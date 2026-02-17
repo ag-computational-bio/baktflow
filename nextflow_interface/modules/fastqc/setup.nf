@@ -7,7 +7,8 @@ params.FASTQC_ENV_PATH = "${baseDir}/../setup/conda_envs/fastqc"
 process SETUP_FASTQC {
     tag "SETUP_FASTQC"
     memory '4GB'
-    cpus 2
+    cpus (params.threads >= 2 ? 2 : params.threads)
+
     script:
     """
     echo 'Starting Fastqc environment setup...'

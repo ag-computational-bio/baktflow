@@ -10,7 +10,8 @@ params.FLYE_ENV_PATH = "${baseDir}/../setup/conda_envs/flye"
 process SETUP_FLYE {
     tag "SETUP_FLYE"
     memory '4GB'
-    cpus 2
+    cpus (params.threads >= 2 ? 2 : params.threads)
+
     script:
     """
     echo 'Starting Flye environment setup...'

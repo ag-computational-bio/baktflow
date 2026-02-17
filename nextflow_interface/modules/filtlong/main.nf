@@ -21,10 +21,7 @@ process FILTLONG {
 
     publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/filtlong", mode: 'copy'
     conda "${params.CONDA_ENV_PATH}"
-
-    errorStrategy { task.attempt <= 3 ? 'retry' : 'ignore' }  // Retry up to 3 times, then ignore
-    maxRetries 3  // Ensure maxRetries is set to allow up to 3 retries
-    cpus 8
+    cpus (params.threads >= 8 ? 8 : params.threads)
     memory '1GB'
 
     script:

@@ -21,7 +21,7 @@ process FASTP {
     conda "${params.CONDA_ENV_PATH}"
     errorStrategy { task.attempt <= 3 ? 'retry' : 'ignore' }  // Retry up to 3 times, then ignore
     maxRetries 3  // Ensure maxRetries is set to allow up to 3 retries
-    cpus 2
+    cpus (params.threads >= 2 ? 2 : params.threads)
     memory '1GB'
 
     script:

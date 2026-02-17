@@ -7,7 +7,8 @@ params.FASTP_ENV_PATH = "${baseDir}/../setup/conda_envs/fastp"
 process SETUP_FASTP {
     tag "SETUP_FASTP"
     memory '4GB'
-    cpus 2
+    cpus (params.threads >= 2 ? 2 : params.threads)
+
     script:
     """
     echo 'Starting mamba environment setup...'

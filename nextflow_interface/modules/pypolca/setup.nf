@@ -8,7 +8,8 @@ params.PYPOLCA_ENV_PATH = "${baseDir}/../setup/conda_envs/pypolca"
 process SETUP_PYPOLCA {
     tag "SETUP_PYPOLCA"
     memory '4GB'
-    cpus 2
+    cpus (params.threads >= 2 ? 2 : params.threads)
+
     script:
     """
     echo 'Starting Pypolca environment setup...'
