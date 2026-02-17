@@ -8,7 +8,7 @@ params.UNICYCLER_ENV_PATH = "${baseDir}/../setup/conda_envs/unicycler"
 // Process to setup Unicycler
 process SETUP_UNICYCLER {
     tag "SETUP_UNICYCLER"
-    memory '4GB'
+    memory {4.GB * task.attempt}
     cpus (params.threads >= 2 ? 2 : params.threads)
 
     script:

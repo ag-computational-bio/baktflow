@@ -8,7 +8,7 @@ params.DNAAPLER_ENV_PATH = "${baseDir}/../setup/conda_envs/dnaapler"
 // Process to setup DNAapler
 process SETUP_DNAAPLER {
     tag "SETUP_DNAAPLER"
-    memory '4GB'
+    memory {4.GB * task.attempt}
     cpus (params.threads >= 2 ? 2 : params.threads)
 
     script:

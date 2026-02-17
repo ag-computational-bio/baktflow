@@ -16,7 +16,7 @@ process DNAAPLER {
     publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/dnaapler", mode: 'copy'
     conda "${params.CONDA_ENV_PATH}"
     cpus (params.threads >= 8 ? 8 : params.threads)
-    memory '1GB' 
+    memory {1.GB * task.attempt}
 
     script:
     def prefix = meta.sample_id
