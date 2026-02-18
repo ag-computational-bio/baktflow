@@ -22,7 +22,9 @@ process FASTP {
     errorStrategy { task.attempt <= 3 ? 'retry' : 'ignore' }  // Retry up to 3 times, then ignore
     maxRetries 3  // Ensure maxRetries is set to allow up to 3 retries
     cpus (params.threads >= 2 ? 2 : params.threads)
-    memory {1.GB * task.attempt}
+    if ( "${workflow.stubRun}" == "false" ) {
+        memory {1.GB * task.attempt}
+    }
 
     script:
     """

@@ -22,7 +22,9 @@ process FASTQC {
 
     conda "${params.CONDA_ENV_PATH}"
     cpus (params.threads >= 2 ? 2 : params.threads)
-    memory {1.GB * task.attempt}
+    if ( "${workflow.stubRun}" == "false" ) {
+        memory {1.GB * task.attempt}
+    }
 
     script:
     """

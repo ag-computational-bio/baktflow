@@ -21,7 +21,9 @@ process MEDAKA {
     maxRetries 3  // Ensure maxRetries is set to allow up to 3 retries
     // Resource allocation
     cpus (params.threads >= 8 ? 8 : params.threads)
-    memory {1.GB * task.attempt}
+    if ( "${workflow.stubRun}" == "false" ) {
+        memory {1.GB * task.attempt}
+    }
     
     script:
     def prefix = meta.sample_id

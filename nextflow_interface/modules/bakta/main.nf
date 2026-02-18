@@ -29,7 +29,10 @@ process BAKTA {
 
     conda "${params.CONDA_ENV_PATH}"
     cpus (params.threads >= 8 ? 8 : params.threads)
-    memory {16.GB * task.attempt}
+    if ( "${workflow.stubRun}" == "false" ) {
+        memory {16.GB * task.attempt}
+    }
+
     
     script:
     """

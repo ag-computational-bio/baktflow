@@ -9,7 +9,9 @@ params.MEDAKA_ENV_FILE = "${baseDir}/modules/medaka/environment.yaml"
 // Process to setup Medaka
 process SETUP_MEDAKA {
     tag "SETUP_MEDAKA"
-    memory {4.GB * task.attempt}
+    if ( "${workflow.stubRun}" == "false" ) {
+        memory {4.GB * task.attempt}
+    }
     cpus (params.threads >= 2 ? 2 : params.threads)
 
     script:
