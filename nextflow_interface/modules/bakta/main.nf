@@ -28,8 +28,8 @@ process BAKTA {
     publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/bakta", mode: 'copy'
 
     conda "${params.CONDA_ENV_PATH}"
-    cpus (params.threads >= 8 ? 8 : params.threads)
     if ( "${workflow.stubRun}" == "false" ) {
+        cpus (params.threads >= 8 ? 8 : params.threads)
         memory {16.GB * task.attempt}
     }
 

@@ -21,8 +21,8 @@ process FASTQC {
     publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/fastqc", mode: 'copy'
 
     conda "${params.CONDA_ENV_PATH}"
-    cpus (params.threads >= 2 ? 2 : params.threads)
     if ( "${workflow.stubRun}" == "false" ) {
+        cpus (params.threads >= 2 ? 2 : params.threads)
         memory {1.GB * task.attempt}
     }
 

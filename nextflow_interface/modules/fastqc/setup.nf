@@ -7,9 +7,9 @@ params.FASTQC_ENV_PATH = "${baseDir}/../setup/conda_envs/fastqc"
 process SETUP_FASTQC {
     tag "SETUP_FASTQC"
     if ( "${workflow.stubRun}" == "false" ) {
+        cpus (params.threads >= 2 ? 2 : params.threads)
         memory {4.GB * task.attempt}
     }
-    cpus (params.threads >= 2 ? 2 : params.threads)
 
     script:
     """

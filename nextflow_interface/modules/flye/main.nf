@@ -14,8 +14,8 @@ process FLYE {
     tuple val(meta), path("${meta.sample_id}_assembly_graph.gfa"), emit: graph
     tuple val(meta), path("${meta.sample_id}_assembly_info.txt"), emit: info
 
-    cpus (params.threads >= 8 ? 8 : params.threads)
     if ( "${workflow.stubRun}" == "false" ) {
+        cpus (params.threads >= 8 ? 8 : params.threads)
         memory {16.GB * task.attempt}
     }
 

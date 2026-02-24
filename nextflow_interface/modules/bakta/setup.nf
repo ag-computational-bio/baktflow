@@ -20,9 +20,9 @@ process SETUP_BAKTA {
     publishDir path: params.BAKTA_DB_DIR, mode: 'copy'
 
     if ( "${workflow.stubRun}" == "false" ) {
+        cpus (params.threads >= 2 ? 2 : params.threads)
         memory {4.GB * task.attempt}
     }
-    cpus (params.threads >= 2 ? 2 : params.threads)
 
     // Script section for installing Bakta and handling databases
     script:

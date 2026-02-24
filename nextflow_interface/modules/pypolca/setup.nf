@@ -8,9 +8,9 @@ params.PYPOLCA_ENV_PATH = "${baseDir}/../setup/conda_envs/pypolca"
 process SETUP_PYPOLCA {
     tag "SETUP_PYPOLCA"
     if ( "${workflow.stubRun}" == "false" ) {
+        cpus (params.threads >= 2 ? 2 : params.threads)
         memory {4.GB * task.attempt}
     }
-    cpus (params.threads >= 2 ? 2 : params.threads)
 
     script:
     """

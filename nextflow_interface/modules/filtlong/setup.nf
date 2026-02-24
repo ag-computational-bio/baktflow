@@ -10,9 +10,9 @@ params.FILTLONG_ENV_PATH = "${baseDir}/../setup/conda_envs/filtlong"
 process SETUP_FILTLONG {
     tag "SETUP_FILTLONG"
     if ( "${workflow.stubRun}" == "false" ) {
+        cpus (params.threads >= 2 ? 2 : params.threads)
         memory {4.GB * task.attempt}
     }
-    cpus (params.threads >= 2 ? 2 : params.threads)
 
     script:
     """
