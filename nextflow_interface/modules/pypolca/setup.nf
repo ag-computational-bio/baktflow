@@ -12,16 +12,7 @@ process SETUP_PYPOLCA {
     }
 
     script:
+    """
     echo 'Finished Pypolca environment setup.'
     """
 }
-
-    
-
-
-
-
-
-
-
-
