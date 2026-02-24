@@ -1,15 +1,10 @@
 #!/usr/bin/env nextflow
-nextflow.enable.dsl=2
-
-params.CONDA_ENVS_PATH = "$projectDir/../setup/conda_envs"
-params.DATABASE_DIR = "$projectDir/../setup/databases"
 
 // ANSI color codes
 ANSI_BOLD = "\033[1m"
 ANSI_GREEN = "\033[1;32m"
 ANSI_RED = "\033[1;31m"
 ANSI_RESET = "\033[0m"
-
 
 // Include setup processes from modules
 include { SETUP_FASTQC } from './modules/fastqc/setup.nf'
@@ -23,10 +18,7 @@ include { SETUP_PYPOLCA } from './modules/pypolca/setup.nf'
 include { SETUP_DNAAPLER } from './modules/dnaapler/setup.nf'
 include { SETUP_BAKTA } from './modules/bakta/setup.nf'
 
-
-
 // Workflow definition
-
 workflow {
     SETUP_FASTP()
     SETUP_FASTQC()
@@ -38,14 +30,12 @@ workflow {
     SETUP_PYPOLCA()
     SETUP_DNAAPLER()
     SETUP_BAKTA()
-
-
 }
 
 workflow.onComplete {
     log.info "${ANSI_GREEN}${ANSI_BOLD}${''.center(60, '=')}${ANSI_RESET}"
-    log.info "${ANSI_GREEN}${ANSI_BOLD}Check Conda Environment Directory: ${params.CONDA_ENVS_PATH}${ANSI_RESET}"
-    log.info "${ANSI_GREEN}${ANSI_BOLD}Check Database Directory: ${params.DATABASE_DIR}${ANSI_RESET}"
+    log.info "${ANSI_GREEN}${ANSI_BOLD}Check Conda Environment Directory: ${params.cacheDir}${ANSI_RESET}"
+    log.info "${ANSI_GREEN}${ANSI_BOLD}Check Database Directory: ${params.databaseDir}${ANSI_RESET}"
     log.info "${ANSI_GREEN}${ANSI_BOLD}Duration: ${workflow.duration}${ANSI_RESET}"
     log.info "${ANSI_GREEN}${ANSI_BOLD}Success: ${workflow.success}${ANSI_RESET}"
     log.info "${ANSI_GREEN}${ANSI_BOLD}Error Report: ${workflow.errorReport ?: '-'}${ANSI_RESET}"

@@ -2,7 +2,7 @@
 nextflow.enable.dsl=2
 
 // Define parameters with default values
-params.DATABASE_PATH = "$projectDir/../setup/databases/bakta/bakta_db/db-light"
+params.DATABASE_PATH = "$projectDir/../setup/databases/bakta/db-${params.baktaDbType}"
 params.OUTPUT_DIR = "$projectDir/../output"
 
 

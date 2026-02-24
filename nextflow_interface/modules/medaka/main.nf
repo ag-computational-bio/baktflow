@@ -1,8 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 // Define parameters with default values
-params.CONDA_ENV_DIR = "$projectDir/../setup/conda_envs"
-params.CONDA_ENV_PATH = "${params.CONDA_ENV_DIR}/medaka"
 params.OUTPUT_DIR = "$projectDir/../output"
 
 
