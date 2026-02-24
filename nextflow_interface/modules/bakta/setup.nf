@@ -2,10 +2,10 @@
 nextflow.enable.dsl=2
 
 // Parameters
-params.BAKTA_ENV_FILE = "${baseDir}/modules/bakta/environment.yaml"
+params.BAKTA_ENV_FILE = "${projectDir}/modules/bakta/environment.yaml"
 params.BAKTA_DB_TYPE = "light"  // Valid options: light, full
-params.BAKTA_DB_DIR = "$baseDir/../setup/databases/bakta"
-params.BAKTA_ENV_PATH= "${baseDir}/../setup/conda_envs/bakta"
+params.BAKTA_DB_DIR = "$projectDir/../setup/databases/bakta"
+params.BAKTA_ENV_PATH= "${projectDir}/../setup/conda_envs/bakta"
 
 // Create the main process for setting up Bakta
 process SETUP_BAKTA {

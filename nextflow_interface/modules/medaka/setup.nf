@@ -2,8 +2,8 @@
 nextflow.enable.dsl=2
 
 
-params.MEDAKA_ENV_PATH = "${baseDir}/../setup/conda_envs/medaka"
-params.MEDAKA_ENV_FILE = "${baseDir}/modules/medaka/environment.yaml"
+params.MEDAKA_ENV_PATH = "${projectDir}/../setup/conda_envs/medaka"
+params.MEDAKA_ENV_FILE = "${projectDir}/modules/medaka/environment.yaml"
 
 
 // Process to setup Medaka

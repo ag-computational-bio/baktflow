@@ -2,10 +2,10 @@
 nextflow.enable.dsl=2
 
 // Define parameters with default values
-params.CONDA_ENV_DIR = "$baseDir/../setup/conda_envs"
+params.CONDA_ENV_DIR = "$projectDir/../setup/conda_envs"
 params.CONDA_ENV_PATH = "${params.CONDA_ENV_DIR}/bakta"
-params.DATABASE_PATH = "$baseDir/../setup/databases/bakta/bakta_db/db-light"
-params.OUTPUT_DIR = "$baseDir/../output"  
+params.DATABASE_PATH = "$projectDir/../setup/databases/bakta/bakta_db/db-light"
+params.OUTPUT_DIR = "$projectDir/../output"
 
 
 process BAKTA {

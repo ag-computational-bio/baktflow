@@ -1,8 +1,8 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.CONDA_ENVS_PATH = "$baseDir/../setup/conda_envs"
-params.DATABASE_DIR = "$baseDir/../setup/databases"
+params.CONDA_ENVS_PATH = "$projectDir/../setup/conda_envs"
+params.DATABASE_DIR = "$projectDir/../setup/databases"
 
 // ANSI color codes
 ANSI_BOLD = "\033[1m"

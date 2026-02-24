@@ -3,8 +3,8 @@ nextflow.enable.dsl=2
 
 // Define parameters for tools
 
-params.FLYE_ENV_FILE = "${baseDir}/modules/flye/environment.yaml"
-params.FLYE_ENV_PATH = "${baseDir}/../setup/conda_envs/flye"
+params.FLYE_ENV_FILE = "${projectDir}/modules/flye/environment.yaml"
+params.FLYE_ENV_PATH = "${projectDir}/../setup/conda_envs/flye"
 
 // Process to setup Flye
 process SETUP_FLYE {

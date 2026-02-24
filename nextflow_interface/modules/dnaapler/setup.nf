@@ -2,8 +2,8 @@
 nextflow.enable.dsl=2
 
 // Define parameters for DNAapler
-params.DNAAPLER_ENV_FILE = "${baseDir}/modules/dnaapler/environment.yaml"
-params.DNAAPLER_ENV_PATH = "${baseDir}/../setup/conda_envs/dnaapler"
+params.DNAAPLER_ENV_FILE = "${projectDir}/modules/dnaapler/environment.yaml"
+params.DNAAPLER_ENV_PATH = "${projectDir}/../setup/conda_envs/dnaapler"
 
 // Process to setup DNAapler
 process SETUP_DNAAPLER {

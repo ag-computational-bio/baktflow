@@ -2,8 +2,8 @@
 nextflow.enable.dsl=2
 
 // Define parameters for Polypolish 
-params.POLYPOLISH_ENV_FILE = "${baseDir}/modules/polypolish/environment.yaml"
-params.POLYPOLISH_ENV_PATH = "${baseDir}/../setup/conda_envs/polypolish"
+params.POLYPOLISH_ENV_FILE = "${projectDir}/modules/polypolish/environment.yaml"
+params.POLYPOLISH_ENV_PATH = "${projectDir}/../setup/conda_envs/polypolish"
 
 
 // Process to setup Polypolish

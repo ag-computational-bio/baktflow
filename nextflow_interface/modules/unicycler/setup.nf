@@ -2,8 +2,8 @@
 nextflow.enable.dsl=2
 
 // Define parameters for FastQC
-params.UNICYCLER_ENV_FILE = "${baseDir}/modules/unicycler/environment.yaml"
-params.UNICYCLER_ENV_PATH = "${baseDir}/../setup/conda_envs/unicycler"
+params.UNICYCLER_ENV_FILE = "${projectDir}/modules/unicycler/environment.yaml"
+params.UNICYCLER_ENV_PATH = "${projectDir}/../setup/conda_envs/unicycler"
 
 // Process to setup Unicycler
 process SETUP_UNICYCLER {

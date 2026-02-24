@@ -1,8 +1,8 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.FASTQC_ENV_FILE = "${baseDir}/modules/fastqc/environment.yaml"
-params.FASTQC_ENV_PATH = "${baseDir}/../setup/conda_envs/fastqc"
+params.FASTQC_ENV_FILE = "${projectDir}/modules/fastqc/environment.yaml"
+params.FASTQC_ENV_PATH = "${projectDir}/../setup/conda_envs/fastqc"
 
 process SETUP_FASTQC {
     tag "SETUP_FASTQC"

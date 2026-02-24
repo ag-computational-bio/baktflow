@@ -1,10 +1,10 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 // Define parameters with default values
-params.CONDA_ENV_DIR = "$baseDir/../setup/conda_envs"
+params.CONDA_ENV_DIR = "$projectDir/../setup/conda_envs"
 params.CONDA_ENV_PATH = "${params.CONDA_ENV_DIR}/fastqc"
-params.REPORT_SCRIPT = "$baseDir/modules/fastqc/report.py"
-params.OUTPUT_DIR = "$baseDir/../output"
+params.REPORT_SCRIPT = "$projectDir/modules/fastqc/report.py"
+params.OUTPUT_DIR = "$projectDir/../output"
 
 // FastQC Process
 process FASTQC {
