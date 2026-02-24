@@ -1,13 +1,6 @@
 name: pypolca
 channels:
-  - bioconda
   - conda-forge
-  - defaults
+  - bioconda
 dependencies:
-  - pypolca=0.3.1
-
-
-
-
-
-
+  - pypolca=0.4.0
