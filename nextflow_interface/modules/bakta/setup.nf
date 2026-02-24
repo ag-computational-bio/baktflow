@@ -2,10 +2,8 @@
 nextflow.enable.dsl=2
 
 // Parameters
-params.BAKTA_ENV_FILE = "${projectDir}/modules/bakta/environment.yaml"
 params.BAKTA_DB_TYPE = "light"  // Valid options: light, full
 params.BAKTA_DB_DIR = "$projectDir/../setup/databases/bakta"
-params.BAKTA_ENV_PATH= "${projectDir}/../setup/conda_envs/bakta"
 
 // Create the main process for setting up Bakta
 process SETUP_BAKTA {
@@ -19,6 +17,7 @@ process SETUP_BAKTA {
     // Publish outputs to the BAKTA_DB_DIR
     publishDir path: params.BAKTA_DB_DIR, mode: 'copy'
 
+    conda "${projectDir}/modules/bakta/environment.yaml"
     if ( "${workflow.stubRun}" == "false" ) {
         cpus (params.threads >= 2 ? 2 : params.threads)
         memory {4.GB * task.attempt}
@@ -27,15 +26,8 @@ process SETUP_BAKTA {
     // Script section for installing Bakta and handling databases
     script:
     """
-    echo 'Starting Bakta environment setup...'
-    echo "Conda environments path: ${params.BAKTA_ENV_PATH}"
-    # Create the conda environment using mamba
-    mamba create -y -p ${params.BAKTA_ENV_PATH} -c bioconda bakta
-    
-    # Download the Bakta databases directly into the subdirectory using mamba run
-    mamba run -p ${params.BAKTA_ENV_PATH} bakta_db download --type ${params.BAKTA_DB_TYPE} --output bakta_db
+    bakta_db download --type ${params.BAKTA_DB_TYPE} --output bakta_db
     echo 'Finished Bakta environment setup.'
-
     """
 }
 

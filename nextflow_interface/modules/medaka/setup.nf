@@ -1,14 +1,11 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-
-params.MEDAKA_ENV_PATH = "${projectDir}/../setup/conda_envs/medaka"
-params.MEDAKA_ENV_FILE = "${projectDir}/modules/medaka/environment.yaml"
-
-
 // Process to setup Medaka
 process SETUP_MEDAKA {
     tag "SETUP_MEDAKA"
+
+    conda "${projectDir}/../setup/conda_envs/medaka"
     if ( "${workflow.stubRun}" == "false" ) {
         cpus (params.threads >= 2 ? 2 : params.threads)
         memory {4.GB * task.attempt}
@@ -16,9 +13,6 @@ process SETUP_MEDAKA {
 
     script:
     """
-    echo 'Starting Medaka environment setup...'
-    echo "Conda environments path: ${params.MEDAKA_ENV_PATH}"
-    mamba env create -p ${params.MEDAKA_ENV_PATH} -f ${params.MEDAKA_ENV_FILE} -v
     echo 'Finished Medaka environment setup.'
     """
 }

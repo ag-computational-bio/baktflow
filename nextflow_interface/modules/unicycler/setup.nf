@@ -1,13 +1,11 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-// Define parameters for FastQC
-params.UNICYCLER_ENV_FILE = "${projectDir}/modules/unicycler/environment.yaml"
-params.UNICYCLER_ENV_PATH = "${projectDir}/../setup/conda_envs/unicycler"
-
 // Process to setup Unicycler
 process SETUP_UNICYCLER {
     tag "SETUP_UNICYCLER"
+
+    conda "${projectDir}/modules/unicycler/environment.yaml"
     if ( "${workflow.stubRun}" == "false" ) {
         cpus (params.threads >= 2 ? 2 : params.threads)
         memory {4.GB * task.attempt}
@@ -15,9 +13,7 @@ process SETUP_UNICYCLER {
 
     script:
     """
-    echo 'Starting Unicycler environment setup...'
-    echo "Conda environments path: ${params.UNICYCLER_ENV_PATH}"
-    mamba env create -p ${params.UNICYCLER_ENV_PATH} -f ${params.UNICYCLER_ENV_FILE} -v 
+    echo 'Finished Unicycler environment setup.'
     """
 }
 

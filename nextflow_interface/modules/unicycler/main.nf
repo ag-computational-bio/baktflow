@@ -1,8 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 // Define parameters with default values
-params.CONDA_ENV_DIR = "$projectDir/../setup/conda_envs"
-params.CONDA_ENV_PATH = "${params.CONDA_ENV_DIR}/unicycler"
 params.OUTPUT_DIR = "$projectDir/../output"
 params.REPORT_SCRIPT = "$projectDir/modules/unicycler/report.py"
 
@@ -19,7 +17,7 @@ process UNICYCLER {
     tuple val(meta), path("${meta.sample_id}_unicycler.log"), emit: log
 
     publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/unicycler", mode: 'copy'
-    conda "${params.CONDA_ENV_PATH}"
+    conda "${projectDir}/modules/unicycler/environment.yaml"
     if ( "${workflow.stubRun}" == "false" ) {
         cpus (params.threads >= 8 ? 8 : params.threads)
         memory {16.GB * task.attempt}
@@ -31,7 +29,6 @@ process UNICYCLER {
 
     """
     unicycler --short1 ${r1} --short2 ${r2} ${long_reads_option} --out ./ --threads ${task.cpus}
-        
 
     mv ./assembly.fasta ${prefix}_assembly.fasta
     mv ./assembly.gfa ${prefix}_assembly.gfa

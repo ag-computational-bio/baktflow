@@ -6,6 +6,8 @@ params.FASTP_ENV_PATH = "${projectDir}/../setup/conda_envs/fastp"
 
 process SETUP_FASTP {
     tag "SETUP_FASTP"
+
+    conda "${projectDir}/modules/fastp/environment.yaml"
     if ( "${workflow.stubRun}" == "false" ) {
         cpus (params.threads >= 2 ? 2 : params.threads)
         memory {4.GB * task.attempt}
@@ -13,11 +15,7 @@ process SETUP_FASTP {
 
     script:
     """
-    echo 'Starting mamba environment setup...'
-    echo "Conda environments path: ${params.FASTP_ENV_PATH}"
-    mamba env create -p ${params.FASTP_ENV_PATH} -f ${params.FASTP_ENV_FILE} -v
     echo 'Finished mamba environment setup.'
-
     """
 }
 
