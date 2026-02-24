@@ -17,8 +17,10 @@ process PYPOLCA {
     conda "${params.CONDA_ENV_PATH }"
     errorStrategy { task.attempt <= 3 ? 'retry' : 'ignore' }  // Retry up to 3 times, then ignore
     maxRetries 3  // Ensure maxRetries is set to allow up to 3 retries
-    cpus 8
-    memory '16GB'
+    if ( "${workflow.stubRun}" == "false" ) {
+        cpus (params.threads >= 8 ? 8 : params.threads)
+        memory {16.GB * task.attempt}
+    }
 
     script:
     """

@@ -8,8 +8,11 @@ params.UNICYCLER_ENV_PATH = "${baseDir}/../setup/conda_envs/unicycler"
 // Process to setup Unicycler
 process SETUP_UNICYCLER {
     tag "SETUP_UNICYCLER"
-    memory '4GB'
-    cpus 2
+    if ( "${workflow.stubRun}" == "false" ) {
+        cpus (params.threads >= 2 ? 2 : params.threads)
+        memory {4.GB * task.attempt}
+    }
+
     script:
     """
     echo 'Starting Unicycler environment setup...'
