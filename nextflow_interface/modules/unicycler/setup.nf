@@ -6,10 +6,6 @@ process SETUP_UNICYCLER {
     tag "SETUP_UNICYCLER"
 
     conda "${projectDir}/modules/unicycler/environment.yaml"
-    if ( "${workflow.stubRun}" == "false" ) {
-        cpus (params.threads >= 2 ? 2 : params.threads)
-        memory {4.GB * task.attempt}
-    }
 
     script:
     """

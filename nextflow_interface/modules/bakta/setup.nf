@@ -18,10 +18,6 @@ process SETUP_BAKTA {
     publishDir path: params.BAKTA_DB_DIR, mode: 'copy'
 
     conda "${projectDir}/modules/bakta/environment.yaml"
-    if ( "${workflow.stubRun}" == "false" ) {
-        cpus (params.threads >= 2 ? 2 : params.threads)
-        memory {4.GB * task.attempt}
-    }
 
     // Script section for installing Bakta and handling databases
     script:
