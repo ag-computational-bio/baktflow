@@ -16,7 +16,7 @@ process MEDAKA {
     tuple val(meta), path("${meta.sample_id}_polished_assembly.fasta"), emit: input_fasta
 
     publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/medaka", mode: 'copy'
-    conda "${projectDir}/../setup/conda_envs/medaka"
+    conda "${projectDir}/modules/medaka"
     if ( "${workflow.stubRun}" == "false" ) {
         cpus (params.threads >= 8 ? 8 : params.threads)
         memory {1.GB * task.attempt}
