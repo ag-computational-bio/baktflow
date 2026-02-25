@@ -2,7 +2,7 @@
 
 process SETUP_MEDAKA {
     tag "SETUP_MEDAKA"
-    conda "${projectDir}/modules/medaka"
+    conda "${projectDir}/modules/medaka/environment.yaml"
 
     script:
     """
