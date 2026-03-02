@@ -21,10 +21,6 @@ from baktflow.nextflow import baktflow_setup, run
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
-# Define color codes
-c_blue = "\033[1;34m"
-c_green = "\033[1;32m"
-c_reset = "\033[0m"
 
 # ---- Subcommand: Setup ----
 default_setup_dir = Path(__file__).resolve().parent.parent.joinpath('setup')

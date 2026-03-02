@@ -1,11 +1,5 @@
 #!/usr/bin/env nextflow
 
-// ANSI color codes
-ANSI_BOLD = "\033[1m"
-ANSI_GREEN = "\033[1;32m"
-ANSI_RED = "\033[1;31m"
-ANSI_RESET = "\033[0m"
-
 // Include setup processes from modules
 include { SETUP_FASTQC } from './modules/fastqc/setup.nf'
 include { SETUP_FASTP } from './modules/fastp/setup.nf'
@@ -33,15 +27,12 @@ workflow {
 }
 
 workflow.onComplete {
-    log.info "${ANSI_GREEN}${ANSI_BOLD}${''.center(60, '=')}${ANSI_RESET}"
-    log.info "${ANSI_GREEN}${ANSI_BOLD}Check Conda Environment Directory: ${params.cacheDir}${ANSI_RESET}"
-    log.info "${ANSI_GREEN}${ANSI_BOLD}Check Database Directory: ${params.databaseDir}${ANSI_RESET}"
-    log.info "${ANSI_GREEN}${ANSI_BOLD}Duration: ${workflow.duration}${ANSI_RESET}"
-    log.info "${ANSI_GREEN}${ANSI_BOLD}Success: ${workflow.success}${ANSI_RESET}"
-    log.info "${ANSI_GREEN}${ANSI_BOLD}Error Report: ${workflow.errorReport ?: '-'}${ANSI_RESET}"
-    log.info "${ANSI_GREEN}${ANSI_BOLD}Launch Dir: ${workflow.launchDir}${ANSI_RESET}"
-    log.info "${ANSI_GREEN}${ANSI_BOLD}${''.center(60, '=')}${ANSI_RESET}"
+    log.info "${''.center(60, '=')}"
+    log.info "Check Conda Environment Directory: ${params.cacheDir}"
+    log.info "Check Database Directory: ${params.databaseDir}"
+    log.info "Duration: ${workflow.duration}"
+    log.info "Success: ${workflow.success}"
+    log.info "Error Report: ${workflow.errorReport ?: '-'}"
+    log.info "Launch Dir: ${workflow.launchDir}"
+    log.info "${''.center(60, '=')}"
 }
-
-
-
