@@ -1,7 +1,5 @@
 #!/usr/bin/env nextflow
 
-params.BAKTA_DB_TYPE = "light"  // Valid options: light, full
-
 process SETUP_BAKTA {
     publishDir path: "${params.databaseDir}", mode: 'copy'
     tag "SETUP_BAKTA"
@@ -12,7 +10,7 @@ process SETUP_BAKTA {
 
     script:
     """
-    bakta_db download --type ${params.BAKTA_DB_TYPE} --output bakta
+    bakta_db download --type ${params.baktaDbType} --output bakta
     echo 'Finished Bakta environment setup.'
     """
 }
