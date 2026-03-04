@@ -22,22 +22,23 @@ from baktflow.nextflow import baktflow_setup, run
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
+# ---- Basic direcotries ----
+base_dir: Path = Path(__file__).resolve()
+root_dir: Path = Path(__file__).parent.parent.resolve()
+nextflow_dir = root_dir.joinpath('nextflow_interface')
+
 # ---- Subcommand: Setup ----
-default_setup_dir = Path(__file__).resolve().parent.parent.joinpath('setup')
-nextflow_dir = Path(__file__).resolve().parent.parent.joinpath('nextflow_interface')
-setup_script = (nextflow_dir.joinpath('setup.nf')).resolve()
+default_setup_dir = root_dir.joinpath('setup')
+setup_script = nextflow_dir.joinpath('setup.nf')
 
 # ---- Subcommand: Report ----
-current_script_path = os.path.abspath(__file__)
-baktflow_dir = os.path.dirname(os.path.dirname(current_script_path))  
-aggregated_report_path = os.path.join(baktflow_dir, "baktflow", "aggregated_report.py")
-nextflow_dir = Path(__file__).resolve().parent.parent /'nextflow_interface'
+aggregated_report_script = root_dir.joinpath("baktflow", "aggregated_report.py")
 
 # ---- Subcommand: Single ----
 valid_extensions = ('.fastq', '.fq', '.fastq.gz', '.fq.gz', '.fasta', '.fa', '.fa.gz')
 # ---- Paths for Subcommands (Single and Batch) ----
-main_script = Path(nextflow_dir / 'main.nf').resolve()
-base_path = Path(__file__).parent
+main_script = nextflow_dir.joinpath('main.nf')
+base_path = base_dir.parent
 
 
 def setup_subcommand(args, conda_implementation: str):
@@ -262,14 +263,14 @@ def report_subcommand(input_dir, output_dir):
     logger.info(f"Input directory: {input_dir}")
     logger.info(f"Output directory: {output_dir}")
 
-    if not os.path.exists(aggregated_report_path):
-        logger.error(f"aggregated_report.py not found at {aggregated_report_path}")
+    if not os.path.exists(aggregated_report_script):
+        logger.error(f"aggregated_report.py not found at {aggregated_report_script}")
         return
 
     logger.info(f"Running aggregated report from {input_dir} to {output_dir}...")
 
     try:
-        subprocess.run(["python", aggregated_report_path, "--input_dir", input_dir, "--output_dir", output_dir], check=True)
+        subprocess.run(["python", aggregated_report_script, "--input_dir", input_dir, "--output_dir", output_dir], check=True)
         logger.info("Report generation completed successfully.")
     except subprocess.CalledProcessError as e:
         logger.error(f"Error while running report: {e}")
