@@ -1,9 +1,6 @@
 import os
-import argparse
 import logging
 from pathlib import Path
-import pandas as pd
-import re
 import argparse
 import subprocess
 import shutil
@@ -19,165 +16,87 @@ from baktflow.utils import (
     get_baktflow_parent_dir
 )
 from baktflow.aggregated_report import find_json_reports, generate_html_report
-from baktflow.nextflow import start, run
+from baktflow.nextflow import baktflow_setup, run
 
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
-# Define color codes
-c_blue = "\033[1;34m"
-c_green = "\033[1;32m"
-c_reset = "\033[0m"
+
+# ---- Basic direcotries ----
+base_dir: Path = Path(__file__).resolve()
+root_dir: Path = Path(__file__).parent.parent.resolve()
+nextflow_dir = root_dir.joinpath('nextflow_interface')
 
 # ---- Subcommand: Setup ----
-default_setup_dir = Path(__file__).resolve().parent.parent /'setup'
-nextflow_dir = Path(__file__).resolve().parent.parent /'nextflow_interface'
-setup_script = (nextflow_dir / 'setup.nf').resolve()
-
+default_setup_dir = root_dir.joinpath('setup')
+setup_script = nextflow_dir.joinpath('setup.nf')
 
 # ---- Subcommand: Report ----
-current_script_path = os.path.abspath(__file__)
-baktflow_dir = os.path.dirname(os.path.dirname(current_script_path))  
-aggregated_report_path = os.path.join(baktflow_dir, "baktflow", "aggregated_report.py")
-
-nextflow_dir = Path(__file__).resolve().parent.parent /'nextflow_interface'
-setup_script = (nextflow_dir / 'setup.nf').resolve()
+aggregated_report_script = root_dir.joinpath("baktflow", "aggregated_report.py")
 
 # ---- Subcommand: Single ----
 valid_extensions = ('.fastq', '.fq', '.fastq.gz', '.fq.gz', '.fasta', '.fa', '.fa.gz')
 # ---- Paths for Subcommands (Single and Batch) ----
-main_script = Path(nextflow_dir / 'main.nf').resolve()
-base_path = Path(__file__).parent
+main_script = nextflow_dir.joinpath('main.nf')
+base_path = base_dir.parent
 
 
-
-
-def setup_subcommand(args):
+def setup_subcommand(args, conda_implementation: str):
     """Setup Baktflow pipeline by managing Conda environments and databases"""
     logger.info("Setting up Baktflow pipeline...")
-
-    # Log user-provided directory and configuration file
     logger.info(f"Setup directory: {args.directory}")
 
-
-    # Define paths for Conda and database directories
     setup_subdir =  Path(args.directory).resolve() if args.directory else default_setup_dir
-    conda_dir = setup_subdir / 'conda_envs'
-    database_dir = setup_subdir / 'databases'
+    conda_dir = setup_subdir.joinpath('envs')
+    database_dir = setup_subdir.joinpath('databases')
 
-    if args.directory:
-        user_dir = Path(args.directory).resolve()
-        setup_subdir = user_dir / 'setup'
-        conda_dir = setup_subdir / 'conda_envs'
-        database_dir = setup_subdir / 'databases'
-
-        if user_dir != default_setup_dir:
-            response = input(f"Do you want to move the setup to {setup_subdir}? [Y/N]: ").strip().lower()
-            if response == 'y':
-                if setup_subdir.exists():
-                    shutil.rmtree(setup_subdir)
-                shutil.move(str(default_setup_dir), str(setup_subdir))
-                logger.info(f"Moved setup directory to: {setup_subdir}")
-
-     # Ensure required directories exist; create them if they don't
     for directory in [conda_dir, database_dir]:
         if not directory.exists():
             directory.mkdir(parents=True)
             logger.info(f"Created directory: {directory}")
     
-     # Check if any YAML configuration files exist in the Conda environments directory
-        yaml_files_found = False
-        for env_dir in conda_dir.iterdir():
-            if env_dir.is_dir() and list(env_dir.glob('*.yaml')):  # Look for YAML files inside each Conda env folder
-                yaml_files_found = True
-                logger.info(f"Found YAML files in: {env_dir}")
-    
-    # List existing files in Conda and database directories
     conda_files = [file.name for file in conda_dir.iterdir() if conda_dir.exists() and any(conda_dir.iterdir())]
     database_files = [file.name for file in database_dir.iterdir() if database_dir.exists() and any(database_dir.iterdir())]
     
-    
-    if conda_files or database_files:
-        # Log detected existing environments and databases
-        logger.info("Existing files found:")
+    if not args.force and (conda_files or database_files):
         if conda_files:
-            logger.info(f"Conda Environments found: {', '.join(conda_files)}")
+            logger.info(f"Existing Conda Environments found: {', '.join(conda_files)}")
         if database_files:
-            logger.info(f"Databases found: {', '.join(database_files)}")
+            logger.info(f"Existing Databases found: {', '.join(database_files)}")
 
-        # Prompt user for action: reinstall, update, or skip setup
-        response = input("Do you want to reinstall or update these environments and databases? [reinstall/update/skip]: ").strip().lower()
-
-        if response == 'reinstall':
-            # Reinstall: remove and recreate the directories
+        response = input("Do you want to reinstall the environments and databases? ([r]einstall/[s]kip): ").strip().lower()
+        if response == 'r' or response == 'reinstall':
             logger.info("Reinstalling all environments and databases...")
-            shutil.rmtree(conda_dir, ignore_errors=True)  # Delete existing Conda environments
-            conda_dir.mkdir(parents=True)  # Recreate the directory
+            shutil.rmtree(conda_dir, ignore_errors=True)
+            conda_dir.mkdir(parents=True)
+            shutil.rmtree(database_dir, ignore_errors=True)
+            database_dir.mkdir(parents=True)
 
-            shutil.rmtree(database_dir, ignore_errors=True)  # Delete existing database files
-            database_dir.mkdir(parents=True)  # Recreate the directory
-              # Run the Nextflow setup script to reinstall everything
             try:
-                start(setup_script, setup_subdir, conda_dir, database_dir)
+                baktflow_setup(setup_script, setup_subdir, conda_dir, database_dir, conda_implementation, nextflow_path=args.nextflow_path)
             except subprocess.CalledProcessError as e:
                 logger.error(f"Nextflow setup failed: {e}")
                 return
             logger.info("Reinstallation complete.")
 
-        elif response == 'update':
-            # Update: Preserve YAML files and reinstall while keeping configurations
-            logger.info("Updating environments and databases while preserving user configuration...")
-
-            temp_dir = Path(setup_subdir, 'temp_configs')  # Temporary directory for storing YAML files
-            temp_dir.mkdir(parents=True, exist_ok=True)
-            preserved_configs = {}
-
-            # Backup YAML configuration files before removal
-            for env_dir in conda_dir.iterdir():
-                if env_dir.is_dir():
-                    for yaml_file in env_dir.glob('*.yaml'):
-                        temp_file = temp_dir / yaml_file.name
-                        shutil.copy(yaml_file, temp_file)  # Copy YAML file to temp directory
-                        preserved_configs.setdefault(env_dir, []).append(temp_file)
-                        logger.info(f"Preserved YAML file '{yaml_file.name}' from '{env_dir}' to '{temp_dir}'")
-
-            # Remove old directories and reinstall everything
-            shutil.rmtree(conda_dir, ignore_errors=True)
-            shutil.rmtree(database_dir, ignore_errors=True)
-            conda_dir.mkdir(parents=True)
-            database_dir.mkdir(parents=True)
-
-            try:
-                start(setup_script, setup_subdir, conda_dir, database_dir)
-            except subprocess.CalledProcessError as e:
-                logger.error(f"Nextflow setup failed: {e}")
-                return
-
-            # Restore preserved YAML files back to the respective environment directories
-            for env_dir, yaml_files in preserved_configs.items():
-                for temp_file in yaml_files:
-                    shutil.copy(temp_file, env_dir / temp_file.name)
-                    logger.info(f"Restored YAML file '{temp_file.name}' to '{env_dir}'")
-
-            # Clean up temporary storage for YAML files
-            shutil.rmtree(temp_dir)
-            logger.info(f"Deleted temporary configuration files from '{temp_dir}'")
-
-        elif response == 'skip':
-            # Skip the setup process
+        elif response == 's' or response == 'skip':
             logger.info("Skipping setup process.")
     else:
-        # No existing files found: Install everything from scratch
-        logger.info("No existing environments or databases found. Installing from scratch...")
-
+        if args.force:
+            logger.info("Try forced reinstallation of all environments and databases...")
+            shutil.rmtree(conda_dir, ignore_errors=True)
+            conda_dir.mkdir(parents=True)
+            shutil.rmtree(database_dir, ignore_errors=True)
+            database_dir.mkdir(parents=True)
+        else:
+            logger.info("No existing environments or databases found. Installing from scratch...")
         try:
-            start(setup_script, setup_subdir, conda_dir, database_dir)
+            baktflow_setup(setup_script, setup_subdir, conda_dir, database_dir, conda_implementation, nextflow_path=args.nextflow_path)
         except subprocess.CalledProcessError as e:
             logger.error(f"Nextflow setup failed: {e}")
             return
 
 
- 
 def single_subcommand(args):
     """Run baktflow single analysis."""
     logger.info("Running baktflow single...")
@@ -193,7 +112,6 @@ def single_subcommand(args):
     if not input_files:
         logger.error("At least one input file must be provided.")
         return
-
     
     for file in input_files:
         if not file.endswith(valid_extensions):
@@ -229,7 +147,6 @@ def single_subcommand(args):
         logger.info(f"Output directory already exists: {output}")
 
     final_output_dir = output
-  
 
     temp_tsv_path = get_baktflow_parent_dir() / 'temp'
     temp_tsv_path.mkdir(parents=True, exist_ok=True)
@@ -241,7 +158,6 @@ def single_subcommand(args):
     try:
         create_tsv(args.id, args.r1, args.r2, args.long, args.assembly, sample_type, tsv_path)
 
-        
         if not check_existence(tsv_path):
             logger.error(f"Failed to create the TSV file at: {tsv_path}")
             return
@@ -250,7 +166,6 @@ def single_subcommand(args):
     except Exception as e:
         logger.error(f"Error creating TSV: {e}")
         return
-
 
     try:
         run(main_script, tsv_path, output,base_path)
@@ -263,7 +178,6 @@ def single_subcommand(args):
             logger.info(f"Temporary directory {temp_tsv_path} removed successfully.")
         except Exception as e:
             logger.error(f"Failed to remove temporary directory {temp_tsv_path}: {e}")
-
 
 
 def batch_subcommand(args):
@@ -304,7 +218,6 @@ def batch_subcommand(args):
         logger.info(f"Output directory already exists: {output_dir}")
 
     final_output_dir = output_dir
-    
 
      # Process the TSV file and generate a temporary TSV file
     temp_tsv = process_tsv(args.input_tsv, args.input_dir)
@@ -350,14 +263,14 @@ def report_subcommand(input_dir, output_dir):
     logger.info(f"Input directory: {input_dir}")
     logger.info(f"Output directory: {output_dir}")
 
-    if not os.path.exists(aggregated_report_path):
-        logger.error(f"aggregated_report.py not found at {aggregated_report_path}")
+    if not os.path.exists(aggregated_report_script):
+        logger.error(f"aggregated_report.py not found at {aggregated_report_script}")
         return
 
     logger.info(f"Running aggregated report from {input_dir} to {output_dir}...")
 
     try:
-        subprocess.run(["python", aggregated_report_path, "--input_dir", input_dir, "--output_dir", output_dir], check=True)
+        subprocess.run(["python", aggregated_report_script, "--input_dir", input_dir, "--output_dir", output_dir], check=True)
         logger.info("Report generation completed successfully.")
     except subprocess.CalledProcessError as e:
         logger.error(f"Error while running report: {e}")
@@ -379,7 +292,16 @@ def report_subcommand(input_dir, output_dir):
     else:
         logger.error("Failed to create aggregated report.")
 
-    
+
+def get_conda_implementation() -> str:
+    if bool(shutil.which('micromamba')):
+        return 'micromamba'
+    elif bool(shutil.which('mamba')):
+        return 'mamba'
+    elif bool(shutil.which('conda')):
+        return 'conda'
+    else:
+        raise 'No Conda, Mamba or Micromamba'
 
 
 def parse_arguments():
@@ -389,8 +311,9 @@ def parse_arguments():
 
     # Setup subcommand
     setup_parser = subparsers.add_parser('setup', help='Setup baktflow pipeline')
-    setup_parser.add_argument('--directory', help='Home directory for the pipeline setup')
-    setup_parser.add_argument('--nextflow_path', default=None, help='Path to Nextflow installation')
+    setup_parser.add_argument('--directory', '-d', help='Home directory for the pipeline setup')
+    setup_parser.add_argument('--nextflow_path', '-n', default=None, help='Path to Nextflow installation')
+    setup_parser.add_argument('--force', '-f', default=False, action='store_true', help='Force the (re)installation setup of baktflow.')
     
     # Single subcommand
     single_parser = subparsers.add_parser('single', help='Run baktflow single analysis')
@@ -411,14 +334,17 @@ def parse_arguments():
     report_parser = subparsers.add_parser('report', help='Generate an aggregated report from output directory')
     report_parser.add_argument('--input_dir', required=True, help='Path to the input directory containing report files')
     report_parser.add_argument('--output_dir', required=True, help='Path to the output directory for the report')
-  
 
     return parser.parse_args()
+
+
 def main():
     args = parse_arguments()
 
+    conda_implementation: str = get_conda_implementation()
+
     if args.subcommand == 'setup':
-        setup_subcommand(args)
+        setup_subcommand(args, conda_implementation)
     elif args.subcommand == 'single':
         single_subcommand(args)
     elif args.subcommand == 'batch':

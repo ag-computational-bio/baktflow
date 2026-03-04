@@ -1,8 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 // Define parameters with default values
-params.CONDA_ENV_DIR = "$projectDir/../setup/conda_envs"
-params.CONDA_ENV_PATH = "${params.CONDA_ENV_DIR}/medaka"
 params.OUTPUT_DIR = "$projectDir/../output"
 
 
@@ -16,10 +14,7 @@ process MEDAKA {
     tuple val(meta), path("${meta.sample_id}_polished_assembly.fasta"), emit: input_fasta
 
     publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/medaka", mode: 'copy'
-    conda "${params.CONDA_ENV_PATH}"
-    errorStrategy { task.attempt <= 3 ? 'retry' : 'ignore' }  // Retry up to 3 times, then ignore
-    maxRetries 3  // Ensure maxRetries is set to allow up to 3 retries
-    // Resource allocation
+    conda "${projectDir}/modules/medaka/environment.yaml"
     if ( "${workflow.stubRun}" == "false" ) {
         cpus (params.threads >= 8 ? 8 : params.threads)
         memory {1.GB * task.attempt}

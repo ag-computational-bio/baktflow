@@ -1,11 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 // Define parameters with default values
-params.CONDA_ENV_DIR = "$projectDir/../setup/conda_envs"
-params.CONDA_ENV_PATH = "${params.CONDA_ENV_DIR}/fastp"
 params.OUTPUT_DIR = "$projectDir/../output"
-
-
 
 process FASTP {
     tag "$meta.sample_id"
@@ -16,11 +12,9 @@ process FASTP {
     tuple val(meta), path("${meta.sample_id}_R1_processed.fastq.gz"), path("${meta.sample_id}_R2_processed.fastq.gz"), path("${meta.sample_id}_SE_processed.fastq.gz"), emit: processed_reads
     tuple val(meta), path('*.json'), emit: json
     tuple val(meta), path('*.html'), emit: html
-    errorStrategy 'retry'  // Retry on failure
+
     publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/fastp", mode: 'copy'
-    conda "${params.CONDA_ENV_PATH}"
-    errorStrategy { task.attempt <= 3 ? 'retry' : 'ignore' }  // Retry up to 3 times, then ignore
-    maxRetries 3  // Ensure maxRetries is set to allow up to 3 retries
+    conda "${projectDir}/modules/fastp/environment.yaml"
     if ( "${workflow.stubRun}" == "false" ) {
         cpus (params.threads >= 2 ? 2 : params.threads)
         memory {1.GB * task.attempt}

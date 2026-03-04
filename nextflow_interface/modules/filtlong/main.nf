@@ -1,8 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 // Define parameters with default values
-params.CONDA_ENV_DIR = "$projectDir/../setup/conda_envs"
-params.CONDA_ENV_PATH = "${params.CONDA_ENV_DIR}/filtlong"
 params.OUTPUT_DIR = "$projectDir/../output"
 
 // Process parameters
@@ -20,7 +18,7 @@ process FILTLONG {
     tuple val(meta), path("${meta.sample_id}_filtlong.log"), emit: log
 
     publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/filtlong", mode: 'copy'
-    conda "${params.CONDA_ENV_PATH}"
+    conda "${projectDir}/modules/filtlong/environment.yaml"
     if ( "${workflow.stubRun}" == "false" ) {
         cpus (params.threads >= 8 ? 8 : params.threads)
         memory {1.GB * task.attempt}

@@ -1,8 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 // Define parameters with default values
-params.CONDA_ENV_DIR = "$projectDir/../setup/conda_envs"
-params.CONDA_ENV_PATH = "${params.CONDA_ENV_DIR}/flye"
 params.OUTPUT_DIR = "$projectDir/../output"
 
 process FLYE {
@@ -14,13 +12,11 @@ process FLYE {
     tuple val(meta), path("${meta.sample_id}_assembly_graph.gfa"), emit: graph
     tuple val(meta), path("${meta.sample_id}_assembly_info.txt"), emit: info
 
+    conda "${projectDir}/modules/flye/environment.yaml"
     if ( "${workflow.stubRun}" == "false" ) {
         cpus (params.threads >= 8 ? 8 : params.threads)
         memory {16.GB * task.attempt}
     }
-
-    errorStrategy { task.attempt <= 3 ? 'retry' : 'ignore' }  // Retry up to 3 times, then ignore
-    maxRetries 3  // Ensure maxRetries is set to allow up to 3 retries
 
     script:
     """

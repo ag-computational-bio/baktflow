@@ -1,11 +1,10 @@
 name: unicycler
 channels:
-  - bioconda
   - conda-forge
-  - defaults
+  - bioconda
 dependencies:
   - unicycler=0.5.1
-  - Biopython=1.85
+  - Biopython=1.86
 
 
 
