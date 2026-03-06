@@ -1,3 +1,50 @@
+[project]
+name = "baktflow"
+version = "0.1.0"
+requires-python = ">=3.11"
+description = "Baktflow - An Automated Bacterial Genome Analysis Pipeline"
+readme = "README.md"
+license = "MIT"
+authors = [
+    { name = "Oliver Schwengers", email = "oliver.schwengers@cb.jlug.de" },
+    { name = "Julian M. Hahnfeld" },
+    { name = "Ayche Serradj " },
+    { name = "Linda Fenske" },
+]
+maintainers = [
+    { name = "Oliver Schwengers", email = "oliver.schwengers@cb.jlug.de" }
+]
+# keywords = ["TODO"]
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Programming Language :: Python",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "nextflow>=25.10.4",
+    "pandas>=3.0.1",
+    "jinja2>=2.11.3",
+    "plotly>=6.6.0",
+]
+
+[project.urls]
+# Documentation = "https://readthedocs.org"
+Repository = "github.com/ag-computational-bio/baktflow"
+"Bug Tracker" = "https://github.com/ag-computational-bio/baktflow/issues"
+
+[project.scripts]
+baktflow = "baktflow.CLI:main"
+
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["uv_build >= 0.10.7, <0.11.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "baktflow"
+module-root = ""
+source-include = ["nextflow_interface/**"]
+
+[tool.ruff]
+line-length = 120
