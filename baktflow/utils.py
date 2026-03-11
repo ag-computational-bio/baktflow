@@ -4,8 +4,8 @@ import os
 from pathlib import Path
 
 # Define expected file counts for each sample type
-sample_types = {"illumina", "long", "assembly", "hybrid"}
-illumina_files = 2  # Expecting R1 and R2 files
+sample_types = {"short", "long", "assembly", "hybrid"}
+short_files = 2  # Expecting R1 and R2 files
 long_files = 1  # Expecting one long-read file
 assembly_files = 1  # Expecting one assembly file
 hybrid_files = 3  # Expecting three files for hybrid samples
@@ -13,7 +13,7 @@ hybrid_files = 3  # Expecting three files for hybrid samples
 logger = logging.getLogger(__name__)
 
 
-def check_existence(path: str | Path) -> bool:
+def check_readable(path: str | Path) -> bool:
     """Check if the path exists."""
     return os.path.exists(path) and os.access(path, os.R_OK)
 
@@ -61,23 +61,12 @@ def check_tsv_readability(tsv_file):
     return True
 
 
-def get_baktflow_parent_dir():
-    """Dynamically get the parent directory of the 'baktflow' folder."""
-    # Get the absolute path to the current script
-    current_script_path = Path(__file__).resolve()
-
-    # Navigate one level up from the 'baktflow' directory to get the parent directory
-    baktflow_parent_dir = current_script_path.parent.parent  # Going up two levels from the script
-
-    return baktflow_parent_dir
-
-
 # ------------------------------
 # SINGLE SAMPLE PROCESSING FUNCTIONS
 # ------------------------------
 
 
-def determine_sample_type(r1, r2=None, long=None, assembly=None):
+def determine_sample_type(r1: str | None, r2: str | None, long: str | None, assembly: str | None) -> str | None:
     """
     Determine the type of sequencing data based on file names.
 
@@ -88,7 +77,7 @@ def determine_sample_type(r1, r2=None, long=None, assembly=None):
     - assembly (str, optional): Path to the assembly file.
 
     Returns:
-    - str: The determined sequencing type (illumina, Long, Hybrid, Assembly, or Unknown).
+    - str | None: The determined sequencing type (Short, Long, Hybrid, Assembly, or None).
     """
     if r1 and r2 and long:
         return "hybrid"
@@ -103,13 +92,13 @@ def determine_sample_type(r1, r2=None, long=None, assembly=None):
 
 
 def create_tsv(
-    sample_id,
-    r1=None,
-    r2=None,
-    long=None,
-    assembly=None,
-    analysis_type=None,
-    output_path="temp/temp_tsv.tsv",
+    sample_id: str,
+    sample_type: str,
+    output_path: Path,
+    r1: str = "",
+    r2: str = "",
+    long: str = "",
+    assembly: str = "",
 ):
     """
     Create a TSV file containing sample information without headers.
@@ -127,26 +116,16 @@ def create_tsv(
     - Writes a TSV file to the specified location with the format:
       sample_id, sequencing_type, R1_file, R2_file, long_read_file, assembly_file
     """
-    # Determine sample type if not provided
-    if not analysis_type:
-        sample_type = determine_sample_type(r1, r2, long, assembly)
-    else:
-        sample_type = analysis_type
-
-    print(f"Debug: Sample ID: {sample_id}")
-    print(f"Debug: Sequencing Type: {sample_type}")
-
-    row = [sample_id, sample_type, r1 or "", r2 or "", long or "", assembly or ""]
-
-    logger.info(f"TSV Row Content: {row}")
+    row: list[str] = [sample_id, sample_type, r1, r2, long, assembly]
+    logger.info(f"TSV Row Content:\n{row}")
 
     try:
-        with open(output_path, "w", newline="") as f:
+        with open(output_path, "w") as f:
             writer = csv.writer(f, delimiter="\t")
             writer.writerow(row)
         logger.info(f"TSV file successfully written at: {output_path}")
-    except Exception as e:
-        logger.error(f"Error writing TSV file: {e}")
+    except IOError as e:
+        raise IOError(f"Error writing TSV file: {e}")
 
 
 # ------------------------------
@@ -208,7 +187,7 @@ def process_tsv(input_tsv, input_dir):
         logger.debug(f"Processing row {idx}: {row}")
 
         # Process different sample types
-        if sample_type == "illumina" and len(files) == illumina_files:
+        if sample_type == "short" and len(files) == short_files:
             new_row.append(os.path.join(input_dir, files[0]))  # R1
             new_row.append(os.path.join(input_dir, files[1]))  # R2
         elif sample_type == "long" and len(files) == long_files:
