@@ -1,7 +1,4 @@
 #!/usr/bin/env nextflow
-nextflow.enable.dsl=2
-// Define parameters with default values
-params.OUTPUT_DIR = "$projectDir/../output"
 
 process PYPOLCA {
     input:
@@ -11,7 +8,7 @@ process PYPOLCA {
     tuple val(meta), path("${meta.sample_id}_pypolca.fasta"), emit: short_pypolca
     tuple val(meta), path("${meta.sample_id}_pypolca.report"), emit: short_pypolca_report
 
-    publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/pypolca", mode: 'copy'
+    publishDir "${params.output}/${meta.sample_id}/pypolca", mode: 'copy'
     conda "${projectDir}/modules/pypolca/environment.yaml"
     if ( "${workflow.stubRun}" == "false" ) {
         cpus (params.threads >= 8 ? 8 : params.threads)
@@ -25,27 +22,3 @@ process PYPOLCA {
     mv ${meta.sample_id}_pypolca/${meta.sample_id}.report ${meta.sample_id}_pypolca.report
     """
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
