@@ -69,15 +69,23 @@ def get_setup_directories(setup_dir: str | Path, setup_mode: bool = False) -> tu
     return setup_subdir, conda_dir, database_dir
 
 
-def check_readable(path: str | Path) -> bool:
+def check_readable(path: str | Path) -> None:
     """Check if the path exists."""
-    return os.path.exists(path) and os.access(path, os.R_OK)
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"File does not exist: {path}")
+    if not os.access(path, os.R_OK):
+        raise IOError(f"File is not readable: {path}")
 
 
-def check_directory_accessibility(directory_path):
+def check_directory_accessibility(directory_path: str | Path):
     """Check if a directory exists and is accessible."""
     directory_path = Path(directory_path)
-    return directory_path.is_dir() and directory_path.exists()
+    if not directory_path.exists():
+        raise FileNotFoundError(f"Directory does not exist: {directory_path}")
+    if not directory_path.is_dir():
+        raise IOError(f"Is not a directory: {directory_path}")
+    if not os.access(directory_path, os.R_OK):
+        raise IOError(f"Directory is not readable: {directory_path}")
 
 
 def check_writability(directory_path):
@@ -122,7 +130,7 @@ def check_tsv_readability(tsv_file):
 # ------------------------------
 
 
-def determine_sample_type(r1: str | None, r2: str | None, long: str | None, assembly: str | None) -> str | None:
+def determine_sample_type(r1: str | None, r2: str | None, long: str | None, assembly: str | None) -> str:
     """
     Determine the type of sequencing data based on file names.
 
@@ -135,16 +143,18 @@ def determine_sample_type(r1: str | None, r2: str | None, long: str | None, asse
     Returns:
     - str | None: The determined sequencing type (Short, Long, Hybrid, Assembly, or None).
     """
-    if r1 and r2 and long:
+    if r1 and r2 and long and not assembly:
         return "hybrid"
-    elif r1 and r2:
+    elif r1 and r2 and not (long or assembly):
         return "short"
-    elif long:
+    elif long and not (r1 or r2 or assembly):
         return "long"
-    elif assembly:
+    elif assembly and not (r1 or r2 or long):
         return "assembly"
     else:
-        return None
+        raise Exception(
+            f"Could not determine sample type from input:\nR1: {r1}\nR2: {r2}\nLong: {long}\nAssembly: {assembly}"
+        )
 
 
 def create_tsv(

@@ -3,7 +3,6 @@ import logging
 import os
 import shutil
 import subprocess
-from encodings.punycode import T
 from pathlib import Path
 
 import baktflow.nextflow as bn
@@ -59,8 +58,6 @@ def setup_subcommand(args):
         )
 
 
-# TODO workflow resume parameters
-# TODO workflow workDir parameters
 def single_subcommand(args):
     """Run baktflow single analysis."""
     logger.info("Running baktflow single...")
@@ -69,35 +66,30 @@ def single_subcommand(args):
     input_files: list[str] = [f for f in [args.r1, args.r2, args.long, args.assembly] if f]
     if len(input_files) == 0:
         raise FileNotFoundError("At least one input file must be provided.")
-
     for file in input_files:
         if not file.endswith(bu.get_fasta_file_extensions()):
             raise IOError(f"Invalid file extension: {file}")
+        bu.check_readable(file)
         logger.info(f"Valid file detected: {file}")
 
-    for file_path in input_files:
-        if not bu.check_readable(file_path):
-            raise FileNotFoundError(f"Input file does not exist:\n{file_path}")
-
     output = Path(args.output).resolve()
-    if not output.exists():
-        output.mkdir(parents=True)
-        logger.info(f"Created output directory: {output}")
-    elif not os.access(output, os.W_OK):
-        raise IOError(f"The output directory {args.output} is not writable.")
-    else:
-        logger.info(f"Output directory already exists: {output}")
+    if output.exists():
+        logger.info(f"Output directory already exists. May overwrite existing data: {output}")
+    try:
+        output.mkdir(parents=True, exist_ok=True)
+    except OSError as e:
+        raise e
+    bu.check_directory_accessibility(output)
 
     sample_type = bu.determine_sample_type(args.r1, args.r2, args.long, args.assembly)
-    if not sample_type:
-        raise Exception(
-            f"Could not determine sample type from input combination:\n{args.r1}\n{args.r2}\n{args.long}\n{args.assembly}"
-        )
     tsv_path = output.joinpath("single_config.tsv")
-
-    setup_dir, conda_dir, database_dir = bu.get_setup_directories(args.setup_dir)
-
     bu.create_tsv(args.id, sample_type, tsv_path, args.r1, args.r2, args.long, args.assembly)
+
+    _, conda_dir, database_dir = bu.get_setup_directories(args.setup_dir)
+    work_dir: Path = Path(args.work_dir) if args.work_dir else output.joinpath("work")
+    work_dir.mkdir(parents=True, exist_ok=True)
+    bu.check_directory_accessibility(conda_dir)
+    bu.check_directory_accessibility(database_dir)
 
     bn.run_baktflow_workflow(
         workflow_script=bu.get_nf_script("main.nf"),
@@ -105,7 +97,9 @@ def single_subcommand(args):
         output_path=output,
         conda_dir=conda_dir,
         database_dir=database_dir,
+        work_dir=work_dir,
         profile=args.profile,
+        resume=args.resume,
     )
 
 
@@ -125,9 +119,7 @@ def batch_subcommand(args):
         return
 
     # Validate the input directory
-    if not bu.check_readable(str(input_dir)):
-        logger.error(f"The input directory {args.input_dir} does not exist.")
-        return
+    bu.check_readable(input_dir)
     if not bu.check_directory_accessibility(input_dir):
         logger.error(f"The input directory {args.input_dir} is not readable.")
         return
@@ -160,6 +152,8 @@ def batch_subcommand(args):
     logger.info(f"Temporary TSV file saved at {temp_tsv}")
 
     setup_dir, conda_dir, database_dir = bu.get_setup_directories(args.setup_dir)
+    work_dir: Path = Path(args.work_dir) if args.work_dir else output_dir.joinpath("work")
+    work_dir.mkdir(parents=True, exist_ok=True)
 
     bn.run_baktflow_workflow(
         workflow_script=bu.get_nf_script("main.nf"),
@@ -167,7 +161,9 @@ def batch_subcommand(args):
         output_path=final_output_dir,
         conda_dir=conda_dir,
         database_dir=database_dir,
+        work_dir=work_dir,
         profile=args.profile,
+        resume=args.resume,
     )
     logger.info("Nextflow workflow executed successfully.")
 
@@ -251,23 +247,23 @@ def parse_arguments():
     # Single subcommand
     single_parser = subparsers.add_parser("single", help="Run baktflow single analysis")
     single_parser.add_argument("--id", help="ID for a specific single analysis", required=True)
-    single_parser.add_argument("--output", help="Output directory for single analysis", required=True)
-    single_parser.add_argument(
-        "--setup_dir", "-d", help="Directory for the workflow setup"
-    )  # TODO muss installiert und in path sein
+    single_parser.add_argument("--output", help="Output directory", required=True)
+    single_parser.add_argument("--setup_dir", "-d", help="Directory for the workflow setup", required=True)
+    single_parser.add_argument("--work_dir", "-w", help="Directory for the nextflow work folder (default: output/work)")
+    single_parser.add_argument("--resume", help="Resume the workflow", action="store_true")
     single_parser.add_argument("--profile", type=str, default="standard", help="Nextflow execution profile")
     single_parser.add_argument("--r1", default=None, help="Input file for R1 sequencing reads (FASTQ format)")
     single_parser.add_argument("--r2", default=None, help="Input file for R2 sequencing reads (FASTQ format)")
     single_parser.add_argument("--long", default=None, help="Input file for long reads (FASTQ format)")
-    single_parser.add_argument(
-        "--assembly", default=None, help="Input assembly file (FASTQ format)"
-    )  # TODO gegenseitiges ausschliessen?
+    single_parser.add_argument("--assembly", default=None, help="Input assembly file (FASTQ format)")
 
     # Batch subcommand
     batch_parser = subparsers.add_parser("batch", help="Run baktflow batch analysis")
     batch_parser.add_argument("--input_tsv", help="Output directory for batch analysis", required=True)
     batch_parser.add_argument("--input_dir", help="Output directory for batch analysis", required=True)
     batch_parser.add_argument("--output", help="Output directory for batch analysis", required=True)
+    batch_parser.add_argument("--work_dir", "-w", help="Directory for the nextflow work folder (default: output/work)")
+    batch_parser.add_argument("--resume", help="Resume the workflow", action="store_true")
 
     # Subcommand for processing aggregated reports
     report_parser = subparsers.add_parser("report", help="Generate an aggregated report from output directory")
@@ -277,7 +273,7 @@ def parse_arguments():
     return parser.parse_args()
 
 
-# TODO use subprocess cwd to set .nextflow dir and logs. Use additional workDir to set the work dir to the output dir.
+# TODO automatically handle the bakta db type after setup
 def main():
     args = parse_arguments()
 

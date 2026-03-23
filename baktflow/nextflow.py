@@ -51,7 +51,9 @@ def run_baktflow_workflow(
     output_path: Path,
     conda_dir: Path,
     database_dir: Path,
+    work_dir: Path,
     profile: str,
+    resume: bool,
 ):
     """Run Nextflow workflow script."""
 
@@ -71,7 +73,12 @@ def run_baktflow_workflow(
         str(conda_dir),
         "--databaseDir",
         str(database_dir),
+        "--workDir",
+        str(work_dir),
     ]
+
+    if resume:
+        nextflow_cmd.append("-resume")
 
     conda_implementation: str = bu.get_conda_implementation()
     if conda_implementation == "micromamba":
