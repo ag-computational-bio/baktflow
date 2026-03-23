@@ -3,103 +3,65 @@ import logging
 import os
 import shutil
 import subprocess
+from encodings.punycode import T
 from pathlib import Path
 
+import baktflow.nextflow as bn
+import baktflow.utils as bu
 from baktflow.aggregated_report import find_json_reports, generate_html_report
-from baktflow.nextflow import baktflow_setup, run_baktflow_workflow
-from baktflow.utils import (
-    check_directory_accessibility,
-    check_readable,
-    check_tsv_readability,
-    check_writability,
-    create_tsv,
-    determine_sample_type,
-    process_tsv,
-)
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-# ---- Basic directories ----
-base_dir: Path = Path(__file__).resolve()
-root_dir: Path = Path(__file__).parent.parent.resolve()
-nextflow_dir: Path = root_dir.joinpath("nextflow_interface")
 
-# ---- Subcommand: Setup ----
-default_setup_dir: Path = root_dir.joinpath("setup")
-setup_script: Path = nextflow_dir.joinpath("setup.nf")
-
-# ---- Subcommand: Report ----
-aggregated_report_script: Path = root_dir.joinpath("baktflow", "aggregated_report.py")
-
-# ---- Subcommand: Single ----
-valid_extensions: tuple[str, ...] = (".fastq", ".fq", ".fastq.gz", ".fq.gz", ".fasta", ".fa", ".fa.gz")
-# ---- Paths for Subcommands (Single and Batch) ----
-main_script: Path = nextflow_dir.joinpath("main.nf")
-base_path: Path = base_dir.parent
-
-
-def setup_subcommand(args, conda_implementation: str):
+def setup_subcommand(args):
     """Setup Baktflow workflow by managing Conda environments and databases"""
     logger.info("Setting up Baktflow workflow...")
     logger.info(f"Setup directory: {args.setup_dir}")
 
-    setup_subdir: Path = Path(args.setup_dir).resolve() if args.setup_dir else default_setup_dir
-    conda_dir: Path = setup_subdir.joinpath("envs")
-    database_dir: Path = setup_subdir.joinpath("databases")
+    setup_subdir, conda_dir, database_dir = bu.get_setup_directories(args.setup_dir, setup_mode=True)
 
     conda_files: list[str] = [file.name for file in conda_dir.iterdir()] if conda_dir.exists() else []
     database_files: list[str] = [file.name for file in database_dir.iterdir()] if database_dir.exists() else []
 
-    if not args.force and (setup_subdir.exists() or conda_files or database_files):
-        if conda_files:
-            logger.info(f"Existing Conda Environments found: {', '.join(conda_files)}")
-        if database_files:
-            logger.info(f"Existing Databases found: {', '.join(database_files)}")
+    if not args.force and (setup_subdir.exists() and (conda_files or database_files)):
+        if conda_files or database_files:
+            logger.debug(f"Existing Setup found: {', '.join(conda_files + database_files)}")
 
-        response = (
-            input("Do you want to reinstall the environments and databases? ([r]einstall/[s]kip): ").strip().lower()
-        )
-        if response == "r" or response == "reinstall":
+        response = input("Do you want to reinstall the environments and databases? (Yes/No): ").strip().lower()
+        if response == "y" or response == "yes":
             logger.info("Reinstalling all environments and databases...")
-            shutil.rmtree(conda_dir, ignore_errors=True)
-            conda_dir.mkdir(parents=True)
-            shutil.rmtree(database_dir, ignore_errors=True)
-            database_dir.mkdir(parents=True)
-
-            baktflow_setup(
-                setup_script,
+            bu.reinstall_directory(conda_dir)
+            bu.reinstall_directory(database_dir)
+            bn.baktflow_setup(
+                bu.get_nf_script("setup.nf"),
                 setup_subdir,
                 conda_dir,
                 database_dir,
-                conda_implementation,
-                nextflow_path=args.nextflow_path,
             )
             logger.info("Reinstallation complete.")
 
-        elif response == "s" or response == "skip":
+        elif response == "n" or response == "no":
             logger.info("Skipping setup process.")
     else:
         if args.force:
             logger.info("Try forced reinstallation of all environments and databases...")
-            shutil.rmtree(conda_dir, ignore_errors=True)
-            conda_dir.mkdir(parents=True)
-            shutil.rmtree(database_dir, ignore_errors=True)
-            database_dir.mkdir(parents=True)
+            bu.reinstall_directory(conda_dir)
+            bu.reinstall_directory(database_dir)
         else:
             logger.info("No existing environments or databases found. Installing from scratch...")
         setup_subdir.mkdir(parents=True, exist_ok=True)
-        baktflow_setup(
-            setup_script,
+        bn.baktflow_setup(
+            bu.get_nf_script("setup.nf"),
             setup_subdir,
             conda_dir,
             database_dir,
-            conda_implementation,
-            nextflow_path=args.nextflow_path,
         )
 
 
-def single_subcommand(args, conda_implementation: str):
+# TODO workflow resume parameters
+# TODO workflow workDir parameters
+def single_subcommand(args):
     """Run baktflow single analysis."""
     logger.info("Running baktflow single...")
     logger.info(f"Analysis ID: {args.id}\nOutput directory: {args.output}")
@@ -109,12 +71,12 @@ def single_subcommand(args, conda_implementation: str):
         raise FileNotFoundError("At least one input file must be provided.")
 
     for file in input_files:
-        if not file.endswith(valid_extensions):
+        if not file.endswith(bu.get_fasta_file_extensions()):
             raise IOError(f"Invalid file extension: {file}")
         logger.info(f"Valid file detected: {file}")
 
     for file_path in input_files:
-        if not check_readable(file_path):
+        if not bu.check_readable(file_path):
             raise FileNotFoundError(f"Input file does not exist:\n{file_path}")
 
     output = Path(args.output).resolve()
@@ -126,38 +88,28 @@ def single_subcommand(args, conda_implementation: str):
     else:
         logger.info(f"Output directory already exists: {output}")
 
-    sample_type = determine_sample_type(args.r1, args.r2, args.long, args.assembly)
+    sample_type = bu.determine_sample_type(args.r1, args.r2, args.long, args.assembly)
     if not sample_type:
         raise Exception(
             f"Could not determine sample type from input combination:\n{args.r1}\n{args.r2}\n{args.long}\n{args.assembly}"
         )
     tsv_path = output.joinpath("single_config.tsv")
 
-    setup_subdir: Path = Path(args.setup_dir).resolve() if args.setup_dir else default_setup_dir
-    conda_dir: Path = setup_subdir.joinpath("envs")
-    database_dir: Path = setup_subdir.joinpath("databases")
-    if not check_readable(database_dir):
-        raise IOError("Could not read from setup database directory.")
-    if not conda_dir.exists():
-        logger.warning(
-            "Could not find installed conda environments. Trying to install them on the fly (internet connection required)."
-        )
+    setup_dir, conda_dir, database_dir = bu.get_setup_directories(args.setup_dir)
 
-    create_tsv(args.id, sample_type, tsv_path, args.r1, args.r2, args.long, args.assembly)
+    bu.create_tsv(args.id, sample_type, tsv_path, args.r1, args.r2, args.long, args.assembly)
 
-    run_baktflow_workflow(
-        workflow_script=main_script,
+    bn.run_baktflow_workflow(
+        workflow_script=bu.get_nf_script("main.nf"),
         input_tsv=tsv_path,
         output_path=output,
         conda_dir=conda_dir,
         database_dir=database_dir,
         profile=args.profile,
-        conda_implementation=conda_implementation,
-        nextflow_path=args.nextflow_path,
     )
 
 
-def batch_subcommand(args, conda_implementation):
+def batch_subcommand(args):
     """Run baktflow batch analysis."""
     logger.info("Running baktflow batch...")
     logger.info(f"Input directory for TSV file: {args.input_tsv}")
@@ -168,15 +120,15 @@ def batch_subcommand(args, conda_implementation):
     output_dir = Path(args.output)
 
     # Validate the existence and accessibility of the TSV file
-    if not check_tsv_readability(tsv_file):
+    if not bu.check_tsv_readability(tsv_file):
         logger.error(f"The TSV file {args.input_tsv} does not exist or is not readable.")
         return
 
     # Validate the input directory
-    if not check_readable(str(input_dir)):
+    if not bu.check_readable(str(input_dir)):
         logger.error(f"The input directory {args.input_dir} does not exist.")
         return
-    if not check_directory_accessibility(input_dir):
+    if not bu.check_directory_accessibility(input_dir):
         logger.error(f"The input directory {args.input_dir} is not readable.")
         return
 
@@ -188,7 +140,7 @@ def batch_subcommand(args, conda_implementation):
         except Exception as e:
             logger.error(f"Failed to create output directory {output_dir}: {e}")
             return
-    elif not check_writability(output_dir):
+    elif not bu.check_writability(output_dir):
         logger.error(f"The output directory {args.output} is not writable.")
         return
     else:
@@ -197,7 +149,7 @@ def batch_subcommand(args, conda_implementation):
     final_output_dir = output_dir
 
     # Process the TSV file and generate a temporary TSV file
-    temp_tsv = process_tsv(args.input_tsv, args.input_dir)
+    temp_tsv = bu.process_tsv(args.input_tsv, args.input_dir)
     if temp_tsv is None:
         logger.error("Error processing TSV: Unable to generate temp TSV file. Aborting.")
         return
@@ -207,25 +159,15 @@ def batch_subcommand(args, conda_implementation):
 
     logger.info(f"Temporary TSV file saved at {temp_tsv}")
 
-    setup_subdir: Path = Path(args.setup_dir).resolve() if args.setup_dir else default_setup_dir
-    conda_dir: Path = setup_subdir.joinpath("envs")
-    database_dir: Path = setup_subdir.joinpath("databases")
-    if not check_readable(database_dir):
-        raise IOError("Could not read from setup database directory.")
-    if not conda_dir.exists():
-        logger.warning(
-            "Could not find installed conda environments. Trying to install them on the fly (internet connection required)."
-        )
+    setup_dir, conda_dir, database_dir = bu.get_setup_directories(args.setup_dir)
 
-    run_baktflow_workflow(
-        workflow_script=main_script,
+    bn.run_baktflow_workflow(
+        workflow_script=bu.get_nf_script("main.nf"),
         input_tsv=temp_tsv,
         output_path=final_output_dir,
         conda_dir=conda_dir,
         database_dir=database_dir,
         profile=args.profile,
-        conda_implementation=conda_implementation,
-        nextflow_path=args.nextflow_path,
     )
     logger.info("Nextflow workflow executed successfully.")
 
@@ -243,11 +185,11 @@ def batch_subcommand(args, conda_implementation):
 
 
 def report_subcommand(input_dir, output_dir):
-    logger = logging.getLogger(__name__)
-
     logger.info("Running baktflow batch...")
     logger.info(f"Input directory: {input_dir}")
     logger.info(f"Output directory: {output_dir}")
+
+    aggregated_report_script = Path(__file__).parent.parent.resolve().joinpath("baktflow", "aggregated_report.py")
 
     if not os.path.exists(aggregated_report_script):
         logger.error(f"aggregated_report.py not found at {aggregated_report_script}")
@@ -289,17 +231,6 @@ def report_subcommand(input_dir, output_dir):
         logger.error("Failed to create aggregated report.")
 
 
-def get_conda_implementation() -> str:
-    if bool(shutil.which("micromamba")):
-        return "micromamba"
-    elif bool(shutil.which("mamba")):
-        return "mamba"
-    elif bool(shutil.which("conda")):
-        return "conda"
-    else:
-        raise Exception("No Conda, Mamba or Micromamba")
-
-
 def parse_arguments():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="baktflow: ")
@@ -307,8 +238,12 @@ def parse_arguments():
 
     # Setup subcommand
     setup_parser = subparsers.add_parser("setup", help="Setup baktflow workflow")
-    setup_parser.add_argument("--setup_dir", "-d", help="Directory for the workflow setup")
-    setup_parser.add_argument("--nextflow_path", "-n", default=None, help="Path to Nextflow installation")
+    setup_parser.add_argument(
+        "--setup_dir",
+        "-d",
+        required=True,
+        help="Directory for the workflow setup",
+    )
     setup_parser.add_argument(
         "--force", "-f", action="store_true", help="Force the (re)installation setup of baktflow."
     )
@@ -317,13 +252,16 @@ def parse_arguments():
     single_parser = subparsers.add_parser("single", help="Run baktflow single analysis")
     single_parser.add_argument("--id", help="ID for a specific single analysis", required=True)
     single_parser.add_argument("--output", help="Output directory for single analysis", required=True)
-    single_parser.add_argument("--setup_dir", "-d", help="Directory for the workflow setup")
-    single_parser.add_argument("--nextflow_path", default=None, help="Path to Nextflow installation")
+    single_parser.add_argument(
+        "--setup_dir", "-d", help="Directory for the workflow setup"
+    )  # TODO muss installiert und in path sein
     single_parser.add_argument("--profile", type=str, default="standard", help="Nextflow execution profile")
     single_parser.add_argument("--r1", default=None, help="Input file for R1 sequencing reads (FASTQ format)")
     single_parser.add_argument("--r2", default=None, help="Input file for R2 sequencing reads (FASTQ format)")
     single_parser.add_argument("--long", default=None, help="Input file for long reads (FASTQ format)")
-    single_parser.add_argument("--assembly", default=None, help="Input assembly file (FASTQ format)")
+    single_parser.add_argument(
+        "--assembly", default=None, help="Input assembly file (FASTQ format)"
+    )  # TODO gegenseitiges ausschliessen?
 
     # Batch subcommand
     batch_parser = subparsers.add_parser("batch", help="Run baktflow batch analysis")
@@ -339,17 +277,16 @@ def parse_arguments():
     return parser.parse_args()
 
 
+# TODO use subprocess cwd to set .nextflow dir and logs. Use additional workDir to set the work dir to the output dir.
 def main():
     args = parse_arguments()
 
-    conda_implementation: str = get_conda_implementation()
-
     if args.subcommand == "setup":
-        setup_subcommand(args, conda_implementation)
+        setup_subcommand(args)
     elif args.subcommand == "single":
-        single_subcommand(args, conda_implementation)
+        single_subcommand(args)
     elif args.subcommand == "batch":
-        batch_subcommand(args, conda_implementation)
+        batch_subcommand(args)
     elif args.subcommand == "report":
         report_subcommand(args.input_dir, args.output_dir)
     else:

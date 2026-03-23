@@ -4,6 +4,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
+import baktflow.utils as bu
+
 logger = logging.getLogger(__name__)
 
 
@@ -21,15 +23,15 @@ def baktflow_setup(
     setup_dir: Path,
     conda_dir: Path,
     database_dir: Path,
-    conda_implementation: str,
-    nextflow_path: str | None,
 ) -> None:
     """Run Nextflow setup script."""
-    nextflow_path: str = get_nextflow_executable() if not nextflow_path else nextflow_path
+    nextflow_path: str = get_nextflow_executable()
 
     nextflow_cmd: str = (
         f"{nextflow_path} run {setup_script} -profile standard --cacheDir {conda_dir} --databaseDir {database_dir}"
     )
+
+    conda_implementation: str = bu.get_conda_implementation()
     if conda_implementation == "micromamba":
         nextflow_cmd += " --useMicromamba true"
     elif conda_implementation == "mamba":
@@ -50,12 +52,10 @@ def run_baktflow_workflow(
     conda_dir: Path,
     database_dir: Path,
     profile: str,
-    conda_implementation: str,
-    nextflow_path: str | None,
 ):
     """Run Nextflow workflow script."""
 
-    nextflow_path: str = get_nextflow_executable() if not nextflow_path else nextflow_path
+    nextflow_path: str = get_nextflow_executable()
 
     nextflow_cmd = [
         nextflow_path,
@@ -72,12 +72,12 @@ def run_baktflow_workflow(
         "--databaseDir",
         str(database_dir),
     ]
+
+    conda_implementation: str = bu.get_conda_implementation()
     if conda_implementation == "micromamba":
         nextflow_cmd.extend(["--useMicromamba", "true"])
     elif conda_implementation == "mamba":
         nextflow_cmd.extend(["--useMamba", "true"])
 
-    print(" ".join(nextflow_cmd))
-
-    subprocess.run(nextflow_cmd, check=True, env=os.environ.copy())
+    subprocess.run(nextflow_cmd, check=True, cwd=str(output_path), env=os.environ.copy())
     logger.info("Nextflow workflow executed successfully.")

@@ -1,6 +1,7 @@
 import csv
 import logging
 import os
+import shutil
 from pathlib import Path
 
 # Define expected file counts for each sample type
@@ -11,6 +12,61 @@ assembly_files = 1  # Expecting one assembly file
 hybrid_files = 3  # Expecting three files for hybrid samples
 
 logger = logging.getLogger(__name__)
+
+
+def get_nf_dir() -> Path:
+    root_dir: Path = Path(__file__).parent.parent.resolve()
+    nextflow_dir: Path = root_dir.joinpath("nextflow_interface")
+    return nextflow_dir
+
+
+def get_nf_script(script_name: str) -> Path:
+    return get_nf_dir().joinpath(script_name)
+
+
+def get_nf_workflow_script() -> Path:
+    return get_nf_dir()
+
+
+def get_conda_implementation() -> str:
+    if bool(shutil.which("micromamba")):
+        return "micromamba"
+    elif bool(shutil.which("mamba")):
+        return "mamba"
+    elif bool(shutil.which("conda")):
+        return "conda"
+    else:
+        raise Exception("No Conda, Mamba or Micromamba")
+
+
+def get_fasta_file_extensions() -> tuple[str, ...]:
+    fasta_extensions: list[str] = [".fastq", ".fq", ".fasta", ".fa"]
+    compression_extensions: list[str] = [".gz"]
+    valid_extensions: list[str] = fasta_extensions + [
+        fe + ce for fe in fasta_extensions for ce in compression_extensions
+    ]
+    return tuple(valid_extensions)
+
+
+def reinstall_directory(path: Path):
+    try:
+        shutil.rmtree(path, ignore_errors=True)
+        path.mkdir(parents=True)
+    except Exception as e:
+        raise e
+
+
+def get_setup_directories(setup_dir: str | Path, setup_mode: bool = False) -> tuple[Path, Path, Path]:
+    setup_subdir: Path = Path(setup_dir).resolve()
+    conda_dir: Path = setup_subdir.joinpath("envs")
+    database_dir: Path = setup_subdir.joinpath("databases")
+    if not setup_mode and not check_readable(database_dir):
+        raise IOError("Could not read from setup database directory.")
+    if not conda_dir.exists():
+        logger.warning(
+            "Could not find installed conda environments. Trying to install them on the fly (internet connection required)."
+        )
+    return setup_subdir, conda_dir, database_dir
 
 
 def check_readable(path: str | Path) -> bool:
@@ -116,7 +172,10 @@ def create_tsv(
     - Writes a TSV file to the specified location with the format:
       sample_id, sequencing_type, R1_file, R2_file, long_read_file, assembly_file
     """
-    row: list[str] = [sample_id, sample_type, r1, r2, long, assembly]
+    row: list[str | None] = [
+        sample_id,
+        sample_type,
+    ] + [str(Path(f).resolve()) if f else None for f in [r1, r2, long, assembly]]
     logger.info(f"TSV Row Content:\n{row}")
 
     try:
