@@ -4,13 +4,6 @@ import os
 import shutil
 from pathlib import Path
 
-# Define expected file counts for each sample type
-sample_types = {"short", "long", "assembly", "hybrid"}
-short_files = 2  # Expecting R1 and R2 files
-long_files = 1  # Expecting one long-read file
-assembly_files = 1  # Expecting one assembly file
-hybrid_files = 3  # Expecting three files for hybrid samples
-
 logger = logging.getLogger(__name__)
 
 
@@ -95,43 +88,6 @@ def check_directory_accessibility(directory_path: str | Path):
         raise IOError(f"Directory is not readable: {directory_path}")
 
 
-def check_writability(directory_path):
-    """Check if a directory is writable."""
-    directory_path = Path(directory_path)  # Convert to Path object
-    test_file = directory_path / "test_writable"
-    try:
-        # Create a test file to check writability
-        with test_file.open("w") as f:
-            pass
-        test_file.unlink()  # Remove the test file
-        return True
-    except IOError:
-        return False
-
-
-def check_tsv_readability(tsv_file):
-    """Check if the TSV file exists, is accessible, and can be read."""
-    tsv_file = Path(tsv_file)
-
-    # Check if the file exists and is a valid file
-    if not tsv_file.exists() or not tsv_file.is_file():
-        return False
-
-    # Try opening the file to check if it can be read
-    try:
-        with tsv_file.open("r") as f:
-            # Attempt to read the first line (simple check for file contents)
-            first_line = f.readline()
-            if not first_line:  # If the file is empty
-                return False
-    except Exception as e:
-        # If there's an error opening the file, return False
-        print(f"Error reading the TSV file: {e}")
-        return False
-
-    return True
-
-
 # ------------------------------
 # SINGLE SAMPLE PROCESSING FUNCTIONS
 # ------------------------------
@@ -207,90 +163,71 @@ def create_tsv(
 # ------------------------------
 # BATCH PROCESSING FUNCTION
 # ------------------------------
-def process_tsv(input_tsv, input_dir):
+
+
+def checked_file(file_path: str, input_dir: Path, extentsions: tuple[str, ...]) -> str:
+    if not file_path.endswith(extentsions):
+        raise IOError(f"Invalid file extension: {file_path}")
+    abs_path: Path = input_dir.joinpath(file_path).resolve()
+    check_readable(abs_path)
+    return str(abs_path)
+
+
+def preprocess_tsv(input_tsv: str | Path, input_dir: Path, output_dir: Path) -> Path:
     """Process the TSV file and generate a modified version with absolute file paths.
 
     Args:
         input_tsv (str): Path to the input TSV file containing sample information.
-        input_dir (str): Directory where the raw sequence files are located.
+        input_dir (Path): Path to the directory containing the samples.
+        output_dir (str): Output directory
 
     Returns:
         str or None: Path to the modified TSV file if successful, otherwise None.
     """
+    sample_types: dict[str, int] = {
+        "short": 2,
+        "long": 1,
+        "hybrid": 3,
+        "assembly": 1,
+    }
+    if not str(input_tsv).endswith((".csv", ".tsv")):
+        raise IOError(f"File {input_tsv} is not a .tsv or .csv file")
 
-    # Create a temporary folder inside the main 'baktflow' directory for storing modified TSV files
-    temp_folder = os.path.join(os.path.dirname(os.path.dirname(input_tsv)), "temp")
-    os.makedirs(temp_folder, exist_ok=True)
+    cleaned_tsv_file = output_dir.joinpath("cleaned_config.tsv")
+    seperator: str = "\t"
+    exts = get_fasta_file_extensions()
 
-    # Define the output file path for the processed TSV
-    output_file = os.path.join(temp_folder, "temp_tsv.tsv")
-
-    # Read the contents of the input TSV file
-    try:
-        with open(input_tsv, "r") as infile:
-            reader = infile.readlines()
-    except Exception as e:
-        print(f"Error reading the input TSV file: {e}")
-        return None
-
-    # List to store processed rows that will be written to the new TSV file
-    processed_rows = []
-
-    # Process each row from the input TSV file
-    for idx, row in enumerate(reader, start=1):
-        # Strip whitespace and split by spaces or tabs
-        row = [col.strip() for col in row.split()]
-
-        # Skip rows that do not contain the minimum required number of columns
-        if len(row) < 3:
-            print(f"Skipping incomplete row (Line {idx}): {row}")
-            user_input = input(f"Incomplete row on Line {idx}: {row}. Do you want to skip this line? (y/n): ")
-            if user_input.lower() == "y":
-                print(f"Skipping line {idx}...")
+    with open(input_tsv, "r") as infile, open(cleaned_tsv_file, "w", newline="\n") as outfile:
+        tsv_writer = csv.writer(outfile, delimiter="\t")
+        for i, line in enumerate(infile, start=1):
+            row: list[str] = [c for c in line.strip().split(seperator) if len(c) > 0]
+            if len(row) < 3:
+                logger.warning(f"Skipping line {i}. Invalid input: {line}")
                 continue
+
+            sample_id, sample_type, *files = row
+            checked_row: list[str] = [sample_id, sample_type]
+
+            if sample_type not in sample_types:
+                logger.warning(f"Invalid sample type '{sample_type}' in row {i}: {row}")
+                continue
+
+            logger.debug(f"Processing row {i}: {row}")
+            if sample_type == "short" and len(files) == sample_types["short"]:
+                checked_row.append(checked_file(files[0], input_dir, exts))  # R1
+                checked_row.append(checked_file(files[1], input_dir, exts))  # R2
+            elif sample_type == "long" and len(files) == sample_types["long"]:
+                checked_row.append(checked_file(files[0], input_dir, exts))  # Long-read file
+            elif sample_type == "hybrid" and len(files) == sample_types["hybrid"]:
+                checked_row.append(checked_file(files[0], input_dir, exts))  # R1
+                checked_row.append(checked_file(files[1], input_dir, exts))  # R2
+                checked_row.append(checked_file(files[2], input_dir, exts))  # Long-read file
+            elif sample_type == "assembly" and len(files) == sample_types["assembly"]:
+                checked_row.append(checked_file(files[0], input_dir, exts))  # Assembly file
             else:
-                print(f"Please check the data for line {idx}.")
-                return None
+                logger.warning(f"Skipping row {i}: Incorrect file count for type '{sample_type}'")
+                continue
 
-        sample_id, sample_type, *files = row
-        new_row = [sample_id, sample_type]
+            tsv_writer.writerow(checked_row)
 
-        if sample_type not in sample_types:
-            logger.warning(f"Invalid sample type '{sample_type}' in row {idx}: {row}")
-            continue
-
-        # Debugging: Print file paths
-        logger.debug(f"Processing row {idx}: {row}")
-
-        # Process different sample types
-        if sample_type == "short" and len(files) == short_files:
-            new_row.append(os.path.join(input_dir, files[0]))  # R1
-            new_row.append(os.path.join(input_dir, files[1]))  # R2
-        elif sample_type == "long" and len(files) == long_files:
-            new_row.extend(["", "", os.path.join(input_dir, files[0])])  # Long-read file
-        elif sample_type == "assembly" and len(files) == assembly_files:
-            new_row.extend(["", "", "", os.path.join(input_dir, files[0])])  # Assembly file
-        elif sample_type == "hybrid" and len(files) >= hybrid_files:
-            new_row.append(os.path.join(input_dir, files[0]))
-            new_row.append(os.path.join(input_dir, files[1]))
-            new_row.append(os.path.join(input_dir, files[2]))
-        else:
-            logger.warning(f"Skipping row {idx}: Incorrect file count for type '{sample_type}'")
-            continue
-
-        logger.info(f"Processed row {idx}: {new_row}")
-        processed_rows.append(new_row)
-    # If no valid rows are found, return None
-    if not processed_rows:
-        print("No valid rows to write to the output file.")
-        return None
-
-    # Write the processed data to a new TSV file
-    try:
-        with open(output_file, "w", newline="") as outfile:
-            writer = csv.writer(outfile, delimiter="\t")
-            writer.writerows(processed_rows)
-        return output_file  # Return the path of the modified TSV
-    except Exception as e:
-        print(f"Error writing the processed TSV file: {e}")
-        return None
+    return cleaned_tsv_file

@@ -60,8 +60,9 @@ def single_subcommand(args):
     input_files: list[str] = [f for f in [args.r1, args.r2, args.long, args.assembly] if f]
     if len(input_files) == 0:
         raise FileNotFoundError("At least one input file must be provided.")
+    exts = bu.get_fasta_file_extensions()
     for file in input_files:
-        if not file.endswith(bu.get_fasta_file_extensions()):
+        if not file.endswith(exts):
             raise IOError(f"Invalid file extension: {file}")
         bu.check_readable(file)
         logger.info(f"Valid file detected: {file}")
@@ -114,62 +115,49 @@ def single_subcommand(args):
 def batch_subcommand(args):
     """Run baktflow batch analysis."""
     logger.info("Running baktflow batch...")
-    logger.info(f"Input directory for TSV file: {args.input_tsv}")
+    logger.info(f"Input TSV file: {args.input_tsv}")
+    logger.info(f"Input directory: {args.input_dir}")
     logger.info(f"Output directory: {args.output}")
-    # Convert input arguments to Path objects for easier handling
-    tsv_file = Path(args.input_tsv)
-    input_dir = Path(args.input_dir)
-    output_dir = Path(args.output)
 
-    # Validate the existence and accessibility of the TSV file
-    if not bu.check_tsv_readability(tsv_file):
-        logger.error(f"The TSV file {args.input_tsv} does not exist or is not readable.")
-        return
+    bu.check_readable(args.input_tsv)
+    bu.check_directory_accessibility(args.input_dir)
 
-    # Validate the input directory
-    bu.check_readable(input_dir)
-    if not bu.check_directory_accessibility(input_dir):
-        logger.error(f"The input directory {args.input_dir} is not readable.")
-        return
-
-    # Validate and create the output directory
-    if not output_dir.exists():
-        try:
-            output_dir.mkdir(parents=True)  # Create the directory if it doesn't exist
-            logger.info(f"Created output directory: {output_dir}")
-        except Exception as e:
-            logger.error(f"Failed to create output directory {output_dir}: {e}")
-            return
-    elif not bu.check_writability(output_dir):
-        logger.error(f"The output directory {args.output} is not writable.")
-        return
-    else:
-        logger.info(f"Output directory already exists: {output_dir}")
-
-    final_output_dir = output_dir
+    output = Path(args.output).resolve()
+    if output.exists():
+        logger.info(f"Output directory already exists. May overwrite existing data: {output}")
+    try:
+        output.mkdir(parents=True, exist_ok=True)
+    except OSError as e:
+        raise e
+    bu.check_directory_accessibility(output)
 
     # Process the TSV file and generate a temporary TSV file
-    temp_tsv = bu.process_tsv(args.input_tsv, args.input_dir)
-    if temp_tsv is None:
-        logger.error("Error processing TSV: Unable to generate temp TSV file. Aborting.")
-        return
+    cleaned_tsv: Path = bu.preprocess_tsv(args.input_tsv, Path(args.input_dir), output)
+    logger.info(f"Temporary TSV file saved at {cleaned_tsv}")
 
-    temp_tsv = Path(temp_tsv)
-    temp_folder = temp_tsv.parent
+    try:
+        _, conda_dir, database_dir = bu.get_setup_directories(args.setup_dir)
+        bu.check_directory_accessibility(conda_dir)
+        bu.check_directory_accessibility(database_dir)
+        bakta_db_type: str = bu.get_bakta_db_type(database_dir)
+    except FileNotFoundError or IOError as e:
+        logger.info(
+            f"Did not find installed setup. Trying to install them on the fly (internet connection required).\n\t{e}"
+        )
+        setup_subdir, conda_dir, database_dir = bu.get_setup_directories(args.setup_dir, setup_mode=True)
+        setup_subdir.mkdir(parents=True, exist_ok=True)
+        bakta_db_type: str = args.bakta_db_type
+        bn.baktflow_setup(
+            bu.get_nf_script("setup.nf"), setup_subdir, conda_dir, database_dir, bakta_db_type=bakta_db_type
+        )
 
-    logger.info(f"Temporary TSV file saved at {temp_tsv}")
-
-    _, conda_dir, database_dir = bu.get_setup_directories(args.setup_dir)
-    work_dir: Path = Path(args.work_dir) if args.work_dir else output_dir.joinpath("work")
+    work_dir: Path = Path(args.work_dir) if args.work_dir else output.joinpath("work")
     work_dir.mkdir(parents=True, exist_ok=True)
-    bu.check_directory_accessibility(conda_dir)
-    bu.check_directory_accessibility(database_dir)
-    bakta_db_type: str = bu.get_bakta_db_type(database_dir)
 
     bn.run_baktflow_workflow(
         workflow_script=bu.get_nf_script("main.nf"),
-        input_tsv=temp_tsv,
-        output_path=final_output_dir,
+        input_tsv=cleaned_tsv,
+        output_path=output,
         conda_dir=conda_dir,
         database_dir=database_dir,
         bakta_db_type=bakta_db_type,
@@ -178,18 +166,6 @@ def batch_subcommand(args):
         resume=args.resume,
     )
     logger.info("Nextflow workflow executed successfully.")
-
-    # Cleanup: Remove the temporary TSV file and its folder
-    try:
-        if temp_tsv.exists():
-            temp_tsv.unlink()  # Delete the TSV file
-            logger.info(f"Temporary TSV file {temp_tsv} deleted after execution.")
-
-        if temp_folder.exists() and temp_folder.name == "temp":
-            shutil.rmtree(temp_folder)
-            logger.info(f"Temporary folder {temp_folder} removed successfully.")
-    except Exception as e:
-        logger.error(f"Error cleaning up temporary files: {e}")
 
 
 def report_subcommand(input_dir, output_dir):
@@ -269,7 +245,6 @@ def parse_arguments():
     )
     single_parser.add_argument("--work_dir", help="Directory for the nextflow work folder (default: output/work)")
     single_parser.add_argument("--resume", help="Resume the workflow", action="store_true")
-    single_parser.add_argument("--profile", type=str, default="standard", help="Nextflow execution profile")
     single_parser.add_argument("--r1", default=None, help="Input file for R1 sequencing reads (FASTQ format)")
     single_parser.add_argument("--r2", default=None, help="Input file for R2 sequencing reads (FASTQ format)")
     single_parser.add_argument("--long", default=None, help="Input file for long reads (FASTQ format)")
@@ -280,7 +255,9 @@ def parse_arguments():
     batch_parser.add_argument("--input_tsv", help="Output directory for batch analysis", required=True)
     batch_parser.add_argument("--input_dir", help="Output directory for batch analysis", required=True)
     batch_parser.add_argument("--output", help="Output directory for batch analysis", required=True)
+    batch_parser.add_argument("--setup_dir", help="Directory for the workflow setup", required=True)
     batch_parser.add_argument("--work_dir", "-w", help="Directory for the nextflow work folder (default: output/work)")
+    batch_parser.add_argument("--profile", type=str, default="standard", help="Nextflow execution profile")
     batch_parser.add_argument("--resume", help="Resume the workflow", action="store_true")
 
     # Subcommand for processing aggregated reports
@@ -291,7 +268,6 @@ def parse_arguments():
     return parser.parse_args()
 
 
-# TODO automatically handle the bakta db type after setup
 def main():
     args = parse_arguments()
 
