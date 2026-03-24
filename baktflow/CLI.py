@@ -33,10 +33,7 @@ def setup_subcommand(args):
             bu.reinstall_directory(conda_dir)
             bu.reinstall_directory(database_dir)
             bn.baktflow_setup(
-                bu.get_nf_script("setup.nf"),
-                setup_subdir,
-                conda_dir,
-                database_dir,
+                bu.get_nf_script("setup.nf"), setup_subdir, conda_dir, database_dir, bakta_db_type=args.bakta_db_type
             )
             logger.info("Reinstallation complete.")
 
@@ -51,10 +48,7 @@ def setup_subcommand(args):
             logger.info("No existing environments or databases found. Installing from scratch...")
         setup_subdir.mkdir(parents=True, exist_ok=True)
         bn.baktflow_setup(
-            bu.get_nf_script("setup.nf"),
-            setup_subdir,
-            conda_dir,
-            database_dir,
+            bu.get_nf_script("setup.nf"), setup_subdir, conda_dir, database_dir, bakta_db_type=args.bakta_db_type
         )
 
 
@@ -85,11 +79,24 @@ def single_subcommand(args):
     tsv_path = output.joinpath("single_config.tsv")
     bu.create_tsv(args.id, sample_type, tsv_path, args.r1, args.r2, args.long, args.assembly)
 
-    _, conda_dir, database_dir = bu.get_setup_directories(args.setup_dir)
+    try:
+        _, conda_dir, database_dir = bu.get_setup_directories(args.setup_dir)
+        bu.check_directory_accessibility(conda_dir)
+        bu.check_directory_accessibility(database_dir)
+        bakta_db_type: str = bu.get_bakta_db_type(database_dir)
+    except FileNotFoundError or IOError as e:
+        logger.info(
+            f"Did not find installed setup. Trying to install them on the fly (internet connection required).\n\t{e}"
+        )
+        setup_subdir, conda_dir, database_dir = bu.get_setup_directories(args.setup_dir, setup_mode=True)
+        setup_subdir.mkdir(parents=True, exist_ok=True)
+        bakta_db_type: str = args.bakta_db_type
+        bn.baktflow_setup(
+            bu.get_nf_script("setup.nf"), setup_subdir, conda_dir, database_dir, bakta_db_type=bakta_db_type
+        )
+
     work_dir: Path = Path(args.work_dir) if args.work_dir else output.joinpath("work")
     work_dir.mkdir(parents=True, exist_ok=True)
-    bu.check_directory_accessibility(conda_dir)
-    bu.check_directory_accessibility(database_dir)
 
     bn.run_baktflow_workflow(
         workflow_script=bu.get_nf_script("main.nf"),
@@ -97,6 +104,7 @@ def single_subcommand(args):
         output_path=output,
         conda_dir=conda_dir,
         database_dir=database_dir,
+        bakta_db_type=bakta_db_type,
         work_dir=work_dir,
         profile=args.profile,
         resume=args.resume,
@@ -151,9 +159,12 @@ def batch_subcommand(args):
 
     logger.info(f"Temporary TSV file saved at {temp_tsv}")
 
-    setup_dir, conda_dir, database_dir = bu.get_setup_directories(args.setup_dir)
+    _, conda_dir, database_dir = bu.get_setup_directories(args.setup_dir)
     work_dir: Path = Path(args.work_dir) if args.work_dir else output_dir.joinpath("work")
     work_dir.mkdir(parents=True, exist_ok=True)
+    bu.check_directory_accessibility(conda_dir)
+    bu.check_directory_accessibility(database_dir)
+    bakta_db_type: str = bu.get_bakta_db_type(database_dir)
 
     bn.run_baktflow_workflow(
         workflow_script=bu.get_nf_script("main.nf"),
@@ -161,6 +172,7 @@ def batch_subcommand(args):
         output_path=final_output_dir,
         conda_dir=conda_dir,
         database_dir=database_dir,
+        bakta_db_type=bakta_db_type,
         work_dir=work_dir,
         profile=args.profile,
         resume=args.resume,
@@ -243,13 +255,19 @@ def parse_arguments():
     setup_parser.add_argument(
         "--force", "-f", action="store_true", help="Force the (re)installation setup of baktflow."
     )
+    setup_parser.add_argument(
+        "--bakta_db_type", type=str, default="light", help="Bakta database type [light, full]. default = 'light'"
+    )
 
     # Single subcommand
     single_parser = subparsers.add_parser("single", help="Run baktflow single analysis")
     single_parser.add_argument("--id", help="ID for a specific single analysis", required=True)
     single_parser.add_argument("--output", help="Output directory", required=True)
-    single_parser.add_argument("--setup_dir", "-d", help="Directory for the workflow setup", required=True)
-    single_parser.add_argument("--work_dir", "-w", help="Directory for the nextflow work folder (default: output/work)")
+    single_parser.add_argument("--setup_dir", help="Directory for the workflow setup", required=True)
+    single_parser.add_argument(
+        "--bakta_db_type", type=str, default="light", help="Bakta database type [light, full]. default = 'light'"
+    )
+    single_parser.add_argument("--work_dir", help="Directory for the nextflow work folder (default: output/work)")
     single_parser.add_argument("--resume", help="Resume the workflow", action="store_true")
     single_parser.add_argument("--profile", type=str, default="standard", help="Nextflow execution profile")
     single_parser.add_argument("--r1", default=None, help="Input file for R1 sequencing reads (FASTQ format)")

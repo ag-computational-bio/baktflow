@@ -48,6 +48,13 @@ def get_fasta_file_extensions() -> tuple[str, ...]:
     return tuple(valid_extensions)
 
 
+def get_bakta_db_type(database_path: Path) -> str:
+    bakta_db_path: Path = database_path.joinpath("bakta")
+    db_dir: list[Path] = list(bakta_db_path.glob("db-*"))
+    db_type: str = str(db_dir[0]).split("-")[-1]
+    return db_type
+
+
 def reinstall_directory(path: Path):
     try:
         shutil.rmtree(path, ignore_errors=True)
@@ -60,8 +67,8 @@ def get_setup_directories(setup_dir: str | Path, setup_mode: bool = False) -> tu
     setup_subdir: Path = Path(setup_dir).resolve()
     conda_dir: Path = setup_subdir.joinpath("envs")
     database_dir: Path = setup_subdir.joinpath("databases")
-    if not setup_mode and not check_readable(database_dir):
-        raise IOError("Could not read from setup database directory.")
+    if not setup_mode:
+        check_readable(database_dir)
     if not conda_dir.exists():
         logger.warning(
             "Could not find installed conda environments. Trying to install them on the fly (internet connection required)."
@@ -72,9 +79,9 @@ def get_setup_directories(setup_dir: str | Path, setup_mode: bool = False) -> tu
 def check_readable(path: str | Path) -> None:
     """Check if the path exists."""
     if not os.path.exists(path):
-        raise FileNotFoundError(f"File does not exist: {path}")
+        raise FileNotFoundError(f"Path does not exist: {path}")
     if not os.access(path, os.R_OK):
-        raise IOError(f"File is not readable: {path}")
+        raise IOError(f"Path is not readable: {path}")
 
 
 def check_directory_accessibility(directory_path: str | Path):
