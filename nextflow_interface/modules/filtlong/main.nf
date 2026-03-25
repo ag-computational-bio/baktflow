@@ -1,14 +1,10 @@
 #!/usr/bin/env nextflow
-nextflow.enable.dsl=2
-// Define parameters with default values
-params.OUTPUT_DIR = "$projectDir/../output"
 
 // Process parameters
 params.filtlong_keep_percent = 80  
 params.filtlong_min_length = 1000  
 params.filtlong_target_bases = 500000000  
 
-// Process for FiltLong (long reads)
 process FILTLONG {
     input:
     tuple val(meta), path(long_reads)
@@ -17,7 +13,7 @@ process FILTLONG {
     tuple val(meta), path("${meta.sample_id}_filtered.fastq.gz"), emit: filtered_long_reads
     tuple val(meta), path("${meta.sample_id}_filtlong.log"), emit: log
 
-    publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/filtlong", mode: 'copy'
+    publishDir "${params.output}/${meta.sample_id}/filtlong", mode: 'copy'
     conda "${projectDir}/modules/filtlong/environment.yaml"
     if ( "${workflow.stubRun}" == "false" ) {
         cpus (params.threads >= 8 ? 8 : params.threads)
@@ -35,19 +31,3 @@ process FILTLONG {
          2> ${meta.sample_id}_filtlong.log | gzip > ${meta.sample_id}_filtered.fastq.gz
     """
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

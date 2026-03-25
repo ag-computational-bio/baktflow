@@ -1,7 +1,4 @@
 #!/usr/bin/env nextflow
-nextflow.enable.dsl=2
-// Define parameters with default values
-params.OUTPUT_DIR = "$projectDir/../output"
 
 process POLYPOLISH {
     input:
@@ -9,7 +6,7 @@ process POLYPOLISH {
 
     output:
     tuple val(meta), path("${meta.sample_id}_polypolish.fasta"), emit:polished_output
-    publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/polypolish", mode: 'copy'
+    publishDir "${params.output}/${meta.sample_id}/polypolish", mode: 'copy'
 
     conda "${projectDir}/modules/polypolish/environment.yaml"
     if ( "${workflow.stubRun}" == "false" ) {
@@ -36,24 +33,3 @@ process POLYPOLISH {
     mv polished.fasta ${meta.sample_id}_polypolish.fasta
     """
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

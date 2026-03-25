@@ -1,8 +1,4 @@
 #!/usr/bin/env nextflow
-nextflow.enable.dsl=2
-
-// Define parameters with default values
-params.OUTPUT_DIR = "$projectDir/../output"
 
 process DNAAPLER {
     input:
@@ -11,7 +7,7 @@ process DNAAPLER {
     output:
     tuple val(meta), path("${meta.sample_id}_reoriented.fasta"), emit: assembly
 
-    publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/dnaapler", mode: 'copy'
+    publishDir "${params.output}/${meta.sample_id}/dnaapler", mode: 'copy'
     conda "${projectDir}/modules/dnaapler/environment.yaml"
     if ( "${workflow.stubRun}" == "false" ) {
         cpus (params.threads >= 8 ? 8 : params.threads)
@@ -56,26 +52,3 @@ process DNAAPLER {
     fi
     """
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,9 +1,6 @@
 #!/usr/bin/env nextflow
 
-// Define parameters with default values
 params.DATABASE_PATH = "${params.databaseDir}/bakta/db-${params.baktaDbType}"
-params.OUTPUT_DIR = "$projectDir/../output"
-
 
 process BAKTA {
     input:
@@ -21,7 +18,7 @@ process BAKTA {
     tuple val(meta), path("${meta.sample_id}.tsv"), emit: tsv
     tuple val(meta), path("${meta.sample_id}.txt"), emit: txt
 
-    publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/bakta", mode: 'copy'
+    publishDir "${params.output}/${meta.sample_id}/bakta", mode: 'copy'
 
     conda "${projectDir}/modules/bakta/environment.yaml"
     if ( "${workflow.stubRun}" == "false" ) {
@@ -66,30 +63,3 @@ process BAKTA {
     echo "Bakta run completed for sample: ${meta.sample_id}"
     """
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

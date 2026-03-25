@@ -1,9 +1,6 @@
 #!/usr/bin/env nextflow
-nextflow.enable.dsl=2
-// Define parameters with default values
-params.OUTPUT_DIR = "$projectDir/../output"
-params.REPORT_SCRIPT = "$projectDir/modules/unicycler/report.py"
 
+params.REPORT_SCRIPT = "$projectDir/modules/unicycler/report.py"
 
 process UNICYCLER {
     tag "$meta.sample_id"
@@ -16,7 +13,7 @@ process UNICYCLER {
     tuple val(meta), path("${meta.sample_id}_assembly.gfa"), emit: gfa
     tuple val(meta), path("${meta.sample_id}_unicycler.log"), emit: log
 
-    publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/unicycler", mode: 'copy'
+    publishDir "${params.output}/${meta.sample_id}/unicycler", mode: 'copy'
     conda "${projectDir}/modules/unicycler/environment.yaml"
     if ( "${workflow.stubRun}" == "false" ) {
         cpus (params.threads >= 8 ? 8 : params.threads)
@@ -37,25 +34,6 @@ process UNICYCLER {
     python ${params.REPORT_SCRIPT} \\
     --fasta ${prefix}_assembly.fasta \\
     --log ${meta.sample_id}_unicycler.log \\
-    --output ${params.OUTPUT_DIR}/${meta.sample_id}/unicycler
+    --output ${params.output}/${meta.sample_id}/unicycler
     """
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

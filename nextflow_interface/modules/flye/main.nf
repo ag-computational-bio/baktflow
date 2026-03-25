@@ -1,7 +1,4 @@
 #!/usr/bin/env nextflow
-nextflow.enable.dsl=2
-// Define parameters with default values
-params.OUTPUT_DIR = "$projectDir/../output"
 
 process FLYE {
     input:
@@ -27,27 +24,3 @@ process FLYE {
     cp flye_output/assembly_info.txt ${meta.sample_id}_assembly_info.txt
     """
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

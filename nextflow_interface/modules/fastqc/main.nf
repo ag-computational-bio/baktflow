@@ -1,10 +1,7 @@
 #!/usr/bin/env nextflow
-nextflow.enable.dsl=2
-// Define parameters with default values
-params.REPORT_SCRIPT = "$projectDir/modules/fastqc/report.py"
-params.OUTPUT_DIR = "$projectDir/../output"
 
-// FastQC Process
+params.REPORT_SCRIPT = "$projectDir/modules/fastqc/report.py"
+
 process FASTQC {
     tag { meta.sample_id }
     label 'fastqc'
@@ -16,7 +13,7 @@ process FASTQC {
     tuple val(meta), path("${reads.baseName}.html"), emit: html
     tuple val(meta), path("${reads.baseName}.zip"), emit: zip
 
-    publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/fastqc", mode: 'copy'
+    publishDir "${params.output}/${meta.sample_id}/fastqc", mode: 'copy'
 
     conda "${projectDir}/modules/fastqc/environment.yaml"
     if ( "${workflow.stubRun}" == "false" ) {
@@ -31,26 +28,6 @@ process FASTQC {
     mv *fastqc.zip ${reads.baseName}.zip
 
     # Run report.py with correct arguments
-    python ${params.REPORT_SCRIPT} --zip ${reads.baseName}.zip --output ${params.OUTPUT_DIR}/${meta.sample_id}/fastqc
+    python ${params.REPORT_SCRIPT} --zip ${reads.baseName}.zip --output ${params.output}/${meta.sample_id}/fastqc
     """
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
