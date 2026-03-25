@@ -248,6 +248,9 @@ def parse_arguments():
     batch_parser.add_argument("--input_dir", help="Output directory for batch analysis", required=True)
     batch_parser.add_argument("--output", help="Output directory for batch analysis", required=True)
     batch_parser.add_argument("--setup_dir", help="Directory for the workflow setup", required=True)
+    batch_parser.add_argument(
+        "--bakta_db_type", type=str, default="light", help="Bakta database type [light, full]. default = 'light'"
+    )
     batch_parser.add_argument("--work_dir", "-w", help="Directory for the nextflow work folder (default: output/work)")
     batch_parser.add_argument("--profile", type=str, default="standard", help="Nextflow execution profile")
     batch_parser.add_argument("--resume", help="Resume the workflow", action="store_true")
