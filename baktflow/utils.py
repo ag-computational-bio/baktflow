@@ -223,7 +223,7 @@ def preprocess_tsv(input_tsv: str | Path, input_dir: Path, output_dir: Path) -> 
                 checked_row.append(checked_file(files[1], input_dir, extensions))  # R2
                 checked_row.append(checked_file(files[2], input_dir, extensions))  # Long-read file
             elif sample_type == "assembly" and len(files) == sample_types["assembly"]:
-                checked_row.append(checked_file(files[0], input_dir, extensions))  # Assembly file
+                checked_row.extend(["", "", "", checked_file(files[0], input_dir, extensions)])  # Assembly file
             else:
                 logger.warning(f"Skipping row {i}: Incorrect file count for type '{sample_type}'")
                 continue
