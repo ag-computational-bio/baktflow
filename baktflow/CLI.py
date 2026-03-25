@@ -1,7 +1,6 @@
 import argparse
 import logging
 import os
-import shutil
 import subprocess
 from pathlib import Path
 
@@ -52,6 +51,28 @@ def setup_subcommand(args):
         )
 
 
+def on_the_fly_setup(setup_dir: str, bakta_db_type: str, work_dir: str, output: Path) -> tuple[Path, Path, str, Path]:
+    try:
+        _, conda_dir, database_dir = bu.get_setup_directories(setup_dir)
+        bu.check_directory_accessibility(conda_dir)
+        bu.check_directory_accessibility(database_dir)
+        bakta_db_type: str = bu.get_bakta_db_type(database_dir)
+    except FileNotFoundError or IOError as e:
+        logger.warning(
+            f"Did not find installed setup. Trying to install them on the fly (internet connection required).\n\t{e}"
+        )
+        setup_subdir, conda_dir, database_dir = bu.get_setup_directories(setup_dir, setup_mode=True)
+        setup_subdir.mkdir(parents=True, exist_ok=True)
+        bakta_db_type: str = bakta_db_type
+        bn.baktflow_setup(
+            bu.get_nf_script("setup.nf"), setup_subdir, conda_dir, database_dir, bakta_db_type=bakta_db_type
+        )
+
+    work_dir: Path = Path(work_dir) if work_dir else output.joinpath("work")
+    work_dir.mkdir(parents=True, exist_ok=True)
+    return conda_dir, database_dir, bakta_db_type, work_dir
+
+
 def single_subcommand(args):
     """Run baktflow single analysis."""
     logger.info("Running baktflow single...")
@@ -60,9 +81,9 @@ def single_subcommand(args):
     input_files: list[str] = [f for f in [args.r1, args.r2, args.long, args.assembly] if f]
     if len(input_files) == 0:
         raise FileNotFoundError("At least one input file must be provided.")
-    exts = bu.get_fasta_file_extensions()
+    extensions = bu.get_fasta_file_extensions()
     for file in input_files:
-        if not file.endswith(exts):
+        if not file.endswith(extensions):
             raise IOError(f"Invalid file extension: {file}")
         bu.check_readable(file)
         logger.info(f"Valid file detected: {file}")
@@ -80,24 +101,9 @@ def single_subcommand(args):
     tsv_path = output.joinpath("single_config.tsv")
     bu.create_tsv(args.id, sample_type, tsv_path, args.r1, args.r2, args.long, args.assembly)
 
-    try:
-        _, conda_dir, database_dir = bu.get_setup_directories(args.setup_dir)
-        bu.check_directory_accessibility(conda_dir)
-        bu.check_directory_accessibility(database_dir)
-        bakta_db_type: str = bu.get_bakta_db_type(database_dir)
-    except FileNotFoundError or IOError as e:
-        logger.info(
-            f"Did not find installed setup. Trying to install them on the fly (internet connection required).\n\t{e}"
-        )
-        setup_subdir, conda_dir, database_dir = bu.get_setup_directories(args.setup_dir, setup_mode=True)
-        setup_subdir.mkdir(parents=True, exist_ok=True)
-        bakta_db_type: str = args.bakta_db_type
-        bn.baktflow_setup(
-            bu.get_nf_script("setup.nf"), setup_subdir, conda_dir, database_dir, bakta_db_type=bakta_db_type
-        )
-
-    work_dir: Path = Path(args.work_dir) if args.work_dir else output.joinpath("work")
-    work_dir.mkdir(parents=True, exist_ok=True)
+    conda_dir, database_dir, bakta_db_type, work_dir = on_the_fly_setup(
+        args.setup_dir, args.bakta_db_type, args.work_dir, output
+    )
 
     bn.run_baktflow_workflow(
         workflow_script=bu.get_nf_script("main.nf"),
@@ -135,24 +141,9 @@ def batch_subcommand(args):
     cleaned_tsv: Path = bu.preprocess_tsv(args.input_tsv, Path(args.input_dir), output)
     logger.info(f"Temporary TSV file saved at {cleaned_tsv}")
 
-    try:
-        _, conda_dir, database_dir = bu.get_setup_directories(args.setup_dir)
-        bu.check_directory_accessibility(conda_dir)
-        bu.check_directory_accessibility(database_dir)
-        bakta_db_type: str = bu.get_bakta_db_type(database_dir)
-    except FileNotFoundError or IOError as e:
-        logger.info(
-            f"Did not find installed setup. Trying to install them on the fly (internet connection required).\n\t{e}"
-        )
-        setup_subdir, conda_dir, database_dir = bu.get_setup_directories(args.setup_dir, setup_mode=True)
-        setup_subdir.mkdir(parents=True, exist_ok=True)
-        bakta_db_type: str = args.bakta_db_type
-        bn.baktflow_setup(
-            bu.get_nf_script("setup.nf"), setup_subdir, conda_dir, database_dir, bakta_db_type=bakta_db_type
-        )
-
-    work_dir: Path = Path(args.work_dir) if args.work_dir else output.joinpath("work")
-    work_dir.mkdir(parents=True, exist_ok=True)
+    conda_dir, database_dir, bakta_db_type, work_dir = on_the_fly_setup(
+        args.setup_dir, args.bakta_db_type, args.work_dir, output
+    )
 
     bn.run_baktflow_workflow(
         workflow_script=bu.get_nf_script("main.nf"),
@@ -244,6 +235,7 @@ def parse_arguments():
         "--bakta_db_type", type=str, default="light", help="Bakta database type [light, full]. default = 'light'"
     )
     single_parser.add_argument("--work_dir", help="Directory for the nextflow work folder (default: output/work)")
+    single_parser.add_argument("--profile", type=str, default="standard", help="Nextflow execution profile")
     single_parser.add_argument("--resume", help="Resume the workflow", action="store_true")
     single_parser.add_argument("--r1", default=None, help="Input file for R1 sequencing reads (FASTQ format)")
     single_parser.add_argument("--r2", default=None, help="Input file for R2 sequencing reads (FASTQ format)")

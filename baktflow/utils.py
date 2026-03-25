@@ -149,7 +149,7 @@ def create_tsv(
         sample_id,
         sample_type,
     ] + [str(Path(f).resolve()) if f else None for f in [r1, r2, long, assembly]]
-    logger.info(f"TSV Row Content:\n{row}")
+    logger.info(f"TSV Row Content: {row}")
 
     try:
         with open(output_path, "w") as f:
@@ -165,8 +165,8 @@ def create_tsv(
 # ------------------------------
 
 
-def checked_file(file_path: str, input_dir: Path, extentsions: tuple[str, ...]) -> str:
-    if not file_path.endswith(extentsions):
+def checked_file(file_path: str, input_dir: Path, extensions: tuple[str, ...]) -> str:
+    if not file_path.endswith(extensions):
         raise IOError(f"Invalid file extension: {file_path}")
     abs_path: Path = input_dir.joinpath(file_path).resolve()
     check_readable(abs_path)
@@ -195,7 +195,7 @@ def preprocess_tsv(input_tsv: str | Path, input_dir: Path, output_dir: Path) -> 
 
     cleaned_tsv_file = output_dir.joinpath("cleaned_config.tsv")
     seperator: str = "\t"
-    exts = get_fasta_file_extensions()
+    extensions = get_fasta_file_extensions()
 
     with open(input_tsv, "r") as infile, open(cleaned_tsv_file, "w", newline="\n") as outfile:
         tsv_writer = csv.writer(outfile, delimiter="\t")
@@ -214,16 +214,16 @@ def preprocess_tsv(input_tsv: str | Path, input_dir: Path, output_dir: Path) -> 
 
             logger.debug(f"Processing row {i}: {row}")
             if sample_type == "short" and len(files) == sample_types["short"]:
-                checked_row.append(checked_file(files[0], input_dir, exts))  # R1
-                checked_row.append(checked_file(files[1], input_dir, exts))  # R2
+                checked_row.append(checked_file(files[0], input_dir, extensions))  # R1
+                checked_row.append(checked_file(files[1], input_dir, extensions))  # R2
             elif sample_type == "long" and len(files) == sample_types["long"]:
-                checked_row.append(checked_file(files[0], input_dir, exts))  # Long-read file
+                checked_row.append(checked_file(files[0], input_dir, extensions))  # Long-read file
             elif sample_type == "hybrid" and len(files) == sample_types["hybrid"]:
-                checked_row.append(checked_file(files[0], input_dir, exts))  # R1
-                checked_row.append(checked_file(files[1], input_dir, exts))  # R2
-                checked_row.append(checked_file(files[2], input_dir, exts))  # Long-read file
+                checked_row.append(checked_file(files[0], input_dir, extensions))  # R1
+                checked_row.append(checked_file(files[1], input_dir, extensions))  # R2
+                checked_row.append(checked_file(files[2], input_dir, extensions))  # Long-read file
             elif sample_type == "assembly" and len(files) == sample_types["assembly"]:
-                checked_row.append(checked_file(files[0], input_dir, exts))  # Assembly file
+                checked_row.append(checked_file(files[0], input_dir, extensions))  # Assembly file
             else:
                 logger.warning(f"Skipping row {i}: Incorrect file count for type '{sample_type}'")
                 continue
