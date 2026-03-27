@@ -2,53 +2,23 @@
 
 process MEDAKA {
     tag "$meta.sample_id"
-    
-    input:
-    tuple val(meta), path(long_reads), path(scaffolds)
-
-    output:
-    tuple val(meta), path("${meta.sample_id}_polished_assembly.fasta"), emit: input_fasta
-
     publishDir "${params.output}/${meta.sample_id}/medaka", mode: 'copy'
     conda "${projectDir}/modules/medaka/environment.yaml"
-    if ( "${workflow.stubRun}" == "false" ) {
-        cpus (params.threads >= 8 ? 8 : params.threads)
-        memory {1.GB * task.attempt}
-    }
-    
+    // queue { params.gpu_queue.length() > 0 ? params.gpu_queue : params.queue }
+    time { 1.h * Math.pow(2, task.attempt) }
+    memory { workflow.stubRun ? 64.MB : 16.GB * task.attempt }
+    cpus { workflow.stubRun ? 1 : (params.threads >= 8 ? 8 : params.threads) }
+
+    input:
+        tuple val(meta), path(long_reads), path(scaffolds)
+
+    output:
+        tuple val(meta), path("${meta.sample_id}_polished_assembly.fasta"), emit: input_fasta
+
     script:
-    def prefix = meta.sample_id
     """
-    # Convert long reads to bgzip if necessary
-    if [[ "${long_reads}" == *.gz ]]; then
-        gunzip -c ${long_reads} | bgzip -c > ${prefix}.fastq.bgz
-        echo "${prefix}.fastq.bgz" > reads_bgzip_out.txt
-    else
-        cp ${long_reads} ${prefix}.fastq.bgz
-        echo "${prefix}.fastq.bgz" > reads_bgzip_out.txt
-    fi
+    medaka_consensus -i ${long_reads} -d ${scaffolds} -o medaka_output -t ${task.cpus}
 
-    # Convert scaffolds to bgzip if necessary
-    if [[ "${scaffolds}" == *.gz ]]; then
-        gunzip -c ${scaffolds} | bgzip -c > ${prefix}.fasta.bgz
-        echo "${prefix}.fasta.bgz" > assembly_bgzip_out.txt
-    else
-        cp ${scaffolds} ${prefix}.fasta.bgz
-        echo "${prefix}.fasta.bgz" > assembly_bgzip_out.txt
-    fi
-
-    # Read variables back into Nextflow
-    reads_bgzip_out=\$(cat reads_bgzip_out.txt)
-    assembly_bgzip_out=\$(cat assembly_bgzip_out.txt)
-
-    # Run medaka consensus polishing
-    medaka_consensus \\
-        -i "\$reads_bgzip_out" \\
-        -d "\$assembly_bgzip_out" \\
-        -o medaka_output \\
-        -t ${task.cpus}
-
-    # Move the polished assembly to the output location
     mv medaka_output/consensus.fasta ${meta.sample_id}_polished_assembly.fasta
     """
 }
