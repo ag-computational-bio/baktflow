@@ -24,15 +24,18 @@ workflow {
     SETUP_PYPOLCA()
     SETUP_DNAAPLER()
     SETUP_BAKTA()
-}
 
-workflow.onComplete {
-    log.info "${''.center(60, '=')}"
-    log.info "Check Conda Environment Directory: ${params.cacheDir}"
-    log.info "Check Database Directory: ${params.databaseDir}"
-    log.info "Duration: ${workflow.duration}"
-    log.info "Success: ${workflow.success}"
-    log.info "Error Report: ${workflow.errorReport ?: '-'}"
-    log.info "Launch Dir: ${workflow.launchDir}"
-    log.info "${''.center(60, '=')}"
+    /*
+    workflow.onComplete {
+        def separator = "=" * 60 // Creates a 60-character separator line
+        log.info "\n${separator}"
+        log.info "Check Conda Environment Directory: ${params.cacheDir}"
+        log.info "Check Database Directory: ${params.databaseDir}"
+        log.info "Duration: ${workflow.duration}"
+        log.info "Success: ${workflow.success}"
+        log.info "Error Report: ${workflow.errorReport ?: '-'}"
+        log.info "Launch Dir: ${workflow.launchDir}"
+        log.info "\n${separator}"
+    }
+    */
 }

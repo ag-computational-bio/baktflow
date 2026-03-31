@@ -212,18 +212,18 @@ def preprocess_tsv(input_tsv: str | Path, input_dir: Path, output_dir: Path) -> 
                 logger.warning(f"Invalid sample type '{sample_type}' in row {i}: {row}")
                 continue
 
-            logger.debug(f"Processing row {i}: {row}")
+            logger.info(f"Processing row {i}: {' '.join(row)}")
             if sample_type == "short" and len(files) == sample_types["short"]:
                 checked_row.append(checked_file(files[0], input_dir, extensions))  # R1
                 checked_row.append(checked_file(files[1], input_dir, extensions))  # R2
             elif sample_type == "long" and len(files) == sample_types["long"]:
-                checked_row.append(checked_file(files[0], input_dir, extensions))  # Long-read file
+                checked_row.extend(["", "", checked_file(files[0], input_dir, extensions)])  # Long-read file
             elif sample_type == "hybrid" and len(files) == sample_types["hybrid"]:
                 checked_row.append(checked_file(files[0], input_dir, extensions))  # R1
                 checked_row.append(checked_file(files[1], input_dir, extensions))  # R2
                 checked_row.append(checked_file(files[2], input_dir, extensions))  # Long-read file
             elif sample_type == "assembly" and len(files) == sample_types["assembly"]:
-                checked_row.append(checked_file(files[0], input_dir, extensions))  # Assembly file
+                checked_row.extend(["", "", "", checked_file(files[0], input_dir, extensions)])  # Assembly file
             else:
                 logger.warning(f"Skipping row {i}: Incorrect file count for type '{sample_type}'")
                 continue

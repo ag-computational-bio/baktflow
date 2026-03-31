@@ -3,23 +3,17 @@
 params.REPORT_SCRIPT = "$projectDir/modules/fastqc/report.py"
 
 process FASTQC {
-    tag { meta.sample_id }
-    label 'fastqc'
-
-    input:
-    tuple val(meta), path(reads)
-
-    output:
-    tuple val(meta), path("${reads.baseName}.html"), emit: html
-    tuple val(meta), path("${reads.baseName}.zip"), emit: zip
+    tag "$meta.sample_id"
 
     publishDir "${params.output}/${meta.sample_id}/fastqc", mode: 'copy'
-
     conda "${projectDir}/modules/fastqc/environment.yaml"
-    if ( "${workflow.stubRun}" == "false" ) {
-        cpus (params.threads >= 2 ? 2 : params.threads)
-        memory {1.GB * task.attempt}
-    }
+
+    input:
+        tuple val(meta), path(reads)
+
+    output:
+        tuple val(meta), path("${reads.baseName}.html"), emit: html
+        tuple val(meta), path("${reads.baseName}.zip"), emit: zip
 
     script:
     """
