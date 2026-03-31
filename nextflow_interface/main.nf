@@ -37,7 +37,7 @@ workflow {
                 meta: meta,
                 r1: r1,
                 r2: r2,
-                long_reads: long_file ? [long_file] : [],
+                long_reads: long_file,
                 assembly: assembly_file
             ]
         }
