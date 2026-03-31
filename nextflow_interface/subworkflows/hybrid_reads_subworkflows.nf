@@ -33,18 +33,13 @@ workflow HYBRID_READ_PROCESSING_SUBWORKFLOW {
         })
 
         // Get processed reads for assembly
-        short_reads_for_assembly = ch_processed_short_reads.processed_reads
-        long_reads_for_assembly = ch_filtered_long_reads.filtered_long_reads
-
         // Key channels with sample_id for easy joining
-        ch_keyed_short_reads = short_reads_for_assembly.map { meta, r1, r2, se, _long ->
+        ch_keyed_short_reads = ch_processed_short_reads.trimmed_reads.map { meta, r1, r2, se, _long ->
             tuple(meta.sample_id, meta, r1, r2, se)
         }
-        ch_keyed_long_reads = long_reads_for_assembly.map { meta, long_reads -> 
+        ch_keyed_long_reads = ch_filtered_long_reads.filtered_long_reads.map { meta, long_reads ->
             tuple(meta.sample_id, meta, long_reads) 
         }
-
-        // Combine short and long reads based on sample_id
         combined_reads = ch_keyed_short_reads.join(ch_keyed_long_reads)
             .map { _sample_id, meta_short, r1, r2, se, _meta_long, long_reads ->
                 tuple('hybrid', meta_short, r1, r2, se, long_reads)

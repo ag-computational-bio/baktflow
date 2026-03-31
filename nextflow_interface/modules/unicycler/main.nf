@@ -20,8 +20,8 @@ process UNICYCLER {
     script:
     if( mode == 'short' )
         """
-        unicycler --short1 ${r1} --short2 ${r2} --unpaired ${se} --out ./ --threads ${task.cpus}
-        # --keep 0
+        unicycler --short1 ${r1} --short2 ${r2} --unpaired ${se} --out ./ --keep 0 --threads ${task.cpus}
+
         # TODO compress output
         mv ./assembly.fasta ${meta.sample_id}_assembly.fasta
         mv ./assembly.gfa ${meta.sample_id}_assembly.gfa
@@ -34,7 +34,7 @@ process UNICYCLER {
         """
     else if( mode == 'hybrid' )
         """
-        unicycler --short1 ${r1} --short2 ${r2} --unpaired ${se} --long ${ont} --out ./ --threads ${task.cpus}
+        unicycler --short1 ${r1} --short2 ${r2} --unpaired ${se} --long ${ont} --out ./ --keep 0 --threads ${task.cpus}
 
         mv ./assembly.fasta ${meta.sample_id}_assembly.fasta
         mv ./assembly.gfa ${meta.sample_id}_assembly.gfa

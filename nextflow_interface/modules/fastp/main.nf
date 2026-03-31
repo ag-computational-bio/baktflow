@@ -11,7 +11,7 @@ process FASTP {
         tuple val(meta), path(r1), path(r2)
 
     output:
-        tuple val(meta), path("${meta.sample_id}_R1_processed.fastq.gz"), path("${meta.sample_id}_R2_processed.fastq.gz"), path("${meta.sample_id}_SE_processed.fastq.gz"), path('empty.long.fq.gz'), emit: processed_reads
+        tuple val(meta), path("${meta.sample_id}_R1_processed.fastq.gz"), path("${meta.sample_id}_R2_processed.fastq.gz"), path("${meta.sample_id}_SE_processed.fastq.gz"), path('empty.long.fq.gz'), emit: trimmed_reads
         tuple val(meta), path('*.json'), emit: json
         tuple val(meta), path('*.html'), emit: html
 

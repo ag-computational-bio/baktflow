@@ -17,13 +17,12 @@ workflow SHORT_READ_PROCESSING_SUBWORKFLOW {
         // Process the short reads with FASTP
         // TODO replace FASTQC with fastp
         // TODO add multiqc pre and post trimming
-        ch_processed_reads = FASTP(ch_short_reads.map { sample ->
+        ch_trimmed_reads = FASTP(ch_short_reads.map { sample ->
             tuple(sample.meta, sample.r1, sample.r2)
         })
 
         // Pass R1, R2, and an empty list for long_reads to UNICYCLER
-        // TODO unpaired reads for unicycler?
-        ch_unicycler_input = ch_processed_reads.processed_reads.map { processed ->
+        ch_unicycler_input = ch_trimmed_reads.trimmed_reads.map { processed ->
             def (meta, r1_processed, r2_processed, se_processed, empty_long_processed) = processed
             tuple('short', meta, r1_processed, r2_processed, se_processed, empty_long_processed)
         }
