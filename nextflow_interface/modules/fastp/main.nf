@@ -1,32 +1,27 @@
 #!/usr/bin/env nextflow
-nextflow.enable.dsl=2
-// Define parameters with default values
-params.CONDA_ENV_DIR = "$baseDir/../setup/conda_envs"
-params.CONDA_ENV_PATH = "${params.CONDA_ENV_DIR}/fastp"
-params.OUTPUT_DIR = "$baseDir/../output"
-
-
 
 process FASTP {
     tag "$meta.sample_id"
+    publishDir "${params.output}/${meta.sample_id}/fastp", mode: 'copy'
+    conda "${projectDir}/modules/fastp/environment.yaml"
+    memory { workflow.stubRun ? 64.MB : 1.GB * task.attempt }
+    cpus { workflow.stubRun ? 1 : (params.threads >= 4 ? 4 : params.threads) }
+
     input:
-    tuple val(meta), path(r1), path(r2)
+        tuple val(meta), path(r1), path(r2)
 
     output:
-    tuple val(meta), path("${meta.sample_id}_R1_processed.fastq.gz"), path("${meta.sample_id}_R2_processed.fastq.gz"), emit: processed_reads
-    tuple val(meta), path('*.json'), emit: json
-    tuple val(meta), path('*.html'), emit: html
-    errorStrategy 'retry'  // Retry on failure
-    publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/fastp", mode: 'copy'
-    conda "${params.CONDA_ENV_PATH}"
-    errorStrategy { task.attempt <= 3 ? 'retry' : 'ignore' }  // Retry up to 3 times, then ignore
-    maxRetries 3  // Ensure maxRetries is set to allow up to 3 retries
-    cpus 2
-    memory '1GB'
+        tuple val(meta), path("${meta.sample_id}_R1_processed.fastq.gz"), path("${meta.sample_id}_R2_processed.fastq.gz"), path("${meta.sample_id}_SE_processed.fastq.gz"), path('empty.long.fq.gz'), emit: trimmed_reads
+        tuple val(meta), path('*.json'), emit: json
+        tuple val(meta), path('*.html'), emit: html
 
     script:
     """
-    fastp --in1 ${r1} --in2 ${r2} --out1 ${meta.sample_id}_R1_processed.fastq.gz --out2 ${meta.sample_id}_R2_processed.fastq.gz --thread  $task.cpus
+    fastp --in1 ${r1} --in2 ${r2} --out1 ${meta.sample_id}_R1_processed.fastq.gz --out2 ${meta.sample_id}_R2_processed.fastq.gz \
+    --unpaired1 ${meta.sample_id}_SE_processed.fastq.gz --unpaired2 ${meta.sample_id}_SE_processed.fastq.gz \
+    --detect_adapter_for_pe --trim_poly_g --cut_front --cut_tail --length_required 21 --low_complexity_filter --correction --thread $task.cpus
+
+    touch empty.long.fq.gz
     """
 
     stub:
@@ -38,24 +33,3 @@ process FASTP {
     touch ${meta.sample_id}.fastp.html
     """
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,27 +1,18 @@
 #!/usr/bin/env nextflow
-nextflow.enable.dsl=2
-// Define parameters with default values
-params.CONDA_ENV_DIR = "$baseDir/../setup/conda_envs"
-params.CONDA_ENV_PATH = "${params.CONDA_ENV_DIR}/flye"
-params.OUTPUT_DIR = "$baseDir/../output"
 
 process FLYE {
+    tag "$meta.sample_id"
+    conda "${projectDir}/modules/flye/environment.yaml"
+    memory { workflow.stubRun ? 64.MB : 16.GB * task.attempt }
+    cpus { workflow.stubRun ? 1 : (params.threads >= 8 ? 8 : params.threads) }
+
     input:
-    tuple val(meta), path(filtered_long_reads)
+        tuple val(meta), path(filtered_long_reads)
 
     output:
-    tuple val(meta), path("${meta.sample_id}_assembly.fasta"), emit: scaffolds
-    tuple val(meta), path("${meta.sample_id}_assembly_graph.gfa"), emit: graph
-    tuple val(meta), path("${meta.sample_id}_assembly_info.txt"), emit: info
-
-    publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/flye", mode: 'copy'
-    conda "${params.CONDA_ENV_PATH}"
-    // Resource allocation
-    cpus 8
-    memory '8GB'
-
-    errorStrategy { task.attempt <= 3 ? 'retry' : 'ignore' }  // Retry up to 3 times, then ignore
-    maxRetries 3  // Ensure maxRetries is set to allow up to 3 retries
+        tuple val(meta), path("${meta.sample_id}_assembly.fasta"), emit: scaffolds
+        tuple val(meta), path("${meta.sample_id}_assembly_graph.gfa"), emit: graph
+        tuple val(meta), path("${meta.sample_id}_assembly_info.txt"), emit: info
 
     script:
     """
@@ -39,27 +30,3 @@ process FLYE {
     touch ${meta.sample_id}_assembly_info.txt
     """
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

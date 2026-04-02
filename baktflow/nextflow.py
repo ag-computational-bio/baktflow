@@ -1,88 +1,88 @@
-import subprocess
 import logging
 import os
+import shutil
+import subprocess
 from pathlib import Path
 
+import baktflow.utils as bu
+
 logger = logging.getLogger(__name__)
-c_blue = "\033[1;34m"
-c_green = "\033[1;32m"
-c_reset = "\033[0m"
 
 
-def start(setup_script, setup_dir, conda_dir, database_dir, nextflow_path=None):
+def get_nextflow_executable() -> str:
+    nextflow_path: str | None = shutil.which("nextflow")
+    if not bool(nextflow_path):
+        raise Exception(
+            'Could not find nextflow executable. Please provide the path to the executable with: "--nextflow_path"'
+        )
+    return nextflow_path
+
+
+def baktflow_setup(
+    setup_script: Path, setup_dir: Path, conda_dir: Path, database_dir: Path, bakta_db_type: str = "light"
+) -> None:
     """Run Nextflow setup script."""
-    
-    # Use a default nextflow_path if not provided
-    if nextflow_path is None:
-        nextflow_path = os.environ.get('NEXTFLOW_HOME', '')  # Environment variable for Nextflow path
-    
-    # Use an alternative default path if NEXTFLOW_HOME is not set
-    if not nextflow_path:
-        nextflow_path = os.path.expanduser("~/nextflow")  # Default path in user's home directory
-    
-    # Validate the nextflow_path
-    if not os.path.exists(nextflow_path):
-        logger.error(f"Nextflow not found at {nextflow_path}. Please provide a valid path.")
-        return
-    
-    root_path = Path(__file__).resolve().parent.parent 
-            
-    # Dynamically determine the path to the setup.nf script
-    setup_script_path = os.path.join(root_path, 'nextflow', setup_script)  # Pointing to 'nextflow/setup.nf'
-    
-    if not os.path.exists(setup_script_path):
-        logger.error(f"Cannot find script file: {setup_script_path}")
-        return
-    
-    # Construct the Nextflow command
-    nextflow_cmd = f"{nextflow_path} run {setup_script_path} -profile standard"
+    nextflow_path: str = get_nextflow_executable()
 
-    try:
-        # Set up Conda and database directories
-        env = os.environ.copy()
-        env['CONDA_ENVS_PATH'] = str(conda_dir)
-        env['DATABASE_DIR'] = str(database_dir)
+    nextflow_cmd: str = f"{nextflow_path} run {setup_script} -profile standard --cacheDir {conda_dir} --databaseDir {database_dir} --baktaDbType {bakta_db_type}"
 
-        # Execute the Nextflow command
-        subprocess.run(nextflow_cmd, check=True, shell=True, cwd=str(setup_dir), env=env)
-        
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Nextflow setup script failed: {e}")
-        raise
+    conda_implementation: str = bu.get_conda_implementation()
+    if conda_implementation == "micromamba":
+        nextflow_cmd += " --useMicromamba true"
+    elif conda_implementation == "mamba":
+        nextflow_cmd += " --useMamba true"
+
+    nextflow_clean_cmd: str = f"{nextflow_path} clean -f -q"
+
+    env = os.environ.copy()
+    subprocess.run(nextflow_cmd, check=True, shell=True, cwd=str(setup_dir), env=env)
+    subprocess.run(nextflow_clean_cmd, check=True, shell=True, cwd=str(setup_dir), env=env)
+    shutil.rmtree(setup_dir.joinpath("work"), ignore_errors=True)
 
 
-def run(main, temp_tsv, sample_output_path, base_path,nextflow_path=None):
-    """Run Nextflow pipeline script."""
-    
-    # Use a default nextflow_path if not provided
-    if nextflow_path is None:
-        nextflow_path = os.environ.get('NEXTFLOW_HOME', '')  # Environment variable for Nextflow path
-    
-    # Use an alternative default path if NEXTFLOW_HOME is not set
-    if not nextflow_path:
-        nextflow_path = os.path.expanduser("~/nextflow")  # Default path in user's home directory
-    
-    # Validate the nextflow_path
-    if not os.path.exists(nextflow_path):
-        logger.error(f"Nextflow not found at {nextflow_path}. Please provide a valid path.")
-        return
-    
-    # Construct the Nextflow command
+def run_baktflow_workflow(
+    workflow_script: Path,
+    input_tsv: Path,
+    output_path: Path,
+    conda_dir: Path,
+    database_dir: Path,
+    bakta_db_type: str,
+    work_dir: Path,
+    profile: str,
+    resume: bool,
+):
+    """Run Nextflow workflow script."""
+
+    nextflow_path: str = get_nextflow_executable()
+
     nextflow_cmd = [
-        nextflow_path, 'run', main,
-        '--INPUT_TSV', temp_tsv,
-        '--OUTPUT_DIR', sample_output_path,
-        '--BASE_PATH', base_path,
-        '-profile', 'standard',
-        '-stub-run'
+        nextflow_path,
+        "run",
+        str(workflow_script),
+        "-profile",
+        profile,
+        "--inputTsv",
+        str(input_tsv),
+        "--output",
+        str(output_path),
+        "--cacheDir",
+        str(conda_dir),
+        "--databaseDir",
+        str(database_dir),
+        "--baktaDbType",
+        bakta_db_type,
+        "--workDir",
+        str(work_dir),
     ]
 
-    try:
-        # Execute the Nextflow command
-        subprocess.run(nextflow_cmd, check=True)
-        logger.info(f"{c_green}Nextflow pipeline executed successfully.{c_reset}")
-    except subprocess.CalledProcessError as e:
-        logger.error(f"{c_blue}Nextflow pipeline failed: {e}{c_reset}")
-        raise
+    if resume:
+        nextflow_cmd.append("-resume")
 
+    conda_implementation: str = bu.get_conda_implementation()
+    if conda_implementation == "micromamba":
+        nextflow_cmd.extend(["--useMicromamba", "true"])
+    elif conda_implementation == "mamba":
+        nextflow_cmd.extend(["--useMamba", "true"])
 
+    subprocess.run(nextflow_cmd, check=True, cwd=str(output_path), env=os.environ.copy())
+    logger.info("Nextflow workflow executed successfully.")

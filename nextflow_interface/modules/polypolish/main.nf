@@ -1,42 +1,27 @@
 #!/usr/bin/env nextflow
-nextflow.enable.dsl=2
-// Define parameters with default values
-params.CONDA_ENV_DIR = "$baseDir/../setup/conda_envs"
-params.CONDA_ENV_PATH = "${params.CONDA_ENV_DIR}/polypolish"
-params.OUTPUT_DIR = "$baseDir/../output"
-
 
 process POLYPOLISH {
+    tag "$meta.sample_id"
+    publishDir "${params.output}/${meta.sample_id}/polypolish", mode: 'copy'
+    conda "${projectDir}/modules/polypolish/environment.yaml"
+    memory { workflow.stubRun ? 64.MB : 16.GB * task.attempt }
+    cpus { workflow.stubRun ? 1 : (params.threads >= 8 ? 8 : params.threads) }
+
     input:
-    tuple val(meta), path(short_pypolca), path(r1), path(r2)
+        tuple val(meta), path(short_pypolca), path(r1), path(r2), path(se)
 
     output:
-    tuple val(meta), path("${meta.sample_id}_polypolish.fasta"), emit:polished_output
-    publishDir "${params.OUTPUT_DIR}/${meta.sample_id}/polypolish", mode: 'copy'
+        tuple val(meta), path("${meta.sample_id}_polypolish.fasta"), emit: polished_output
 
-    conda "${params.CONDA_ENV_PATH}"
-    errorStrategy { task.attempt <= 3 ? 'retry' : 'ignore' }  // Retry up to 3 times, then ignore
-    maxRetries 3  // Ensure maxRetries is set to allow up to 3 retries
-    cpus 8
-    memory '8GB'
-    
     script:
     """
-    # Step 1: Index the draft genome
     bwa index ${short_pypolca}
-
-    # Step 2: Align short reads separately
     bwa mem -t $task.cpus -a ${short_pypolca} ${r1} > alignments_1.sam
     bwa mem -t $task.cpus -a ${short_pypolca} ${r2} > alignments_2.sam
+    bwa mem -t $task.cpus -a ${short_pypolca} ${se} > alignments_se.sam
 
-    # Step 3: Filter low-quality alignments
     polypolish filter --in1 alignments_1.sam --in2 alignments_2.sam --out1 filtered_1.sam --out2 filtered_2.sam
-
-    # Step 4: Perform polishing with high-quality alignments
-    polypolish polish ${short_pypolca} filtered_1.sam filtered_2.sam > polished.fasta
-
-    # Rename output
-    mv polished.fasta ${meta.sample_id}_polypolish.fasta
+    polypolish polish ${short_pypolca} filtered_1.sam filtered_2.sam alignments_se.sam > ${meta.sample_id}_polypolish.fasta
     """
 
     stub:
@@ -44,24 +29,3 @@ process POLYPOLISH {
     touch ${meta.sample_id}_polypolish.fasta
     """
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

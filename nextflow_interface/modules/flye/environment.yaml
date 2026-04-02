@@ -1,11 +1,6 @@
 name: flye
 channels:
-  - bioconda
   - conda-forge
-  - defaults
+  - bioconda
 dependencies:
-
-  - flye=2.9.5         
-
-
-
+  - flye=2.9.6

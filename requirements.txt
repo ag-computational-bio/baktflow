@@ -1,4 +1,0 @@
-nextflow>=23.3
-pandas>=1.0.0
-jinja2>=2.10
-plotly>=4.0.0
