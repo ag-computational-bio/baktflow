@@ -24,4 +24,10 @@ process FASTQC {
     # Run report.py with correct arguments
     python ${params.REPORT_SCRIPT} --zip ${reads.baseName}.zip --output ${params.output}/${meta.sample_id}/fastqc
     """
+
+    stub:
+    """
+    touch ${reads.baseName}.html
+    touch ${reads.baseName}.zip
+    """
 }

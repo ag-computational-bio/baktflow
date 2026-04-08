@@ -86,5 +86,6 @@ workflow HYBRID_READ_PROCESSING_SUBWORKFLOW {
         ch_reoriented = DNAAPLER(ch_final_polished_assembly)
 
         emit:
+
             final_output = ch_reoriented.assembly
 }

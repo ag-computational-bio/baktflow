@@ -21,4 +21,10 @@ process PYPOLCA {
     mv ${meta.sample_id}_pypolca/${meta.sample_id}_corrected.fasta ${meta.sample_id}_pypolca.fasta
     mv ${meta.sample_id}_pypolca/${meta.sample_id}.report ${meta.sample_id}_pypolca.report
     """
+
+    stub:
+    """
+    touch ${meta.sample_id}_pypolca.fasta
+    touch ${meta.sample_id}_pypolca.report
+    """
 }

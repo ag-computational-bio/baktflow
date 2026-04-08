@@ -50,6 +50,7 @@ def run_baktflow_workflow(
     work_dir: Path,
     profile: str,
     resume: bool,
+    stub: bool
 ):
     """Run Nextflow workflow script."""
 
@@ -77,6 +78,9 @@ def run_baktflow_workflow(
 
     if resume:
         nextflow_cmd.append("-resume")
+
+    if stub:
+        nextflow_cmd.append("-stub")
 
     conda_implementation: str = bu.get_conda_implementation()
     if conda_implementation == "micromamba":

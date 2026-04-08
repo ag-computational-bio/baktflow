@@ -17,6 +17,7 @@ process UNICYCLER {
         tuple val(meta), path("${meta.sample_id}_assembly.gfa"), emit: gfa
         tuple val(meta), path("${meta.sample_id}_unicycler.log"), emit: log
 
+
     script:
     if( mode == 'short' )
         """
@@ -47,4 +48,13 @@ process UNICYCLER {
         """
     else
         error "Invalid alignment mode: ${mode}"
+
+    stub:
+        """
+        touch ${meta.sample_id}_assembly.fasta
+        touch ${meta.sample_id}_assembly.gfa
+        touch ${meta.sample_id}_unicycler.log
+        """
 }
+
+

@@ -23,4 +23,9 @@ process POLYPOLISH {
     polypolish filter --in1 alignments_1.sam --in2 alignments_2.sam --out1 filtered_1.sam --out2 filtered_2.sam
     polypolish polish ${short_pypolca} filtered_1.sam filtered_2.sam alignments_se.sam > ${meta.sample_id}_polypolish.fasta
     """
+
+    stub:
+    """
+    touch ${meta.sample_id}_polypolish.fasta
+    """
 }

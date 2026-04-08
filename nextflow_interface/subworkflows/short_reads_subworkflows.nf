@@ -35,5 +35,6 @@ workflow SHORT_READ_PROCESSING_SUBWORKFLOW {
 
     // Emit the final output
     emit:
+
         final_output = ch_reoriented.assembly
 }

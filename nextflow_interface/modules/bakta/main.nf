@@ -28,4 +28,18 @@ process BAKTA {
     """
     bakta --db "${params.baktaDb}" --prefix ${meta.sample_id} --output ./ --threads $task.cpus ${assembly}
     """
+
+    stub:
+    """
+    touch ${meta.sample_id}.embl
+    touch ${meta.sample_id}.faa
+    touch ${meta.sample_id}.ffn
+    touch ${meta.sample_id}.fna
+    touch ${meta.sample_id}.gbff
+    touch ${meta.sample_id}.gff3
+    touch ${meta.sample_id}.hypotheticals.tsv
+    touch ${meta.sample_id}.hypotheticals.faa
+    touch ${meta.sample_id}.tsv
+    touch ${meta.sample_id}.txt
+    """
 }

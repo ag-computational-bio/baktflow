@@ -22,4 +22,11 @@ process FLYE {
     cp flye_output/assembly_graph.gfa ${meta.sample_id}_assembly_graph.gfa
     cp flye_output/assembly_info.txt ${meta.sample_id}_assembly_info.txt
     """
+
+    stub:
+    """
+    touch ${meta.sample_id}_assembly.fasta
+    touch ${meta.sample_id}_assembly_graph.gfa
+    touch ${meta.sample_id}_assembly_info.txt
+    """
 }

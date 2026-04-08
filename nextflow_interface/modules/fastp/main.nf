@@ -23,4 +23,15 @@ process FASTP {
 
     touch empty.long.fq.gz
     """
+
+    stub:
+    """
+    touch ${meta.sample_id}_R1_processed.fastq.gz
+    touch ${meta.sample_id}_R2_processed.fastq.gz
+    touch ${meta.sample_id}_SE_processed.fastq.gz
+    touch ${meta.sample_id}.SE.fastq.gz
+    touch ${meta.sample_id}.fastp.json
+    touch ${meta.sample_id}.fastp.html
+    touch empty.long.fq.gz
+    """
 }

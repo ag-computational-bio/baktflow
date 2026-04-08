@@ -44,4 +44,9 @@ process DNAAPLER {
         exit 1
     fi
     """
+
+    stub:
+    """
+    touch ${meta.sample_id}_reoriented.fasta
+    """
 }
