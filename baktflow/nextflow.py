@@ -74,12 +74,13 @@ def run_baktflow_workflow(
         bakta_db_type,
         "--workDir",
         str(work_dir),
-        "-stub",
-        str(stub)
     ]
 
     if resume:
         nextflow_cmd.append("-resume")
+
+    if stub:
+        nextflow_cmd.append("-stub")
 
     conda_implementation: str = bu.get_conda_implementation()
     if conda_implementation == "micromamba":

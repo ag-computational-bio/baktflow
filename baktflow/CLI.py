@@ -243,7 +243,7 @@ def parse_arguments():
     single_parser.add_argument("--r2", default=None, help="Input file for R2 sequencing reads (FASTQ format)")
     single_parser.add_argument("--long", default=None, help="Input file for long reads (FASTQ format)")
     single_parser.add_argument("--assembly", default=None, help="Input assembly file (FASTQ format)")
-    single_parser.add_argument("--stub", default="false", help="Executed pipeline with the -stub-run option (default: false)")
+    single_parser.add_argument("--stub", action="store_true", help="Executed pipeline with the -stub-run option")
 
     # Batch subcommand
     batch_parser = subparsers.add_parser("batch", help="Run baktflow batch analysis")
@@ -257,7 +257,7 @@ def parse_arguments():
     batch_parser.add_argument("--work_dir", "-w", help="Directory for the nextflow work folder (default: output/work)")
     batch_parser.add_argument("--profile", type=str, default="standard", help="Nextflow execution profile")
     batch_parser.add_argument("--resume", help="Resume the workflow", action="store_true")
-    batch_parser.add_argument("--stub", default="false", help="Executed pipeline with the -stub-run option (default: false)")
+    batch_parser.add_argument("--stub", action="store_true", help="Executed pipeline with the -stub-run option")
 
     # Subcommand for processing aggregated reports
     report_parser = subparsers.add_parser("report", help="Generate an aggregated report from output directory")
