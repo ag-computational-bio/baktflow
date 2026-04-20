@@ -4,7 +4,7 @@ process PYPOLCA {
     tag "$meta.sample_id"
     publishDir "${params.output}/${meta.sample_id}/pypolca", mode: 'copy'
     conda "${projectDir}/modules/pypolca/environment.yaml"
-    memory { workflow.stubRun ? 64.MB : 16.GB * task.attempt }
+    memory { workflow.stubRun ? 1.GB : 2.GB * task.attempt }
     cpus { workflow.stubRun ? 1 : (params.threads >= 8 ? 8 : params.threads) }
 
 
@@ -17,9 +17,11 @@ process PYPOLCA {
 
     script:
     """
-    pypolca run -a ${input_fasta} -1 ${r1} -2 ${r2} -o ${meta.sample_id}_pypolca --prefix ${meta.sample_id} --careful --threads $task.cpus
-    mv ${meta.sample_id}_pypolca/${meta.sample_id}_corrected.fasta ${meta.sample_id}_pypolca.fasta
-    mv ${meta.sample_id}_pypolca/${meta.sample_id}.report ${meta.sample_id}_pypolca.report
+    MEM=\$(echo $task.memory | awk '{print \$1"G"}')
+    pypolca run -a ${input_fasta} -1 ${r1} -2 ${r2} -o out --prefix ${meta.sample_id} --careful --threads $task.cpus --memory_limit \$MEM
+    mv out/${meta.sample_id}_corrected.fasta ${meta.sample_id}_pypolca.fasta
+    mv out/${meta.sample_id}.report ${meta.sample_id}_pypolca.report
+    rm -r out
     """
 
     stub:
