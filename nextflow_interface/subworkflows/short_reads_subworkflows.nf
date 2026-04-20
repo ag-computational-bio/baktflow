@@ -21,15 +21,14 @@ workflow SHORT_READ_PROCESSING_SUBWORKFLOW {
             tuple(sample.meta, sample.r1, sample.r2)
         })
 
-        // Pass R1, R2, and an empty list for long_reads to UNICYCLER
-        ch_unicycler_input = ch_trimmed_reads.trimmed_reads.map { processed ->
-            def (meta, r1_processed, r2_processed, se_processed, empty_long_processed) = processed
-            tuple('short', meta, r1_processed, r2_processed, se_processed, empty_long_processed)
+        // Pass R1, R2, SE, and empty long_reads to UNICYCLER
+        ch_unicycler_input = ch_trimmed_reads.trimmed_reads.map { meta, r1, r2, se ->
+            tuple(meta, r1, r2, se, file("empty.long.fq.gz"))
         }
 
         // Assemble with UNICYCLER
         ch_scaffolds = UNICYCLER(ch_unicycler_input).scaffolds
-        // TODO is dnaapler necessary after unicyler?
+
         // Reorient the scaffolds with DNAAPLER
         ch_reoriented = DNAAPLER(ch_scaffolds)
 
