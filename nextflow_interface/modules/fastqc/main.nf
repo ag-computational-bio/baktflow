@@ -22,7 +22,7 @@ process FASTQC {
     mv *fastqc.zip ${reads.baseName}.zip
 
     # Run report.py with correct arguments
-    python ${params.REPORT_SCRIPT} --zip ${reads.baseName}.zip --output ${params.output}/${meta.sample_id}/fastqc
+    # python ${params.REPORT_SCRIPT} --zip ${reads.baseName}.zip --output ${params.output}/${meta.sample_id}/fastqc
     """
 
     stub:
