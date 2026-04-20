@@ -17,9 +17,10 @@ process MEDAKA {
 
     script:
     """
-    medaka_consensus -i ${long_reads} -d ${scaffolds} -o medaka_output -t ${task.cpus}
+    medaka_consensus -i ${long_reads} -d ${scaffolds} -o ./ -t ${task.cpus} --bacteria || \
+    medaka_consensus -i ${long_reads} -d ${scaffolds} -o ./ -t ${task.cpus}
 
-    mv medaka_output/consensus.fasta ${meta.sample_id}_polished_assembly.fasta
+    mv consensus.fasta ${meta.sample_id}_polished_assembly.fasta
     """
 
     stub:
