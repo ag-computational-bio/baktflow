@@ -1,6 +1,5 @@
 #!/usr/bin/env nextflow
 
-include {FASTQC} from '../modules/fastqc/main.nf'
 include {FASTP} from '../modules/fastp/main.nf'
 include {FILTLONG} from '../modules/filtlong/main.nf'
 include {GENOMESTATS} from '../modules/genomestats/main.nf'
@@ -16,11 +15,6 @@ workflow HYBRID_READ_PROCESSING_SUBWORKFLOW {
         ch_hybrid_reads
 
     main:
-    // Perform FastQC analysis on hybrid reads
-        FASTQC(ch_hybrid_reads.flatMap { sample ->
-            [tuple(sample.meta, sample.r1), tuple(sample.meta, sample.r2)]
-        })
-
         // Separate short and long reads
         short_read_samples = ch_hybrid_reads.filter { it -> it.r1 && it.r2 }
         long_read_samples = ch_hybrid_reads.filter { it -> !it.long_reads.isEmpty() }
@@ -69,7 +63,7 @@ workflow HYBRID_READ_PROCESSING_SUBWORKFLOW {
             unicycler: short_coverage.toInteger() >= 50
             other: true
         }
-        ch_assembler_input.other.view()  // TODO
+        ch_assembler_input.other.view()  // TODO in uniclycler input
 
         // Hybrid Unicycler Assembly
         ch_assembly_unicylcer = UNICYCLER(ch_unicycler_input.mix(

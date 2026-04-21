@@ -1,6 +1,5 @@
 #!/usr/bin/env nextflow
 
-include {FASTQC} from '../modules/fastqc/main.nf'
 include {FASTP} from '../modules/fastp/main.nf'
 include {UNICYCLER} from '../modules/unicycler/main.nf'
 include {DNAAPLER} from '../modules/dnaapler/main.nf' 
@@ -10,13 +9,7 @@ workflow SHORT_READ_PROCESSING_SUBWORKFLOW {
         ch_short_reads
 
     main:
-        FASTQC(ch_short_reads.flatMap { sample ->
-            [tuple(sample.meta, sample.r1), tuple(sample.meta, sample.r2)]
-        })
-
         // Process the short reads with FASTP
-        // TODO replace FASTQC with fastp
-        // TODO add multiqc pre and post trimming
         ch_trimmed_reads = FASTP(ch_short_reads.map { sample ->
             tuple(sample.meta, sample.r1, sample.r2)
         })
