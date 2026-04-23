@@ -14,7 +14,7 @@ workflow AUTOCYCLER_SUBWORKFLOW {
     }
 
     ch_assembler_input = channel.fromList(params.assemblers).combine(ch_subsamples)
-    ch_assemblies = AUTOCYCLER_ASSEMBLY(ch_assembler_input).assembly.groupTuple(size: 4 * params.assemblers.size())
+    ch_assemblies = AUTOCYCLER_ASSEMBLY(ch_assembler_input).assembly.groupTuple(size: params.subsamples * params.assemblers.size())
 
     ch_final_assembly = AUTOCYCLER_CONSENSUS(ch_assemblies)
 

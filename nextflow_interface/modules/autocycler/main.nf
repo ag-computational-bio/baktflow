@@ -27,7 +27,7 @@ process AUTOCYCLER_SUBSAMPLE {
 
 // TODO use existing flye assembly for plassembler run
 process AUTOCYCLER_ASSEMBLY {
-    tag "$meta.sample_id"
+    tag "$meta.sample_id" + "#" + "$assembler"
     conda "${projectDir}/modules/autocycler/environment.yaml"
     errorStrategy { (task.attempt <= 3) ? 'retry' : 'ignore' }  // sometimes an assembly of a subset can fail
     memory { workflow.stubRun ? 64.MB : 16.GB * task.attempt }
@@ -67,7 +67,6 @@ process AUTOCYCLER_ASSEMBLY {
     """
 }
 
-// TODO catch Error: the mean number of contigs per input assembly (46.2) exceeds the allowed threshold (25). Are your input assemblies fragmented or contaminated? in autocycler compress
 process AUTOCYCLER_CONSENSUS {
     tag "$meta.sample_id"
     publishDir "${params.output}/${meta.sample_id}/autocycler", mode: 'copy'
@@ -80,7 +79,8 @@ process AUTOCYCLER_CONSENSUS {
 
     output:
         tuple val(meta), path("${meta.sample_id}_consensus_assembly.fasta"), env("COMPLETE"), emit: assembly
-        path("${meta.sample_id}_consensus_assembly.gfa"), emit: gfa
+        tuple val(meta), path("${meta.sample_id}_consensus_assembly.gfa"), emit: gfa
+        path("metrics.tsv"), emit: log
 
     script:
     """
@@ -91,9 +91,9 @@ process AUTOCYCLER_CONSENSUS {
         fi
     done
 
-    autocycler compress -i assemblies -a autocycler_out --threads $task.cpus
+    autocycler compress -i assemblies -a autocycler_out --max_contigs ${params.maxContigs} --threads $task.cpus
 
-    autocycler cluster -a autocycler_out
+    autocycler cluster -a autocycler_out --max_contigs ${params.maxContigs}
 
     for c in autocycler_out/clustering/qc_pass/cluster_*; do
         autocycler trim -c \$c --threads $task.cpus
@@ -103,7 +103,7 @@ process AUTOCYCLER_CONSENSUS {
     autocycler combine -a autocycler_out -i autocycler_out/clustering/qc_pass/cluster_*/5_final.gfa
 
     autocycler table -a autocycler_out -n ${meta.sample_id} > metrics.tsv
-    COMPLETE=\$(cut -f 13)
+    COMPLETE=\$(awk '{print \$NF}' metrics.tsv)
 
     mv autocycler_out/consensus_assembly.fasta ${meta.sample_id}_consensus_assembly.fasta
     mv autocycler_out/consensus_assembly.gfa ${meta.sample_id}_consensus_assembly.gfa
