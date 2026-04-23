@@ -56,17 +56,19 @@ def reinstall_directory(path: Path):
         raise e
 
 
-def get_setup_directories(setup_dir: str | Path, setup_mode: bool = False) -> tuple[Path, Path, Path]:
+def get_setup_directories(setup_dir: str | Path, setup_mode: bool = False) -> tuple[Path, Path, Path, Path]:
     setup_subdir: Path = Path(setup_dir).resolve()
     conda_dir: Path = setup_subdir.joinpath("envs")
     database_dir: Path = setup_subdir.joinpath("databases")
+    models_dir: Path = setup_subdir.joinpath("models")
     if not setup_mode:
         check_readable(database_dir)
+        check_readable(models_dir)
     if not conda_dir.exists():
         logger.warning(
             "Could not find installed conda environments. Trying to install them on the fly (internet connection required)."
         )
-    return setup_subdir, conda_dir, database_dir
+    return setup_subdir, conda_dir, database_dir, models_dir
 
 
 def check_readable(path: str | Path) -> None:

@@ -19,12 +19,12 @@ def get_nextflow_executable() -> str:
 
 
 def baktflow_setup(
-    setup_script: Path, setup_dir: Path, conda_dir: Path, database_dir: Path, bakta_db_type: str = "light"
+    setup_script: Path, setup_dir: Path, conda_dir: Path, database_dir: Path, models_dir: Path, bakta_db_type: str = "light"
 ) -> None:
     """Run Nextflow setup script."""
     nextflow_path: str = get_nextflow_executable()
 
-    nextflow_cmd: str = f"{nextflow_path} run {setup_script} -profile standard --cacheDir {conda_dir} --databaseDir {database_dir} --baktaDbType {bakta_db_type}"
+    nextflow_cmd: str = f"{nextflow_path} run {setup_script} -profile standard --cacheDir {conda_dir} --databaseDir {database_dir} --modelsDir {models_dir} --baktaDbType {bakta_db_type}"
 
     conda_implementation: str = bu.get_conda_implementation()
     if conda_implementation == "micromamba":
@@ -50,7 +50,8 @@ def run_baktflow_workflow(
     work_dir: Path,
     profile: str,
     resume: bool,
-    stub: bool
+    stub: bool,
+    models_dir: Path
 ):
     """Run Nextflow workflow script."""
 
@@ -70,6 +71,8 @@ def run_baktflow_workflow(
         str(conda_dir),
         "--databaseDir",
         str(database_dir),
+        "--modelsDir",
+        str(models_dir),
         "--baktaDbType",
         bakta_db_type,
         "--workDir",
