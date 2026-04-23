@@ -1,0 +1,6 @@
+name: macsyfinder
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - macsyfinder=2.1.6

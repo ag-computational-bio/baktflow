@@ -1,0 +1,6 @@
+name: ska
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - ska=1.0
