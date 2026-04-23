@@ -3,6 +3,7 @@
 process FLYE {
     tag "$meta.sample_id"
     conda "${projectDir}/modules/flye/environment.yaml"
+    publishDir "${params.output}/${meta.sample_id}/flye", mode: 'copy'
     errorStrategy { (task.attempt <= 3) ? 'retry' : 'ignore' }
     memory { workflow.stubRun ? 64.MB : 16.GB * task.attempt }
     cpus { workflow.stubRun ? 1 : (params.threads >= 16 ? 16 : params.threads) }
