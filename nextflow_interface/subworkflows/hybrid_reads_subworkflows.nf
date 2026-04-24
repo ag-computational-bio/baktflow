@@ -61,30 +61,28 @@ workflow HYBRID_READ_PROCESSING_SUBWORKFLOW {
         }.branch { _meta, _genomesize, short_coverage, long_coverage, _r1, _r2, _se, _long_reads ->
             autocycler: long_coverage.toInteger() >= 50
             unicycler: short_coverage.toInteger() >= 50
-            other: true
+            other: true  // for now use unicycler for assembly
         }
-        ch_assembler_input.other.view()  // TODO in uniclycler input
 
         // Hybrid Unicycler Assembly
         ch_assembly_unicylcer = UNICYCLER(ch_unicycler_input.mix(
             ch_assembler_input.unicycler.map { meta, _genomesize, _short_coverage, _long_coverage, r1, r2, se, long_reads ->
                 tuple(meta, r1, r2, se, long_reads)
             }
+        ).mix(
+            ch_assembler_input.other.map { meta, _genomesize, _short_coverage, _long_coverage, r1, r2, se, long_reads ->
+                tuple(meta, r1, r2, se, long_reads)
+            }
         )).scaffolds
 
-        // Long read only Assembly with Autocycler and 
+        // Long read only Assembly with Autocycler with short read polishing
         ch_autocycler_assembly = AUTOCYCLER_SUBWORKFLOW(ch_assembler_input.autocycler
         .map { meta, genomesize, _short_coverage, _long_coverage, _r1, _r2, _se, long_reads ->
             tuple(meta, genomesize, long_reads)
-        })
-        ch_autocycler_assembly_closed = ch_autocycler_assembly.filter { _meta, _assembly, closed -> closed == "true" }.map { meta, _assembly, _closed -> tuple(meta.sample_id, meta) }
-        ch_autocycler_assembly_open = ch_autocycler_assembly.filter { _meta, _assembly, closed ->
-            closed == "false"
-        }.map { meta, _assembly, _closed -> tuple(meta.sample_id, meta) }
-        ch_autocycler_assembly_open.view()
+        }).map { meta, assembly, _closed -> tuple(meta, assembly) }
 
         // Combine assembly with short reads for Pypolca polishing
-        ch_combined_for_pypolca = ch_autocycler_assembly_closed.map { meta, scaffolds ->
+        ch_combined_for_pypolca = ch_autocycler_assembly.map { meta, scaffolds ->
             tuple(meta.sample_id, meta, scaffolds)
         }.join(ch_keyed_short_reads)
             .map { _sample_id, meta, scaffolds, _meta_short, r1, r2, _se ->

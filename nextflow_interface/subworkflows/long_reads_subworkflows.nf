@@ -39,22 +39,15 @@ workflow LONG_READ_PROCESSING_SUBWORKFLOW {
     }
 
     // Step 2: Assemble with Flye or Autocycler
-    ch_autocycler_assembly = AUTOCYCLER_SUBWORKFLOW(ch_autocycler_input)
-    ch_autocycler_assembly_closed = ch_autocycler_assembly.filter { _meta, _assembly, closed -> closed == "true" }.map { meta, _assembly, _closed -> tuple(meta.sample_id, meta) }
-    // TODO what to do with open genomes?
-    ch_autocycler_assembly_open = ch_autocycler_assembly.filter { _meta, _assembly, closed ->
-        closed == "false"
-    }.map { meta, _assembly, _closed -> tuple(meta.sample_id, meta) }  //.map { meta, _assembly, _closed -> tuple(meta.sample_id, meta) }
+    ch_autocycler_assembly = AUTOCYCLER_SUBWORKFLOW(ch_autocycler_input).map { meta, assembly, _closed ->
+        tuple(meta, assembly)
+    }
 
-    /*
-    ch_flye_assembly = FLYE(ch_flye_input.mix(ch_autocycler_assembly_open.join(ch_autocycler_input).map {
-        _sample_id, _meta_autocycler, meta, genomesize, long_reads -> tuple(meta, genomesize, long_reads)
-    } ))
-    */
     ch_flye_assembly = FLYE(ch_flye_input)
+    // TODO miniasm fallback für gescheiterte flye assemlbies versuchen
 
     // Step 3: Polish with Medaka (only scaffolds + long reads)
-    ch_keyed_assembly = ch_flye_assembly.scaffolds.mix(ch_autocycler_assembly_closed).mix(ch_autocycler_assembly_open).map { meta, assembly ->
+    ch_keyed_assembly = ch_flye_assembly.scaffolds.mix(ch_autocycler_assembly).map { meta, assembly ->
         tuple(meta.sample_id, meta, assembly)
     }
     ch_keyed_long_reads = ch_filtered_long_reads.map { meta, long_reads ->
