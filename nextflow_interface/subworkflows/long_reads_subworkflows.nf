@@ -3,6 +3,7 @@
 include {FILTLONG} from '../modules/filtlong/main.nf'
 include {GENOMESTATS} from '../modules/genomestats/main.nf'
 include {FLYE} from '../modules/flye/main.nf'
+include {MINIASM} from '../modules/miniasm/main.nf'
 include {AUTOCYCLER_SUBWORKFLOW} from './autocycler_subworkflow.nf'
 include {MEDAKA} from '../modules/medaka/main.nf'
 include {DNAAPLER} from '../modules/dnaapler/main.nf'
@@ -43,11 +44,10 @@ workflow LONG_READ_PROCESSING_SUBWORKFLOW {
         tuple(meta, assembly)
     }
 
-    ch_flye_assembly = FLYE(ch_flye_input)
-    // TODO miniasm fallback für gescheiterte flye assemlbies versuchen
+    ch_flye_assembly = FLYE(ch_flye_input).scaffolds
 
     // Step 3: Polish with Medaka (only scaffolds + long reads)
-    ch_keyed_assembly = ch_flye_assembly.scaffolds.mix(ch_autocycler_assembly).map { meta, assembly ->
+    ch_keyed_assembly = ch_flye_assembly.mix(ch_autocycler_assembly).map { meta, assembly ->
         tuple(meta.sample_id, meta, assembly)
     }
     ch_keyed_long_reads = ch_filtered_long_reads.map { meta, long_reads ->
