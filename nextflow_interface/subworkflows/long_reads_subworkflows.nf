@@ -3,7 +3,6 @@
 include {FILTLONG} from '../modules/filtlong/main.nf'
 include {GENOMESTATS} from '../modules/genomestats/main.nf'
 include {FLYE} from '../modules/flye/main.nf'
-include {MINIASM} from '../modules/miniasm/main.nf'
 include {AUTOCYCLER_SUBWORKFLOW} from './autocycler_subworkflow.nf'
 include {MEDAKA} from '../modules/medaka/main.nf'
 include {DNAAPLER} from '../modules/dnaapler/main.nf'
