@@ -1,0 +1,6 @@
+name: pmlst
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - pmlst=2.0.3

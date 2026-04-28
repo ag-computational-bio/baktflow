@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-process SETUP_B {
+process SETUP_BANDAGE {
     tag "SETUP_BANDAGE"
     conda "${projectDir}/modules/bandage/environment.yaml"
 
