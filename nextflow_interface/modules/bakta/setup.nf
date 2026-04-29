@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 
 process SETUP_BAKTA {
-    publishDir path: "${params.databaseDir}", mode: 'copy'
+    publishDir path: "${params.databaseDir}", mode: 'move'
     tag "SETUP_BAKTA"
     conda "${projectDir}/modules/bakta/environment.yaml"
 

@@ -3,11 +3,13 @@
 process FLYE {
     tag "$meta.sample_id"
     conda "${projectDir}/modules/flye/environment.yaml"
+    publishDir "${params.output}/${meta.sample_id}/flye", mode: 'copy'
+    errorStrategy { (task.attempt <= 3) ? 'retry' : 'ignore' }
     memory { workflow.stubRun ? 64.MB : 16.GB * task.attempt }
-    cpus { workflow.stubRun ? 1 : (params.threads >= 8 ? 8 : params.threads) }
+    cpus { workflow.stubRun ? 1 : (params.threads >= 16 ? 16 : params.threads) }
 
     input:
-        tuple val(meta), path(filtered_long_reads)
+        tuple val(meta), val(genome_size), val(coverage), path(filtered_long_reads)
 
     output:
         tuple val(meta), path("${meta.sample_id}_assembly.fasta"), emit: scaffolds
@@ -16,11 +18,17 @@ process FLYE {
 
     script:
     """
-    flye --pacbio-raw ${filtered_long_reads} --genome-size 4.6m --out-dir flye_output --threads ${task.cpus}
+    if [[ ${genome_size} -eq 1 ]]; then
+        flye --scaffold --nano-hq ${filtered_long_reads} --out-dir ./ --threads ${task.cpus}
+    elif [[ ${coverage} -gt 100 ]]; then
+        flye --scaffold --genome-size ${genome_size} --asm-coverage 100 --nano-hq ${filtered_long_reads} --out-dir ./ --threads ${task.cpus}
+    else
+        flye --scaffold --genome-size ${genome_size} --nano-hq ${filtered_long_reads} --out-dir ./ --threads ${task.cpus}
+    fi
 
-    cp flye_output/assembly.fasta ${meta.sample_id}_assembly.fasta
-    cp flye_output/assembly_graph.gfa ${meta.sample_id}_assembly_graph.gfa
-    cp flye_output/assembly_info.txt ${meta.sample_id}_assembly_info.txt
+    mv assembly.fasta ${meta.sample_id}_assembly.fasta
+    mv assembly_graph.gfa ${meta.sample_id}_assembly_graph.gfa
+    mv assembly_info.txt ${meta.sample_id}_assembly_info.txt
     """
 
     stub:

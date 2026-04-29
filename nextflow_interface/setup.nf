@@ -1,7 +1,8 @@
 #!/usr/bin/env nextflow
 
 // Include setup processes from modules
-include { SETUP_FASTQC } from './modules/fastqc/setup.nf'
+include { SETUP_AUTOCYCLER } from './modules/autocycler/setup.nf'
+include { SETUP_GENOMESTATS } from './modules/genomestats/setup.nf'
 include { SETUP_FASTP } from './modules/fastp/setup.nf'
 include { SETUP_FILTLONG} from './modules/filtlong/setup.nf'
 include { SETUP_FLYE } from './modules/flye/setup.nf'
@@ -14,8 +15,9 @@ include { SETUP_BAKTA } from './modules/bakta/setup.nf'
 
 // Workflow definition
 workflow {
+    SETUP_AUTOCYCLER()
+    SETUP_GENOMESTATS()
     SETUP_FASTP()
-    SETUP_FASTQC()
     SETUP_FILTLONG()
     SETUP_FLYE()
     SETUP_UNICYCLER()
