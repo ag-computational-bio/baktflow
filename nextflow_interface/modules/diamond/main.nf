@@ -1,5 +1,4 @@
 #!/usr/bin/env nextflow
-// TODO: Prozess umnennen (welche DB noch, Modul umnenne z.B  Virulenz), Subworkflow erstellen für Teilanalysen
 params.vfdb = "${params.databaseDir}/vfdb.dmnd"
 
 process DIAMOND{
