@@ -29,6 +29,7 @@ process AUTOCYCLER_SUBSAMPLE {
 process AUTOCYCLER_ASSEMBLY {
     tag "$meta.sample_id" + "#" + "$assembler"
     conda "${projectDir}/modules/autocycler/environment.yaml"
+    scratch true
     errorStrategy { (task.attempt <= 3) ? 'retry' : 'ignore' }  // sometimes an assembly of a subset can fail
     memory { workflow.stubRun ? 64.MB : 16.GB * task.attempt }
     cpus { workflow.stubRun ? 1 : (params.threads >= 16 ? 16 : params.threads) }
