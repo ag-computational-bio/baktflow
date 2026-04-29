@@ -1,0 +1,6 @@
+name: pling
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - pling=3.0.1
