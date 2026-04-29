@@ -15,7 +15,7 @@ process FILTLONG {
     script:
     """
     filtlong --min_length 1000 --keep_percent 95 --target_bases 500000000 \
-    ${long_reads} | gzip -c -9 > ${meta.sample_id}_filtered.fastq.gz
+    ${long_reads} | gzip -c > ${meta.sample_id}_filtered.fastq.gz
     """
 
     stub:
