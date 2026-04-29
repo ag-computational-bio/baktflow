@@ -6,7 +6,7 @@ process FASTP {
     publishDir "${params.output}/${meta.sample_id}/fastp", pattern: "*.html", mode: 'copy'
     conda "${projectDir}/modules/fastp/environment.yaml"
     memory { workflow.stubRun ? 64.MB : 2.GB * task.attempt }
-    cpus { workflow.stubRun ? 1 : (params.threads >= 4 ? 4 : params.threads) }
+    cpus { workflow.stubRun ? 1 : (params.threads >= 2 ? 2 : params.threads) }
 
     input:
         tuple val(meta), path(r1), path(r2)
@@ -20,7 +20,7 @@ process FASTP {
     fastp --in1 ${r1} --in2 ${r2} --out1 ${meta.sample_id}_R1_processed.fastq.gz --out2 ${meta.sample_id}_R2_processed.fastq.gz \
     --unpaired1 ${meta.sample_id}_SE_processed.fastq.gz --unpaired2 ${meta.sample_id}_SE_processed.fastq.gz \
     --detect_adapter_for_pe --trim_poly_g --cut_front --cut_tail --length_required 21 --low_complexity_filter \
-    --correction --compression 9 --thread $task.cpus
+    --correction --compression 6 --thread $task.cpus
     """
 
     stub:
