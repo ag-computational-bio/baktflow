@@ -28,7 +28,8 @@ workflow SHORT_READ_PROCESSING_SUBWORKFLOW {
         }
 
         // Assemble with UNICYCLER
-        ch_scaffolds = UNICYCLER(ch_unicycler_input).scaffolds
+        ch_assembly = UNICYCLER(ch_unicycler_input)
+        ch_scaffolds = ch_assembly.scaffolds
         // TODO is dnaapler necessary after unicyler?
         // Reorient the scaffolds with DNAAPLER
         ch_reoriented = DNAAPLER(ch_scaffolds)
@@ -37,4 +38,6 @@ workflow SHORT_READ_PROCESSING_SUBWORKFLOW {
     emit:
 
         final_output = ch_reoriented.assembly
+        assembly_gfa = ch_assembly.gfa
+
 }

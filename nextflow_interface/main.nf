@@ -4,6 +4,22 @@ include { HYBRID_READ_PROCESSING_SUBWORKFLOW } from './subworkflows/hybrid_reads
 include { SHORT_READ_PROCESSING_SUBWORKFLOW } from './subworkflows/short_reads_subworkflows.nf'
 include { LONG_READ_PROCESSING_SUBWORKFLOW } from './subworkflows/long_reads_subworkflows.nf'
 include { BAKTA } from './modules/bakta/main.nf'
+include { MLST } from './modules/mlst/main.nf'
+include { MOB_SUITE } from './modules/mob_suite/main.nf'
+include { SKA } from './modules/ska/main.nf'
+include { RGI } from './modules/rgi/main.nf'
+include { AMRFINDERPLUS } from './modules/amrfinderplus/main.nf'
+include { DIAMOND } from './modules/diamond/main.nf'
+include { CHECKM2 } from './modules/checkm2/main.nf'
+include { PLATON } from './modules/platon/main.nf'
+include { BLAST } from './modules/blast/main.nf'
+include { BANDAGE } from './modules/bandage/main.nf'
+include { TXSSCAN } from './modules/macsyfinder/TXSScan.nf'
+include { CASFINDER } from './modules/macsyfinder/CasFinder.nf'
+include { CONJSCAN } from './modules/macsyfinder/CONJScan.nf'
+include { PLING } from './modules/pling/main.nf'
+include { PMLST } from './modules/pmlst/main.nf'
+include { REFERENCESEEKER} from './modules/referenceseeker/main.nf'
 
 
 workflow {
@@ -56,7 +72,8 @@ workflow {
         }
 
     // Process each type of read and gather the outputs
-    ch_short_output = SHORT_READ_PROCESSING_SUBWORKFLOW(ch_short_reads)
+    ch_short_processed = SHORT_READ_PROCESSING_SUBWORKFLOW(ch_short_reads)
+    ch_short_output = ch_short_processed.final_output
     ch_long_output = LONG_READ_PROCESSING_SUBWORKFLOW(ch_long_reads)
     ch_hybrid_output = HYBRID_READ_PROCESSING_SUBWORKFLOW(ch_hybrid_reads)
 
@@ -64,7 +81,49 @@ workflow {
     combined_output = ch_short_output.mix(ch_long_output, ch_hybrid_output, ch_assemblies)
 
     // Call BAKTA with the combined output channel
-    BAKTA(combined_output)
+    bakta_annotation = BAKTA(combined_output)
+
+    // Call MLST with the combined output channel
+    MLST(combined_output)
+
+    // Call MOB_RECON with the combined output channel
+    mob_results = MOB_SUITE(combined_output)
+
+    // Call SKA with the combined output channel
+    SKA(combined_output)
+
+    // Call RGI with the combined output channel
+    RGI(combined_output)
+
+    //CHECKM2(bakta_annotation.faa)
+
+    REFERENCESEEKER(combined_output)
+
+    //Call AMRFINDERPLUS
+    amr_input = bakta_annotation.gff
+        .join(bakta_annotation.faa)
+        .join(bakta_annotation.fna)
+
+    AMRFINDERPLUS(amr_input)
+
+    // Call DIAMOND (VF database)
+    DIAMOND(bakta_annotation.faa)
+
+    PLATON(combined_output)
+
+    BLAST(bakta_annotation.ffn)
+
+    BANDAGE(ch_short_processed.assembly_gfa)
+
+    TXSSCAN(bakta_annotation.faa)
+
+    CASFINDER(bakta_annotation.faa)
+
+    CONJSCAN(bakta_annotation.faa)
+
+    PLING(mob_results.plasmids)
+
+    PMLST(combined_output)
 
     /*
     workflow.onComplete {
