@@ -11,6 +11,20 @@ include { SETUP_POLYPOLISH } from './modules/polypolish/setup.nf'
 include { SETUP_PYPOLCA } from './modules/pypolca/setup.nf'
 include { SETUP_DNAAPLER } from './modules/dnaapler/setup.nf'
 include { SETUP_BAKTA } from './modules/bakta/setup.nf'
+include { SETUP_CHECKM2 } from './modules/checkm2/setup.nf'
+include { SETUP_MOB_SUITE  } from './modules/mob_suite/setup.nf'
+include { SETUP_MLST } from './modules/mlst/setup.nf'
+include { SETUP_SKA } from './modules/ska/setup.nf'
+include { SETUP_RGI } from './modules/rgi/setup.nf'
+include { SETUP_DIAMOND } from './modules/diamond/setup.nf'
+include { SETUP_AMRFINDERPLUS } from './modules/amrfinderplus/setup.nf'
+include { SETUP_REFERENCESEEKER } from './modules/referenceseeker/setup.nf'
+include { SETUP_PLATON } from './modules/platon/setup.nf'
+include { SETUP_BLAST } from './modules/blast/setup.nf'
+include { SETUP_BANDAGE } from './modules/bandage/setup.nf'
+include { SETUP_MACSYFINDER} from './modules/macsyfinder/setup.nf'
+include { SETUP_GTDBTK} from './modules/gtdbtk/setup.nf'
+include { SETUP_PMLST} from './modules/pmlst/setup.nf'
 
 // Workflow definition
 workflow {
@@ -24,6 +38,20 @@ workflow {
     SETUP_PYPOLCA()
     SETUP_DNAAPLER()
     SETUP_BAKTA()
+    SETUP_CHECKM2()
+    SETUP_MOB_SUITE()
+    SETUP_DIAMOND()
+    SETUP_AMRFINDERPLUS()
+    SETUP_SKA()
+    SETUP_RGI()
+    SETUP_REFERENCESEEKER()
+    SETUP_MLST()
+    SETUP_PLATON()
+    SETUP_BLAST()
+    SETUP_MACSYFINDER()
+    SETUP_BANDAGE()
+    SETUP_PMLST()
+    SETUP_GTDBTK()
 
     /*
     workflow.onComplete {
