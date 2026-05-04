@@ -17,7 +17,7 @@ def setup_subcommand(args):
     logger.info("Setting up Baktflow workflow...")
     logger.info(f"Setup directory: {args.setup_dir}")
 
-    setup_subdir, conda_dir, database_dir, models_dir = bu.get_setup_directories(args.setup_dir, setup_mode=True)
+    setup_subdir, conda_dir, database_dir = bu.get_setup_directories(args.setup_dir, setup_mode=True)
 
     conda_files: list[str] = [file.name for file in conda_dir.iterdir()] if conda_dir.exists() else []
     database_files: list[str] = [file.name for file in database_dir.iterdir()] if database_dir.exists() else []
@@ -32,7 +32,7 @@ def setup_subcommand(args):
             bu.reinstall_directory(conda_dir)
             bu.reinstall_directory(database_dir)
             bn.baktflow_setup(
-                bu.get_nf_script("setup.nf"), setup_subdir, conda_dir, database_dir, models_dir, bakta_db_type=args.bakta_db_type
+                bu.get_nf_script("setup.nf"), setup_subdir, conda_dir, database_dir, bakta_db_type=args.bakta_db_type
             )
             logger.info("Reinstallation complete.")
 
@@ -43,18 +43,17 @@ def setup_subcommand(args):
             logger.info("Try forced reinstallation of all environments and databases...")
             bu.reinstall_directory(conda_dir)
             bu.reinstall_directory(database_dir)
-            bu.reinstall_directory(models_dir)
         else:
             logger.info("No existing environments or databases found. Installing from scratch...")
         setup_subdir.mkdir(parents=True, exist_ok=True)
         bn.baktflow_setup(
-            bu.get_nf_script("setup.nf"), setup_subdir, conda_dir, database_dir, models_dir, bakta_db_type=args.bakta_db_type
+            bu.get_nf_script("setup.nf"), setup_subdir, conda_dir, database_dir, bakta_db_type=args.bakta_db_type
         )
 
 
 def on_the_fly_setup(setup_dir: str, bakta_db_type: str, work_dir: str, output: Path) -> tuple[Path, Path, str, Path, Path]:
     try:
-        _, conda_dir, database_dir, models_dir = bu.get_setup_directories(setup_dir)
+        _, conda_dir, database_dir = bu.get_setup_directories(setup_dir)
         bu.check_directory_accessibility(conda_dir)
         bu.check_directory_accessibility(database_dir)
         bakta_db_type: str = bu.get_bakta_db_type(database_dir)
@@ -71,7 +70,7 @@ def on_the_fly_setup(setup_dir: str, bakta_db_type: str, work_dir: str, output: 
 
     work_dir: Path = Path(work_dir) if work_dir else output.joinpath("work")
     work_dir.mkdir(parents=True, exist_ok=True)
-    return conda_dir, database_dir, bakta_db_type, work_dir, models_dir
+    return conda_dir, database_dir, bakta_db_type, work_dir
 
 
 def single_subcommand(args):
@@ -102,7 +101,7 @@ def single_subcommand(args):
     tsv_path = output.joinpath("single_config.tsv")
     bu.create_tsv(args.id, sample_type, tsv_path, args.r1, args.r2, args.long, args.assembly)
 
-    conda_dir, database_dir, bakta_db_type, work_dir, models_dir = on_the_fly_setup(
+    conda_dir, database_dir, bakta_db_type, work_dir = on_the_fly_setup(
         args.setup_dir, args.bakta_db_type, args.work_dir, output
     )
 
@@ -117,7 +116,6 @@ def single_subcommand(args):
         profile=args.profile,
         resume=args.resume,
         stub=args.stub,
-        models_dir = models_dir
     )
 
 
@@ -144,7 +142,7 @@ def batch_subcommand(args):
     cleaned_tsv: Path = bu.preprocess_tsv(args.input_tsv, Path(args.input_dir), output)
     logger.info(f"Temporary TSV file saved at {cleaned_tsv}")
 
-    conda_dir, database_dir, bakta_db_type, work_dir, models_dir = on_the_fly_setup(
+    conda_dir, database_dir, bakta_db_type, work_dir = on_the_fly_setup(
         args.setup_dir, args.bakta_db_type, args.work_dir, output
     )
 
@@ -159,7 +157,6 @@ def batch_subcommand(args):
         profile=args.profile,
         resume=args.resume,
         stub=args.stub,
-        models_dir = models_dir
     )
     logger.info("Nextflow workflow executed successfully.")
 
