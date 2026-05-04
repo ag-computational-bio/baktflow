@@ -8,9 +8,9 @@ process SETUP_MACSYFINDER{
 
     script:
     """
-     msf_data install --target ${params.modelsDir} TXSScan
-     msf_data install --target ${params.modelsDir} CONJScan
-     msf_data install --target ${params.modelsDir} CASFinder
+     msf_data install --target ${params.databaseDir}/macsyfinder TXSScan
+     msf_data install --target ${params.databaseDir}/macsyfinder CONJScan
+     msf_data install --target ${params.databaseDir}/macsyfinder CASFinder
      echo 'Finished mamba environment setup.'
     """
 }

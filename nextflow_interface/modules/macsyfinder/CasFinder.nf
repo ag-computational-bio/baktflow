@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-params.macsyfinder = "${params.modelsDir}"
+params.macsyfinder = "${params.databaseDir}/macsyfinder"
 
 process CASFINDER{
 
