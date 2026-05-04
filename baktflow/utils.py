@@ -214,7 +214,7 @@ def preprocess_tsv(input_tsv: str | Path, input_dir: Path, output_dir: Path) -> 
                 logger.warning(f"Invalid sample type '{sample_type}' in row {i}: {row}")
                 continue
 
-            logger.info(f"Processing row {i}: {' '.join(row)}")
+            logger.debug(f"Processing row {i}: {' '.join(row)}")
             if sample_type == "short" and len(files) == sample_types["short"]:
                 checked_row.append(checked_file(files[0], input_dir, extensions))  # R1
                 checked_row.append(checked_file(files[1], input_dir, extensions))  # R2

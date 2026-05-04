@@ -144,7 +144,7 @@ def batch_subcommand(args):
     cleaned_tsv: Path = bu.preprocess_tsv(args.input_tsv, Path(args.input_dir), output)
     logger.info(f"Temporary TSV file saved at {cleaned_tsv}")
 
-    conda_dir, database_dir, bakta_db_type, work_dir = on_the_fly_setup(
+    conda_dir, database_dir, bakta_db_type, work_dir, models_dir = on_the_fly_setup(
         args.setup_dir, args.bakta_db_type, args.work_dir, output
     )
 
@@ -158,7 +158,8 @@ def batch_subcommand(args):
         work_dir=work_dir,
         profile=args.profile,
         resume=args.resume,
-        stub=args.stub
+        stub=args.stub,
+        models_dir = models_dir
     )
     logger.info("Nextflow workflow executed successfully.")
 

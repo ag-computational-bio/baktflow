@@ -12,6 +12,7 @@ process SETUP_PLATON {
     """
     wget -O platon_db.tar.gz 'https://zenodo.org/records/4066768/files/db.tar.gz?download=1'
     tar -xzf platon_db.tar.gz
+    rm platon_db.tar.gz
     mv db platon_db
     echo 'Finished mamba environment setup.'
     """

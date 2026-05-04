@@ -74,11 +74,17 @@ workflow {
     // Process each type of read and gather the outputs
     ch_short_processed = SHORT_READ_PROCESSING_SUBWORKFLOW(ch_short_reads)
     ch_short_output = ch_short_processed.final_output
-    ch_long_output = LONG_READ_PROCESSING_SUBWORKFLOW(ch_long_reads)
+    ch_short_gfa = ch_short_processed.assembly_gfa
+
+    ch_long_processed = LONG_READ_PROCESSING_SUBWORKFLOW(ch_long_reads)
+    ch_long_output = ch_long_processed.final_output
+    ch_long_gfa = ch_long_processed.assembly_gfa
+
     ch_hybrid_output = HYBRID_READ_PROCESSING_SUBWORKFLOW(ch_hybrid_reads)
 
     // Combine all outputs into a single channel
     combined_output = ch_short_output.mix(ch_long_output, ch_hybrid_output, ch_assemblies)
+    combined_gfa = ch_short_gfa.mix(ch_long_gfa)
 
     // Call BAKTA with the combined output channel
     bakta_annotation = BAKTA(combined_output)
@@ -113,7 +119,7 @@ workflow {
 
     BLAST(bakta_annotation.ffn)
 
-    BANDAGE(ch_short_processed.assembly_gfa)
+    BANDAGE(combined_gfa)
 
     TXSSCAN(bakta_annotation.faa)
 

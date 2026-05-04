@@ -1,0 +1,9 @@
+name: lrge
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - lrge==0.2.1                  # https://github.com/mbhall88/lrge
+  - seqfu==1.26.0
+  - kmc==3.2.4
+  - genomescope2==2.1.0

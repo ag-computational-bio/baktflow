@@ -26,7 +26,7 @@ process BAKTA {
 
     script:
     """
-    bakta --db "${params.baktaDb}" --prefix ${meta.sample_id} --output ./ --threads $task.cpus ${assembly}
+    bakta --db "${params.baktaDb}" --prefix ${meta.sample_id} --force --output ./ --threads $task.cpus ${assembly}
     """
 
     stub:

@@ -1,6 +1,6 @@
-name: fastp
+name: gtdbtk
 channels:
   - conda-forge
   - bioconda
 dependencies:
-  - fastp==1.3.2
+  - gtdbtk=2.5.2
