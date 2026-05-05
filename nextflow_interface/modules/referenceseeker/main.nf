@@ -1,7 +1,5 @@
 #!/usr/bin/env nextflow
 
-params.referenceseekerDB = "${params.databaseDir}/bacteria-refseq"
-
 process REFERENCESEEKER{
     tag "$meta.sample_id"
     publishDir "${params.output}/${meta.sample_id}/referenceseeker", mode: 'copy'
@@ -10,14 +8,14 @@ process REFERENCESEEKER{
     cpus { workflow.stubRun ? 1 : (params.threads >= 8 ? 8 : params.threads) }
 
      input:
-            tuple val(meta), path(assembly)
+         tuple val(meta), path(assembly)
 
      output:
-            tuple val(meta), path("${meta.sample_id}.ani.tsv"), emit: ani_tsv
+         tuple val(meta), path("${meta.sample_id}.ani.tsv"), emit: ani_tsv
 
      script:
      """
-     referenceseeker --bidirectional --threads ${task.cpus} ${params.referenceseekerDB} ${assembly} > ${meta.sample_id}.ani.tsv
+     referenceseeker --bidirectional --threads ${task.cpus} ${params.databaseDir}/bacteria-refseq ${assembly} > ${meta.sample_id}.ani.tsv
      """
 
     stub:
