@@ -1,6 +1,5 @@
 #!/usr/bin/env nextflow
 
-params.gtdbtkdb = "${params.databaseDir}/gtdbtk_db"
 
 process GTDBTK{
     tag "$meta.sample_id"
@@ -10,14 +9,14 @@ process GTDBTK{
     cpus { workflow.stubRun ? 1 : (params.threads >= 8 ? 8 : params.threads) }
 
      input:
-            tuple val(meta), path(assembly)
+         tuple val(meta), path(assembly)
 
      output:
-            tuple val(meta), path("${meta.sample_id}.gtdbtk.tsv"), emit: tsv
+         tuple val(meta), path("${meta.sample_id}.gtdbtk.tsv"), emit: tsv
 
      script:
      """
-     export GTDBTK_DATA_PATH="${params.gtdbtkdb}"
+     export GTDBTK_DATA_PATH="${params.databaseDir}/gtdbtk_db"
      mkdir genomes/
      mv ${assembly} genomes/
      gtdbtk classify_wf --genome_dir genomes/ --out_dir . --pplacer_cpus ${task.cpus} --cpus ${task.cpus} --extension fasta

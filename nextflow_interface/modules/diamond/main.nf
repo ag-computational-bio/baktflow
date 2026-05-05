@@ -1,5 +1,5 @@
 #!/usr/bin/env nextflow
-params.vfdb = "${params.databaseDir}/vfdb.dmnd"
+
 
 process DIAMOND{
      tag "$meta.sample_id"
@@ -17,7 +17,7 @@ process DIAMOND{
 
     script:
     """
-    diamond blastp --query ${prot} --db ${params.vfdb} --id 80 --query-cover 80 --subject-cover 80 --out ${meta.sample_id}.vf.tsv --outfmt 6 qseqid sseqid qlen slen qstart qend sstart send length pident evalue bitscore --threads ${task.cpus}
+    diamond blastp --query ${prot} --db ${params.databaseDir}/vfdb.dmnd --id 80 --query-cover 80 --subject-cover 80 --out ${meta.sample_id}.vf.tsv --outfmt 6 qseqid sseqid qlen slen qstart qend sstart send length pident evalue bitscore --threads ${task.cpus}
     """
 
     stub:
