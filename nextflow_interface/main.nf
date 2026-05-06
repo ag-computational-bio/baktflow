@@ -21,6 +21,7 @@ include { CASFINDER } from './modules/macsyfinder/main.nf'
 include { TXSSCAN } from './modules/macsyfinder/main.nf'
 include { CONJSCAN } from './modules/macsyfinder/main.nf'
 include { GTDBTK } from './modules/gtdbtk/main.nf'
+include { PLASMIDFINDER } from './modules/plasmidfinder/main.nf'
 
 
 workflow {
@@ -107,7 +108,7 @@ workflow {
     //CHECKM2(bakta_annotation.faa)
 
     // Call ReferenceSeeker (bacteria refseq database)
-    REFERENCESEEKER(combined_output)
+    //REFERENCESEEKER(combined_output)
 
     //Call AMRFINDERPLUS
     amr_input = bakta_annotation.gff
@@ -144,6 +145,8 @@ workflow {
     PMLST(combined_output)
 
     GTDBTK(combined_output)
+
+    PLASMIDFINDER(combined_output)
 
     /*
     workflow.onComplete {

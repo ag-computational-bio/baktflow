@@ -22,12 +22,12 @@ process MOB_SUITE{
     """
 
     stub:
-        """
-        mkdir -p results
-        touch results/${meta.sample_id}.mge_report.txt
-        touch results/${meta.sample_id}.contig_report.txt
-        touch results/${meta.sample_id}.chromosome.fasta
-        touch results/${meta.sample_id}.plasmid_XX.fasta
-        """
+    """
+    mkdir -p results
+    touch results/${meta.sample_id}.mge_report.txt
+    touch results/${meta.sample_id}.contig_report.txt
+    touch results/${meta.sample_id}.chromosome.fasta
+    touch results/${meta.sample_id}.plasmid_XX.fasta
+    """
 
 }
