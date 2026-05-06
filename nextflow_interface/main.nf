@@ -20,6 +20,7 @@ include { REFERENCESEEKER} from './modules/referenceseeker/main.nf'
 include { CASFINDER } from './modules/macsyfinder/main.nf'
 include { TXSSCAN } from './modules/macsyfinder/main.nf'
 include { CONJSCAN } from './modules/macsyfinder/main.nf'
+include { GTDBTK } from './modules/gtdbtk/main.nf'
 
 
 workflow {
@@ -141,6 +142,8 @@ workflow {
 
     //Call pMLST
     PMLST(combined_output)
+
+    GTDBTK(combined_output)
 
     /*
     workflow.onComplete {
