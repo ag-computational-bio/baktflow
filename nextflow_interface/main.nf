@@ -14,12 +14,12 @@ include { CHECKM2 } from './modules/checkm2/main.nf'
 include { PLATON } from './modules/platon/main.nf'
 include { BLAST } from './modules/blast/main.nf'
 include { BANDAGE } from './modules/bandage/main.nf'
-include { TXSSCAN } from './modules/macsyfinder/TXSScan.nf'
-include { CASFINDER } from './modules/macsyfinder/CasFinder.nf'
-include { CONJSCAN } from './modules/macsyfinder/CONJScan.nf'
 include { PLING } from './modules/pling/main.nf'
 include { PMLST } from './modules/pmlst/main.nf'
 include { REFERENCESEEKER} from './modules/referenceseeker/main.nf'
+include { CASFINDER } from './modules/macsyfinder/main.nf'
+include { TXSSCAN } from './modules/macsyfinder/main.nf'
+include { CONJSCAN } from './modules/macsyfinder/main.nf'
 
 
 workflow {
@@ -80,11 +80,13 @@ workflow {
     ch_long_output = ch_long_processed.final_output
     ch_long_gfa = ch_long_processed.assembly_gfa
 
-    ch_hybrid_output = HYBRID_READ_PROCESSING_SUBWORKFLOW(ch_hybrid_reads)
+    ch_hybrid_processed = HYBRID_READ_PROCESSING_SUBWORKFLOW(ch_hybrid_reads)
+    ch_hybrid_output = ch_hybrid_processed.final_output
+    ch_hybrid_gfa = ch_hybrid_processed.assembly_gfa
 
     // Combine all outputs into a single channel
     combined_output = ch_short_output.mix(ch_long_output, ch_hybrid_output, ch_assemblies)
-    combined_gfa = ch_short_gfa.mix(ch_long_gfa)
+    combined_gfa = ch_short_gfa.mix(ch_long_gfa, ch_hybrid_gfa)
 
     // Call BAKTA with the combined output channel
     bakta_annotation = BAKTA(combined_output)
@@ -103,6 +105,7 @@ workflow {
 
     //CHECKM2(bakta_annotation.faa)
 
+    // Call ReferenceSeeker (bacteria refseq database)
     REFERENCESEEKER(combined_output)
 
     //Call AMRFINDERPLUS
@@ -115,20 +118,28 @@ workflow {
     // Call DIAMOND (VF database)
     DIAMOND(bakta_annotation.faa)
 
+    // Call PLATON
     PLATON(combined_output)
 
+    // Call BLAST (SILVA database)
     BLAST(bakta_annotation.ffn)
 
+    //Call Bandage
     BANDAGE(combined_gfa)
 
+    // Call MacSyFinder using TXSSCAN model
     TXSSCAN(bakta_annotation.faa)
 
+    // Call MacSyFinder using CASFINDER model
     CASFINDER(bakta_annotation.faa)
 
+    // Call MacSyFinder using CONJSCAN model
     CONJSCAN(bakta_annotation.faa)
 
+    // Call PLING
     PLING(mob_results.plasmids)
 
+    //Call pMLST
     PMLST(combined_output)
 
     /*

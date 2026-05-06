@@ -51,7 +51,7 @@ def setup_subcommand(args):
         )
 
 
-def on_the_fly_setup(setup_dir: str, bakta_db_type: str, work_dir: str, output: Path) -> tuple[Path, Path, str, Path, Path]:
+def on_the_fly_setup(setup_dir: str, bakta_db_type: str, work_dir: str, output: Path) -> tuple[Path, Path, str, Path]:
     try:
         _, conda_dir, database_dir = bu.get_setup_directories(setup_dir)
         bu.check_directory_accessibility(conda_dir)

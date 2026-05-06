@@ -26,35 +26,42 @@ include { SETUP_BANDAGE } from './modules/bandage/setup.nf'
 include { SETUP_MACSYFINDER} from './modules/macsyfinder/setup.nf'
 include { SETUP_GTDBTK} from './modules/gtdbtk/setup.nf'
 include { SETUP_PMLST} from './modules/pmlst/setup.nf'
+include { SETUP_ECTYPER } from './modules/ectyper/setup.nf'
+include { SETUP_KLEBORATE } from './modules/kleborate/setup.nf'
 
 // Workflow definition
 workflow {
-    SETUP_AUTOCYCLER()
-    SETUP_GENOMESTATS()
-    SETUP_FASTP()
-    SETUP_FILTLONG()
-    SETUP_FLYE()
-    SETUP_UNICYCLER()
-    SETUP_MEDAKA()
-    SETUP_POLYPOLISH()
-    SETUP_PYPOLCA()
-    SETUP_DNAAPLER()
-    SETUP_BAKTA()
-    SETUP_CHECKM2()
-    SETUP_MOB_SUITE()
-    SETUP_DIAMOND()
-    SETUP_AMRFINDERPLUS()
-    SETUP_SKA()
-    SETUP_RGI()
-    SETUP_REFERENCESEEKER()
-    SETUP_MLST()
-    SETUP_PLATON()
-    SETUP_BLAST()
-    SETUP_MACSYFINDER()
-    SETUP_BANDAGE()
-    SETUP_PMLST()
-    SETUP_GTDBTK()
 
+        SETUP_AUTOCYCLER()
+        SETUP_GENOMESTATS()
+        SETUP_FASTP()
+        SETUP_FILTLONG()
+        SETUP_FLYE()
+        SETUP_UNICYCLER()
+        SETUP_MEDAKA()
+        SETUP_POLYPOLISH()
+        SETUP_PYPOLCA()
+        SETUP_DNAAPLER()
+        SETUP_BAKTA()
+        SETUP_CHECKM2()
+        SETUP_MOB_SUITE()
+        SETUP_DIAMOND()
+        SETUP_AMRFINDERPLUS()
+        SETUP_SKA()
+        SETUP_RGI()
+        SETUP_REFERENCESEEKER()
+        SETUP_MLST()
+        SETUP_PLATON()
+        SETUP_BLAST()
+        SETUP_MACSYFINDER()
+        SETUP_BANDAGE()
+        SETUP_PMLST()
+        SETUP_GTDBTK()
+        SETUP_ECTYPER()
+        SETUP_KLEBORATE()
+
+
+    /*
     workflow.onComplete {
         def separator = "=" * 60 // Creates a 60-character separator line
         log.info "\n${separator}"
