@@ -1,6 +1,5 @@
 #!/usr/bin/env nextflow
 
-
 process CHECKM2{
     tag "$meta.sample_id"
     publishDir "${params.output}/${meta.sample_id}/checkm2", mode: 'copy'
@@ -8,19 +7,19 @@ process CHECKM2{
     memory { workflow.stubRun ? 64.MB : 8.GB * task.attempt }
     cpus { workflow.stubRun ? 1 : (params.threads >= 8 ? 8 : params.threads) }
 
-     input:
-         tuple val(meta), path(prot)
+    input:
+        tuple val(meta), path(prot)
 
-     output:
-         tuple val(meta), path("${meta.sample_id}.checkm2.tsv"), emit: tsv
+    output:
+        tuple val(meta), path("${meta.sample_id}.checkm2.tsv"), emit: tsv
 
-     script:
-     """
-     mkdir ./input
-     cp ${prot} ./input
-     checkm2 predict --input ./input --output-directory ./out --database_path ${params.databaseDir}/checkm2db/CheckM2_database/uniref100.KO.1.dmnd --genes  --extension .faa --threads ${task.cpus} --lowmem
-     mv ./out/quality_report.tsv ${meta.sample_id}.checkm2.tsv
-     """
+    script:
+    """
+    mkdir ./input
+    cp ${prot} ./input
+    checkm2 predict --input ./input --output-directory ./out --database_path ${params.databaseDir}/checkm2db/CheckM2_database/uniref100.KO.1.dmnd --genes  --extension .faa --threads ${task.cpus}
+    mv ./out/quality_report.tsv ${meta.sample_id}.checkm2.tsv
+    """
 
     stub:
     """
