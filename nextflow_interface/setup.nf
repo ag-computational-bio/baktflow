@@ -28,6 +28,7 @@ include { SETUP_GTDBTK} from './modules/gtdbtk/setup.nf'
 include { SETUP_PMLST} from './modules/pmlst/setup.nf'
 include { SETUP_ECTYPER } from './modules/ectyper/setup.nf'
 include { SETUP_KLEBORATE } from './modules/kleborate/setup.nf'
+include { SETUP_PLING } from './modules/pling/setup.nf'
 
 // Workflow definition
 workflow {
@@ -59,6 +60,7 @@ workflow {
         SETUP_GTDBTK()
         SETUP_ECTYPER()
         SETUP_KLEBORATE()
+        SETUP_PLING()
 
 
     /*
