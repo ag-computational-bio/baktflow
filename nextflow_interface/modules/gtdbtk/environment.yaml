@@ -3,4 +3,4 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - gtdbtk=2.5.2
+  - gtdbtk=2.7.1
