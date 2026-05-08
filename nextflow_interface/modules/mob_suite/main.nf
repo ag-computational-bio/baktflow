@@ -12,9 +12,9 @@ process MOB_SUITE{
 
     output:
         tuple val(meta), path("results/${meta.sample_id}.contig_report.txt"), emit: contig_report
-        tuple val(meta), path("results/${meta.sample_id}.mge_report.txt"), emit: mge_report
+        tuple val(meta), path("results/${meta.sample_id}.mge_report.txt"), emit: mge_report, optional: true
         tuple val(meta), path("results/${meta.sample_id}.chromosome.fasta"), emit: chromosome_fasta
-        tuple val(meta), path("results/${meta.sample_id}.plasmid_*.fasta"), emit: plasmids
+        tuple val(meta), path("results/${meta.sample_id}.plasmid_*.fasta"), emit: plasmids, optional: true
 
     script:
     """
