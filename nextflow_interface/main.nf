@@ -105,10 +105,11 @@ workflow {
     // Call RGI with the combined output channel
     RGI(combined_output)
 
-    //CHECKM2(bakta_annotation.faa)
+    // Call CheckM2
+    CHECKM2(bakta_annotation.faa)
 
     // Call ReferenceSeeker (bacteria refseq database)
-    //REFERENCESEEKER(combined_output)
+    REFERENCESEEKER(combined_output)
 
     //Call AMRFINDERPLUS
     amr_input = bakta_annotation.gff
@@ -139,7 +140,7 @@ workflow {
     CONJSCAN(bakta_annotation.faa)
 
     // Call PLING
-    PLING(mob_results.plasmids)
+    // PLING(mob_results.plasmids)
 
     //Call pMLST
     PMLST(combined_output)
