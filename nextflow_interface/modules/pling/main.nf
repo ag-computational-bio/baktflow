@@ -18,6 +18,7 @@ process PLING{
     """
     ls *.fasta > plasmid_list.txt
     pling cluster align plasmid_list.txt results --cores ${task.cpus} --visualisation all
+    rm -rf .snakemake/
     """
 
     stub:
