@@ -65,7 +65,7 @@ workflow HYBRID_READ_PROCESSING_SUBWORKFLOW {
         }
 
         // Hybrid Unicycler Assembly
-        ch_assembly_unicylcer = UNICYCLER(ch_unicycler_input.mix(
+        ch_unicylcer = UNICYCLER(ch_unicycler_input.mix(
             ch_assembler_input.unicycler.map { meta, _genomesize, _short_coverage, _long_coverage, r1, r2, se, long_reads ->
                 tuple(meta, r1, r2, se, long_reads)
             }
@@ -73,7 +73,8 @@ workflow HYBRID_READ_PROCESSING_SUBWORKFLOW {
             ch_assembler_input.other.map { meta, _genomesize, _short_coverage, _long_coverage, r1, r2, se, long_reads ->
                 tuple(meta, r1, r2, se, long_reads)
             }
-        )).scaffolds
+        ))
+        ch_assembly_unicylcer = ch_unicylcer.scaffolds
 
         // Long read only Assembly with Autocycler with short read polishing
         ch_autocycler_assembly = AUTOCYCLER_SUBWORKFLOW(ch_assembler_input.autocycler
@@ -108,4 +109,5 @@ workflow HYBRID_READ_PROCESSING_SUBWORKFLOW {
         emit:
 
             final_output = ch_reoriented.assembly
+            assembly_gfa = ch_unicylcer.gfa
 }

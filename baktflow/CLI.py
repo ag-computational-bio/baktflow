@@ -115,7 +115,7 @@ def single_subcommand(args):
         work_dir=work_dir,
         profile=args.profile,
         resume=args.resume,
-        stub=args.stub
+        stub=args.stub,
     )
 
 
@@ -156,7 +156,7 @@ def batch_subcommand(args):
         work_dir=work_dir,
         profile=args.profile,
         resume=args.resume,
-        stub=args.stub
+        stub=args.stub,
     )
     logger.info("Nextflow workflow executed successfully.")
 

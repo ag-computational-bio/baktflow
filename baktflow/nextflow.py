@@ -50,7 +50,7 @@ def run_baktflow_workflow(
     work_dir: Path,
     profile: str,
     resume: bool,
-    stub: bool
+    stub: bool,
 ):
     """Run Nextflow workflow script."""
 

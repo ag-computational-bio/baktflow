@@ -43,7 +43,9 @@ workflow LONG_READ_PROCESSING_SUBWORKFLOW {
         tuple(meta, assembly)
     }
 
-    ch_flye_assembly = FLYE(ch_flye_input).scaffolds
+    ch_flye = FLYE(ch_flye_input)
+    ch_flye_assembly = ch_flye.scaffolds
+
 
     // Step 3: Polish with Medaka (only scaffolds + long reads)
     ch_keyed_assembly = ch_flye_assembly.mix(ch_autocycler_assembly).map { meta, assembly ->
@@ -62,4 +64,5 @@ workflow LONG_READ_PROCESSING_SUBWORKFLOW {
 
     emit:
         final_output = ch_reoriented.assembly
+        assembly_gfa = ch_flye.graph
 }

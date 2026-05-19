@@ -3,7 +3,7 @@
 process AUTOCYCLER_SUBSAMPLE {
     tag "$meta.sample_id"
     conda "${projectDir}/modules/autocycler/environment.yaml"
-    memory { workflow.stubRun ? 64.MB : 4.GB * task.attempt }
+    memory { workflow.stubRun ? 64.MB : 128.MB * task.attempt }
 
     input:
         tuple val(meta), val(genome_size), path(long_reads)
@@ -31,7 +31,7 @@ process AUTOCYCLER_ASSEMBLY {
     conda "${projectDir}/modules/autocycler/environment.yaml"
     scratch true
     errorStrategy { (task.attempt <= 3) ? 'retry' : 'ignore' }  // sometimes an assembly of a subset can fail
-    memory { workflow.stubRun ? 64.MB : 16.GB * task.attempt }
+    memory { workflow.stubRun ? 64.MB : 8.GB * Math.pow(task.attempt, 2) }
     cpus { workflow.stubRun ? 1 : (params.threads >= 16 ? 16 : params.threads) }
 
     input:
@@ -72,7 +72,7 @@ process AUTOCYCLER_CONSENSUS {
     tag "$meta.sample_id"
     publishDir "${params.output}/${meta.sample_id}/autocycler", mode: 'copy'
     conda "${projectDir}/modules/autocycler/environment.yaml"
-    memory { workflow.stubRun ? 64.MB : 16.GB * task.attempt }
+    memory { workflow.stubRun ? 64.MB : 8.GB * task.attempt }
     cpus { workflow.stubRun ? 1 : (params.threads >= 8 ? 8 : params.threads) }
 
     input:

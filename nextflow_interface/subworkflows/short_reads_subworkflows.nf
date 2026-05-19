@@ -2,7 +2,7 @@
 
 include {FASTP} from '../modules/fastp/main.nf'
 include {UNICYCLER} from '../modules/unicycler/main.nf'
-include {DNAAPLER} from '../modules/dnaapler/main.nf' 
+include {DNAAPLER} from '../modules/dnaapler/main.nf'
 
 workflow SHORT_READ_PROCESSING_SUBWORKFLOW {
     take:
@@ -20,7 +20,8 @@ workflow SHORT_READ_PROCESSING_SUBWORKFLOW {
         }
 
         // Assemble with UNICYCLER
-        ch_scaffolds = UNICYCLER(ch_unicycler_input).scaffolds
+        assembly = UNICYCLER(ch_unicycler_input)
+        ch_scaffolds = assembly.scaffolds
 
         // Reorient the scaffolds with DNAAPLER
         ch_reoriented = DNAAPLER(ch_scaffolds)
@@ -29,4 +30,5 @@ workflow SHORT_READ_PROCESSING_SUBWORKFLOW {
     emit:
 
         final_output = ch_reoriented.assembly
+        assembly_gfa = assembly.gfa
 }

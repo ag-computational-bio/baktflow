@@ -1,0 +1,6 @@
+name: silva-16s
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - blast=2.17.0

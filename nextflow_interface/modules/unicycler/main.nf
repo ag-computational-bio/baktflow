@@ -6,6 +6,7 @@ process UNICYCLER {
     tag "$meta.sample_id"
     publishDir "${params.output}/${meta.sample_id}/unicycler", mode: 'copy'
     conda "${projectDir}/modules/unicycler/environment.yaml"
+    errorStrategy { (task.attempt <= 3) ? 'retry' : 'ignore' }
     scratch true
     memory { workflow.stubRun ? 64.MB : 16.GB * task.attempt }
     cpus { workflow.stubRun ? 1 : (params.threads >= 16 ? 16 : params.threads) }

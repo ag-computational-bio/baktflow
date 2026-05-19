@@ -6,7 +6,7 @@ process BAKTA {
     tag "$meta.sample_id"
     publishDir "${params.output}/${meta.sample_id}/bakta", mode: 'copy'
     conda "${projectDir}/modules/bakta/environment.yaml"
-    memory { workflow.stubRun ? 64.MB : 16.GB * task.attempt }
+    memory { workflow.stubRun ? 64.MB : 8.GB * task.attempt }
     cpus { workflow.stubRun ? 1 : (params.threads >= 8 ? 8 : params.threads) }
 
     input:

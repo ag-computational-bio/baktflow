@@ -1,0 +1,6 @@
+name: bandage
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - bandage=0.9.0
