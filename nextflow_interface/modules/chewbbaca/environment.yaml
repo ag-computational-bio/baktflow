@@ -1,0 +1,7 @@
+name: chewbbaca
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - chewbbaca=3.5.4
+  - python=3.13
