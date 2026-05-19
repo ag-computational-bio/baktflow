@@ -1,9 +1,9 @@
 #!/usr/bin/env nextflow
 
-process BLAST{
+process SILVA_16S{
     tag "$meta.sample_id"
-    publishDir "${params.output}/${meta.sample_id}/blast", mode: 'copy'
-    conda "${projectDir}/modules/blast/environment.yaml"
+    publishDir "${params.output}/${meta.sample_id}/silva-16s", mode: 'copy'
+    conda "${projectDir}/modules/silva-16s/environment.yaml"
     memory { workflow.stubRun ? 64.MB : 512.MB * task.attempt }
 
     input:

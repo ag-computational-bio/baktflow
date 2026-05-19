@@ -1,9 +1,9 @@
 #!/usr/bin/env nextflow
 
-process SETUP_BLAST {
+process SETUP_SILVA_16S {
     publishDir path: "${params.databaseDir}", mode: 'move'
-    tag "SETUP_BLAST"
-    conda "${projectDir}/modules/blast/environment.yaml"
+    tag "SETUP_SILVA-16S"
+    conda "${projectDir}/modules/silva-16s/environment.yaml"
 
     output:
         path "silva_db", emit: db

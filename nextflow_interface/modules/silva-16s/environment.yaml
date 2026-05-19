@@ -1,4 +1,4 @@
-name: blast
+name: silva-16s
 channels:
   - conda-forge
   - bioconda
