@@ -21,7 +21,7 @@ include { SETUP_DIAMOND } from './modules/diamond/setup.nf'
 include { SETUP_AMRFINDERPLUS } from './modules/amrfinderplus/setup.nf'
 include { SETUP_REFERENCESEEKER } from './modules/referenceseeker/setup.nf'
 include { SETUP_PLATON } from './modules/platon/setup.nf'
-include { SETUP_BLAST } from './modules/blast/setup.nf'
+include { SETUP_SILVA_16S } from './modules/silva-16s/setup.nf'
 include { SETUP_BANDAGE } from './modules/bandage/setup.nf'
 include { SETUP_MACSYFINDER} from './modules/macsyfinder/setup.nf'
 include { SETUP_GTDBTK} from './modules/gtdbtk/setup.nf'
@@ -55,7 +55,7 @@ workflow {
         SETUP_REFERENCESEEKER()
         SETUP_MLST()
         SETUP_PLATON()
-        SETUP_BLAST()
+        SETUP_SILVA_16S()
         SETUP_MACSYFINDER()
         SETUP_BANDAGE()
         SETUP_PMLST()
