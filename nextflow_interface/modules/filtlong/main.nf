@@ -4,7 +4,7 @@ process FILTLONG {
     tag "$meta.sample_id"
     publishDir "${params.output}/${meta.sample_id}/filtlong", mode: 'copy'
     conda "${projectDir}/modules/filtlong/environment.yaml"
-    memory { workflow.stubRun ? 64.MB : 2.GB * task.attempt }
+    memory { workflow.stubRun ? 64.MB : 1.GB * task.attempt }
 
     input:
         tuple val(meta), path(long_reads)

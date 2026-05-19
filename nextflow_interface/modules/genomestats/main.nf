@@ -5,7 +5,7 @@ process GENOMESTATS {
     conda "${projectDir}/modules/genomestats/environment.yaml"
     publishDir "${params.output}/${meta.sample_id}/genomestats", pattern: "*.log", mode: 'copy'
     memory { workflow.stubRun ? 1.GB : 4.GB * task.attempt }
-    cpus { workflow.stubRun ? 1 : (params.threads >= 8 ? 8 : params.threads) }
+    cpus { workflow.stubRun ? 1 : (params.threads >= 4 ? 4 : params.threads) }
 
     input:
         tuple val(meta), path(r1), path(r2), path(se), path(long_reads)

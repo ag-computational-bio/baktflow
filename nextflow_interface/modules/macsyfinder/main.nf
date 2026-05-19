@@ -4,7 +4,7 @@ process CASFINDER{
     tag "$meta.sample_id"
     publishDir "${params.output}/${meta.sample_id}/macsyfinder", mode: 'copy'
     conda "${projectDir}/modules/macsyfinder/environment.yaml"
-    memory { workflow.stubRun ? 64.MB : 8.GB * task.attempt }
+    memory { workflow.stubRun ? 64.MB : 256.MB * task.attempt }
     cpus { workflow.stubRun ? 1 : (params.threads >= 8 ? 8 : params.threads) }
 
     input:
@@ -39,7 +39,7 @@ process CONJSCAN{
     tag "$meta.sample_id"
     publishDir "${params.output}/${meta.sample_id}/macsyfinder", mode: 'copy'
     conda "${projectDir}/modules/macsyfinder/environment.yaml"
-    memory { workflow.stubRun ? 64.MB : 8.GB * task.attempt }
+    memory { workflow.stubRun ? 64.MB : 256.MB * task.attempt }
     cpus { workflow.stubRun ? 1 : (params.threads >= 8 ? 8 : params.threads) }
 
     input:
@@ -74,7 +74,7 @@ process TXSSCAN{
     tag "$meta.sample_id"
     publishDir "${params.output}/${meta.sample_id}/macsyfinder", mode: 'copy'
     conda "${projectDir}/modules/macsyfinder/environment.yaml"
-    memory { workflow.stubRun ? 64.MB : 8.GB * task.attempt }
+    memory { workflow.stubRun ? 64.MB : 256.MB * task.attempt }
     cpus { workflow.stubRun ? 1 : (params.threads >= 8 ? 8 : params.threads) }
 
     input:
