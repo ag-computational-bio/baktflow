@@ -5,7 +5,7 @@ process PYPOLCA {
     publishDir "${params.output}/${meta.sample_id}/pypolca", mode: 'copy'
     conda "${projectDir}/modules/pypolca/environment.yaml"
     memory { workflow.stubRun ? 1.GB : 2.GB * task.attempt }
-    cpus { workflow.stubRun ? 1 : (params.threads >= 8 ? 8 : params.threads) }
+    cpus { workflow.stubRun ? 1 : (params.threads >= 4 ? 4 : params.threads) }
 
 
     input:

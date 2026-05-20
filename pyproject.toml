@@ -29,6 +29,12 @@ dependencies = [
     "plotly>=6.6.0",
 ]
 
+[dependency-groups]
+dev = [
+    "ruff>=0.15.11",
+    "ty>=0.0.31"
+]
+
 [project.urls]
 # Documentation = "https://readthedocs.org"
 Repository = "github.com/ag-computational-bio/baktflow"
@@ -38,7 +44,7 @@ Repository = "github.com/ag-computational-bio/baktflow"
 baktflow = "baktflow.CLI:main"
 
 [build-system]
-requires = ["uv_build >= 0.10.7, <0.11.0"]
+requires = ["uv_build >= 0.11.7,<0.12"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]

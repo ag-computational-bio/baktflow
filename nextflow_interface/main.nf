@@ -12,7 +12,7 @@ include { AMRFINDERPLUS } from './modules/amrfinderplus/main.nf'
 include { DIAMOND } from './modules/diamond/main.nf'
 include { CHECKM2 } from './modules/checkm2/main.nf'
 include { PLATON } from './modules/platon/main.nf'
-include { BLAST } from './modules/blast/main.nf'
+include { SILVA_16S } from './modules/silva-16s/main.nf'
 include { BANDAGE } from './modules/bandage/main.nf'
 include { PLING } from './modules/pling/main.nf'
 include { PMLST } from './modules/pmlst/main.nf'
@@ -124,8 +124,8 @@ workflow {
     // Call PLATON
     PLATON(combined_output)
 
-    // Call BLAST (SILVA database)
-    BLAST(bakta_annotation.ffn)
+    // Call SILVA_16S (SILVA database)
+    SILVA_16S(bakta_annotation.ffn)
 
     //Call Bandage
     BANDAGE(combined_gfa)

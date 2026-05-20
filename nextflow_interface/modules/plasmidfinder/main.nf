@@ -4,8 +4,7 @@ process PLASMIDFINDER{
     tag "$meta.sample_id"
     publishDir "${params.output}/${meta.sample_id}/plasmidfinder", mode: 'copy'
     conda "${projectDir}/modules/plasmidfinder/environment.yaml"
-    memory { workflow.stubRun ? 64.MB : 8.GB * task.attempt }
-    cpus { workflow.stubRun ? 1 : (params.threads >= 8 ? 8 : params.threads) }
+    memory { workflow.stubRun ? 64.MB : 512.MB * task.attempt }
 
     input:
         tuple val(meta), path(assembly)
@@ -26,5 +25,4 @@ process PLASMIDFINDER{
     """
     touch data.json
     """
-
 }
