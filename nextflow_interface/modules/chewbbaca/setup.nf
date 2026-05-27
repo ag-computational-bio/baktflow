@@ -11,7 +11,7 @@ process SETUP_CHEWBBACA {
    script:
    def script = "${projectDir}/modules/chewbbaca/download_cgmlst_schemas.py"
    """
-   python3 ${script}
+   ./chewbbaca_download_cgmlst_schemas.py
 
    echo 'Finished mamba environment setup.'
    """

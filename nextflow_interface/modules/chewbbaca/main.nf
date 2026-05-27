@@ -8,7 +8,7 @@ process CHEWBBACA {
     cpus { workflow.stubRun ? 1 : (params.threads >= 2 ? 2 : params.threads) }
 
     input:
-        tuple val(meta), path(assembly)
+        tuple val(meta), path(assembly), val(organism)
 
     output:
         tuple val(meta), path("results/cds_coordinates.tsv"), emit: cds_coordinates
@@ -24,7 +24,7 @@ process CHEWBBACA {
     script:
     """
     realpath ${assembly} > fasta_list.txt
-    chewBBACA.py AlleleCall -i fasta_list.txt -g ${params.databaseDir}/chewBBACA/{species} -o ./results --cpu ${task.cpus}
+    chewBBACA.py AlleleCall -i fasta_list.txt -o ./results --cpu ${task.cpus} -g ${params.databaseDir}/chewBBACA/${organism}
     """
 
     stub:
