@@ -3,6 +3,7 @@
 include { HYBRID_READ_PROCESSING_SUBWORKFLOW } from './subworkflows/hybrid_reads_subworkflows.nf'
 include { SHORT_READ_PROCESSING_SUBWORKFLOW } from './subworkflows/short_reads_subworkflows.nf'
 include { LONG_READ_PROCESSING_SUBWORKFLOW } from './subworkflows/long_reads_subworkflows.nf'
+include { TYPING_SUBWORKFLOW } from './subworkflows/typing_subworkflow.nf'
 include { BAKTA } from './modules/bakta/main.nf'
 include { MLST } from './modules/mlst/main.nf'
 include { MOB_SUITE } from './modules/mob_suite/main.nf'
@@ -146,6 +147,35 @@ workflow {
     PMLST(combined_output)
 
     GTDBTK(combined_output)
+    ch_taxonomy = GTDBTK.out.tax.map { meta, tax ->
+        def tax_list = ['', '', '', '', '', '', '']
+        def raw_tax_list = tax.text.split(";")
+        raw_tax_list.eachWithIndex{ it, i ->
+            tax_list[i] = it.contains("_") ? it.split("_")[2] : it
+        }
+
+        def species = ''
+        if (raw_tax_list.size() == 7) {
+            species = tax_list.last()
+        }
+
+        def new_meta = [
+            sample_id: meta.sample_id,
+            sample_type: meta.sample_type,
+            species: species,
+            taxonomy: tax_list
+        ]
+
+        return tuple(meta.sample_id, new_meta)
+    }
+    cf_assemblies_with_taxonomy = combined_output.map {
+        meta, assembly -> tuple(meta.sample_id, meta, assembly)
+    }.join(ch_taxonomy).map {
+        _sample_id, _meta, assembly, new_meta ->
+        tuple(new_meta, assembly)
+    }
+
+    TYPING_SUBWORKFLOW(cf_assemblies_with_taxonomy)
 
     PLASMIDFINDER(combined_output)
 
