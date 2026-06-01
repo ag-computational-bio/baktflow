@@ -24,6 +24,7 @@ include { CONJSCAN } from './modules/macsyfinder/main.nf'
 include { GTDBTK } from './modules/gtdbtk/main.nf'
 include { PLASMIDFINDER } from './modules/plasmidfinder/main.nf'
 include { ANTISMASH } from './modules/antismash/main.nf'
+include { GECCO } from './modules/gecco/main.nf'
 
 
 workflow {
@@ -183,6 +184,9 @@ workflow {
     // Call antismash
     antismash_input = combined_output.join(bakta_annotation.gff)
     ANTISMASH(antismash_input)
+
+    // Call gecco
+    GECCO(bakta_annotation.gbff)
 
     /*
     workflow.onComplete {

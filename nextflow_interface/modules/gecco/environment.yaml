@@ -1,0 +1,6 @@
+name: gecco
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - gecco==0.10.3
