@@ -4,6 +4,7 @@ process CHECKM2{
     tag "$meta.sample_id"
     publishDir "${params.output}/${meta.sample_id}/checkm2", mode: 'copy'
     conda "${projectDir}/modules/checkm2/environment.yaml"
+    errorStrategy { (task.attempt <= 3) ? 'retry' : 'ignore' } // ignore if "No DIAMOND annotation was generated"
     memory { workflow.stubRun ? 64.MB : 8.GB * task.attempt }
     cpus { workflow.stubRun ? 1 : (params.threads >= 8 ? 8 : params.threads) }
 
