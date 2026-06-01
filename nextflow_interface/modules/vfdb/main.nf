@@ -1,9 +1,9 @@
 #!/usr/bin/env nextflow
 
-process DIAMOND{
+process VFDB{
      tag "$meta.sample_id"
-     publishDir "${params.output}/${meta.sample_id}/diamond", mode: 'copy'
-     conda "${projectDir}/modules/diamond/environment.yaml"
+     publishDir "${params.output}/${meta.sample_id}/vfdb", mode: 'copy'
+     conda "${projectDir}/modules/vfdb/environment.yaml"
      memory { workflow.stubRun ? 64.MB : 256.MB * task.attempt }
      cpus { workflow.stubRun ? 1 : (params.threads >= 8 ? 8 : params.threads) }
 

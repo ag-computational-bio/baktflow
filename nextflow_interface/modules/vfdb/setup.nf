@@ -1,9 +1,9 @@
 #!/usr/bin/env nextflow
 
-process SETUP_DIAMOND {
+process SETUP_VFDB {
     publishDir path: "${params.databaseDir}", mode: 'move'
-    tag "SETUP_DIAMOND"
-    conda "${projectDir}/modules/diamond/environment.yaml"
+    tag "SETUP_VFDB"
+    conda "${projectDir}/modules/vfdb/environment.yaml"
 
     output:
         path "vfdb.dmnd", emit: db

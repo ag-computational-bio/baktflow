@@ -1,6 +1,6 @@
-name: diamond
+name: vfdb
 channels:
   - conda-forge
   - bioconda
 dependencies:
-  - diamond=2.1.24
+  - diamond=2.2.1

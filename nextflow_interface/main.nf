@@ -10,7 +10,7 @@ include { MOB_SUITE } from './modules/mob_suite/main.nf'
 include { SKA } from './modules/ska/main.nf'
 include { RGI } from './modules/rgi/main.nf'
 include { AMRFINDERPLUS } from './modules/amrfinderplus/main.nf'
-include { DIAMOND } from './modules/diamond/main.nf'
+include { VFDB } from './modules/vfdb/main.nf'
 include { CHECKM2 } from './modules/checkm2/main.nf'
 include { PLATON } from './modules/platon/main.nf'
 include { SILVA_16S } from './modules/silva-16s/main.nf'
@@ -119,8 +119,8 @@ workflow {
 
     AMRFINDERPLUS(amr_input)
 
-    // Call DIAMOND (VF database)
-    DIAMOND(bakta_annotation.faa)
+    // Call VFDB (VF database)
+    VFDB(bakta_annotation.faa)
 
     // Call PLATON
     PLATON(combined_output)
