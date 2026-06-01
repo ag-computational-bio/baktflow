@@ -23,6 +23,7 @@ include { TXSSCAN } from './modules/macsyfinder/main.nf'
 include { CONJSCAN } from './modules/macsyfinder/main.nf'
 include { GTDBTK } from './modules/gtdbtk/main.nf'
 include { PLASMIDFINDER } from './modules/plasmidfinder/main.nf'
+include { ANTISMASH } from './modules/antismash/main.nf'
 
 
 workflow {
@@ -146,6 +147,8 @@ workflow {
     //Call pMLST
     PMLST(combined_output)
 
+    PLASMIDFINDER(combined_output)
+
     GTDBTK(combined_output)
     ch_taxonomy = GTDBTK.out.tax.map { meta, tax ->
         def tax_list = ['', '', '', '', '', '', '']
@@ -177,7 +180,9 @@ workflow {
 
     TYPING_SUBWORKFLOW(cf_assemblies_with_taxonomy)
 
-    PLASMIDFINDER(combined_output)
+    // Call antismash
+    antismash_input = combined_output.join(bakta_annotation.gff)
+    ANTISMASH(antismash_input)
 
     /*
     workflow.onComplete {
