@@ -6,7 +6,7 @@ from pathlib import Path
 
 import baktflow.nextflow as bn
 import baktflow.utils as bu
-from baktflow.aggregated_report import find_json_reports, generate_html_report
+import baktflow.report as br
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -105,6 +105,7 @@ def single_subcommand(args):
         args.setup_dir, args.bakta_db_type, args.work_dir, output
     )
 
+
     bn.run_baktflow_workflow(
         workflow_script=bu.get_nf_script("main.nf"),
         input_tsv=tsv_path,
@@ -117,6 +118,12 @@ def single_subcommand(args):
         resume=args.resume,
         stub=args.stub,
     )
+    
+
+    jsons = br.check_output(output_dir=output)
+    br.create_aggregated_json(path_json_files=jsons, output_dir=output, sample_id=args.id)
+
+    logger.info("Report generation completed successfully.")
 
 
 def batch_subcommand(args):
@@ -159,53 +166,6 @@ def batch_subcommand(args):
         stub=args.stub,
     )
     logger.info("Nextflow workflow executed successfully.")
-
-
-def report_subcommand(input_dir, output_dir):
-    logger.info("Running baktflow batch...")
-    logger.info(f"Input directory: {input_dir}")
-    logger.info(f"Output directory: {output_dir}")
-
-    aggregated_report_script = Path(__file__).parent.parent.resolve().joinpath("baktflow", "aggregated_report.py")
-
-    if not os.path.exists(aggregated_report_script):
-        logger.error(f"aggregated_report.py not found at {aggregated_report_script}")
-        return
-
-    logger.info(f"Running aggregated report from {input_dir} to {output_dir}...")
-
-    try:
-        subprocess.run(
-            [
-                "python",
-                aggregated_report_script,
-                "--input_dir",
-                input_dir,
-                "--output_dir",
-                output_dir,
-            ],
-            check=True,
-        )
-        logger.info("Report generation completed successfully.")
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Error while running report: {e}")
-
-    # Load the sample reports
-    sample_reports = find_json_reports(input_dir)
-
-    # If no reports are found, log and exit
-    if not sample_reports:
-        logger.warning("No sample reports found!")
-        return
-
-    # Generate the report
-    output_file = os.path.join(output_dir, "aggregated_report.html")
-    generate_html_report(sample_reports, output_file)
-    # Check if the report file was created successfully
-    if os.path.exists(output_file):
-        logger.info("Aggregated report created successfully!")
-    else:
-        logger.error("Failed to create aggregated report.")
 
 
 def parse_arguments():
@@ -259,11 +219,6 @@ def parse_arguments():
     batch_parser.add_argument("--resume", help="Resume the workflow", action="store_true")
     batch_parser.add_argument("--stub", action="store_true", help="Executed pipeline with the -stub-run option")
 
-    # Subcommand for processing aggregated reports
-    report_parser = subparsers.add_parser("report", help="Generate an aggregated report from output directory")
-    report_parser.add_argument("--input_dir", required=True, help="Path to the input directory containing report files")
-    report_parser.add_argument("--output_dir", required=True, help="Path to the output directory for the report")
-
     return parser.parse_args()
 
 
@@ -276,8 +231,6 @@ def main():
         single_subcommand(args)
     elif args.subcommand == "batch":
         batch_subcommand(args)
-    elif args.subcommand == "report":
-        report_subcommand(args.input_dir, args.output_dir)
     else:
         logger.error("No subcommand provided. Use --help for usage information.")
 
