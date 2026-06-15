@@ -17,7 +17,7 @@ workflow TYPING_SUBWORKFLOW {
         ch_chewbacca = ch_input.combine(ch_chewbacca_organisms).filter { meta, _assembly, chewbacca_organism -> chewbacca_organism == meta.species.replace(" ", "_") }
         
         ch_e_coli = ch_input.filter { meta, _assembly -> meta.species == "Escherichia coli" }
-        ch_klebsiella = ch_input.filter { meta, _assembly -> meta.taxonomy[6] == "Klebsiella" }
+        ch_klebsiella = ch_input.filter { meta, _assembly -> meta.taxonomy[5] == "Klebsiella" }
 
         ECTYPER(ch_e_coli)
         KLEBORATE(ch_klebsiella)
