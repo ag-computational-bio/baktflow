@@ -11,10 +11,10 @@ process GECCO {
         tuple val(meta), path(genbank)
 
     output:
-        tuple val(meta), path("${meta.sample_id}.genes.tsv"), emit: genes
-        tuple val(meta), path("${meta.sample_id}.features.tsv"), emit: features
-        tuple val(meta), path("${meta.sample_id}.clusters.tsv"), emit: clusters
-        tuple val(meta), path("${meta.sample_id}.*.gbk"), emit: genbank
+        tuple val(meta), path("${meta.sample_id}.genes.tsv"), emit: genes, optional: true
+        tuple val(meta), path("${meta.sample_id}.features.tsv"), emit: features, optional: true
+        tuple val(meta), path("${meta.sample_id}.clusters.tsv"), emit: clusters, optional: true
+        tuple val(meta), path("${meta.sample_id}.*.gbk"), emit: genbank, optional: true
 
     script:
     """
