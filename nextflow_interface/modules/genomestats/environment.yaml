@@ -7,3 +7,4 @@ dependencies:
   - seqfu==1.26.0
   - kmc==3.2.4
   - genomescope2==2.1.0
+  - polars=1.41.0

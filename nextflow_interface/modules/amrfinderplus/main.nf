@@ -12,16 +12,20 @@ process AMRFINDERPLUS{
 
      output:
          tuple val(meta), path("${meta.sample_id}.amrfinder.tsv"), emit: amrfinder_tsv
+         path("${meta.sample_id}.json.gz"), emit: json
+
 
      script:
      """
      amrfinder --nucleotide ${nuc} --protein ${prot} --gff ${annotation} --annotation_format bakta \
      --output ${meta.sample_id}.amrfinder.tsv --name ${meta.sample_id} --plus --threads ${task.cpus} \
      --database ${params.databaseDir}/amrfinderplus/latest
+     parse_amrfinder.py ${meta.sample_id}.amrfinder.tsv ${meta.sample_id}
      """
 
     stub:
     """
     touch ${meta.sample_id}.amrfinder.tsv
+    touch ${meta.sample_id}.json.gz
     """
 }

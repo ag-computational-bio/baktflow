@@ -4,3 +4,4 @@ channels:
   - bioconda
 dependencies:
   - macsyfinder=2.1.6
+  - polars=1.41.0

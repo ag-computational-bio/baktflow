@@ -13,15 +13,18 @@ process CHECKM2{
 
     output:
         tuple val(meta), path("${meta.sample_id}.checkm2.tsv"), emit: tsv
+        path("${meta.sample_id}.json"), emit: json
 
     script:
     """
     checkm2 predict --input ./input --output-directory ./out --database_path ${params.databaseDir}/checkm2db/CheckM2_database/uniref100.KO.1.dmnd --genes --extension .faa --threads ${task.cpus}
     mv ./out/quality_report.tsv ${meta.sample_id}.checkm2.tsv
+    parse_checkm2.py ${meta.sample_id}.checkm2.tsv ${meta.sample_id}
     """
 
     stub:
     """
     touch ${meta.sample_id}.checkm2.tsv
+    touch ${meta.sample_id}.json
     """
 }

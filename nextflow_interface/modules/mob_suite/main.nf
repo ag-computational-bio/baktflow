@@ -15,19 +15,21 @@ process MOB_SUITE{
         tuple val(meta), path("${meta.sample_id}.mge_report.txt"), emit: mge_report, optional: true
         tuple val(meta), path("${meta.sample_id}.chromosome.fasta"), emit: chromosome_fasta
         tuple val(meta), path("${meta.sample_id}.plasmid_*.fasta"), emit: plasmids, optional: true
+        path("${meta.sample_id}.json.gz"), emit: json
 
     script:
     """
     mob_recon --infile ${assembly} --num_threads ${task.cpus} --outdir ./ --prefix ${meta.sample_id} -d ${params.databaseDir}/mob_suite
+    parse_mob.py results/${meta.sample_id}.contig_report.txt ${meta.sample_id}
     """
 
     stub:
     """
-    mkdir -p results
-    touch results/${meta.sample_id}.mge_report.txt
-    touch results/${meta.sample_id}.contig_report.txt
-    touch results/${meta.sample_id}.chromosome.fasta
-    touch results/${meta.sample_id}.plasmid_XX.fasta
+    touch ${meta.sample_id}.mge_report.txt
+    touch ${meta.sample_id}.contig_report.txt
+    touch ${meta.sample_id}.chromosome.fasta
+    touch ${meta.sample_id}.plasmid_XX.fasta
+    touch ${meta.sample_id}.json.gz
     """
 
 }

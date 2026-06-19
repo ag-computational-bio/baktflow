@@ -1,0 +1,1 @@
+../../bin/parse_gtdbtk.py

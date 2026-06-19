@@ -19,7 +19,6 @@ def parse_bakta(result_dir: str, sample_name: str):
         },
         "data": None
     }
-    """
 
     path = Path(result_dir)
     date  = datetime.fromtimestamp(os.path.getctime(path))
@@ -37,7 +36,6 @@ def parse_bakta(result_dir: str, sample_name: str):
 
     with gzip.open(f"{sample_name}.json.gz", "wt", encoding="utf-8") as f:
         json.dump(json_parse, f, ensure_ascii=False, separators=(",", ":"), indent=4)
-    """
 
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@ process DNAAPLER {
 
     output:
         tuple val(meta), path("${meta.sample_id}_reoriented.fasta"), emit: assembly
+        path("${meta.sample_id}.json.gz"), emit: json
 
     script:
     """
@@ -18,10 +19,13 @@ process DNAAPLER {
 
     mv out/${meta.sample_id}_reoriented.fasta ${meta.sample_id}_reoriented.fasta
     rm -r out
+
+    parse_assembly.py ${meta.sample_id}_reoriented.fasta ${meta.sample_id} dnaapler
     """
 
     stub:
     """
     touch ${meta.sample_id}_reoriented.fasta
+    touch ${meta.sample_id}.json.gz
     """
 }

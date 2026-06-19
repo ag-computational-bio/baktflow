@@ -37,7 +37,7 @@ def parse_mob(result_dir:str, sample_name:str):
     json_parse["data"] = df.to_dict(as_series=False)
 
 
-    with gzip.open(f"results/{sample_name}.json.gz", "wt", encoding="utf-8") as f:
+    with gzip.open(f"{sample_name}.json.gz", "wt", encoding="utf-8") as f:
         json.dump(json_parse, f, ensure_ascii=False, separators=(",", ":"), indent=4)
 
 

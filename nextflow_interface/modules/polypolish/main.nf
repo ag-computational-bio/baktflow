@@ -12,6 +12,7 @@ process POLYPOLISH {
 
     output:
         tuple val(meta), path("${meta.sample_id}_polypolish.fasta"), emit: polished_output
+        path("${meta.sample_id}.json.gz"), emit: json
 
     script:
     """
@@ -22,10 +23,13 @@ process POLYPOLISH {
 
     polypolish filter --in1 alignments_1.sam --in2 alignments_2.sam --out1 filtered_1.sam --out2 filtered_2.sam
     polypolish polish ${short_pypolca} filtered_1.sam filtered_2.sam alignments_se.sam > ${meta.sample_id}_polypolish.fasta
+
+    parse_assembly.py ${meta.sample_id}_polypolish.fasta ${meta.sample_id} polypolish
     """
 
     stub:
     """
     touch ${meta.sample_id}_polypolish.fasta
+    touch ${meta.sample_id}.json.gz
     """
 }

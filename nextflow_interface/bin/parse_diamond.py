@@ -14,7 +14,7 @@ def parse_diamond(result_dir:str, sample_name:str):
     json_parse = {
         "meta_data": {
             "version": "baktflow 0.1.0", # version command, env files
-            "module": "diamond",
+            "module": "vfdb",
             "date": None,
             "sample": sample_name
         },

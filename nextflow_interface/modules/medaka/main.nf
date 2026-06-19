@@ -12,6 +12,7 @@ process MEDAKA {
 
     output:
         tuple val(meta), path("${meta.sample_id}_polished_assembly.fasta"), emit: input_fasta
+        path("${meta.sample_id}.json.gz"), emit: json
 
     script:
     """
@@ -19,10 +20,13 @@ process MEDAKA {
     medaka_consensus -i ${long_reads} -d ${scaffolds} -o ./ -t ${task.cpus}
 
     mv consensus.fasta ${meta.sample_id}_polished_assembly.fasta
+
+    parse_assembly.py ${meta.sample_id}_polished_assembly.fasta ${meta.sample_id} medaka
     """
 
     stub:
     """
     touch ${meta.sample_id}_polished_assembly.fasta
+    touch ${meta.sample_id}.json.gz
     """
 }

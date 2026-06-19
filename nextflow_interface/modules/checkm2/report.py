@@ -1,0 +1,1 @@
+../../bin/parse_checkm2.py

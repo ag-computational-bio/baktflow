@@ -60,7 +60,7 @@ workflow LONG_READ_PROCESSING_SUBWORKFLOW {
     }
 
     ch_medaka_polished = MEDAKA(ch_combined_reads)
-    ch_reoriented = DNAAPLER(ch_medaka_polished)
+    ch_reoriented = DNAAPLER(ch_medaka_polished.input_fasta)
 
     emit:
         final_output = ch_reoriented.assembly

@@ -13,18 +13,21 @@ process PLING{
 
     output:
         tuple val(meta), path("results/*"), emit: results
+        path("results/${meta.sample_id}.json.gz"), emit: json
 
     script:
     """
     ls *.fasta > plasmid_list.txt
     pling cluster align plasmid_list.txt results --cores ${task.cpus} --visualisation all
     rm -rf .snakemake/
+    parse_pling.py results/all_plasmids_distances.tsv ${meta.sample_id}
     """
 
     stub:
     """
     mkdir results
     touch results/pling.log
+    touch results/${meta.sample_id}.json.gz
     """
 
 

@@ -60,11 +60,13 @@ process AUTOCYCLER_ASSEMBLY {
         sed -i 's/^>.*\$/& Autocycler_consensus_weight=2/' \$f
     done
     shopt -u nullglob
+    parse_assembly.py ${meta.sample_id}_consensus_assembly.fasta ${meta.sample_id} autocycler_subsamples
     """
 
     stub:
     """
     touch ${assembler}_${subsample.baseName.tokenize('_')[1]}.fasta
+    touch ${meta.sample_id}.json.gz
     """
 }
 
@@ -83,6 +85,7 @@ process AUTOCYCLER_CONSENSUS {
         tuple val(meta), path("${meta.sample_id}_consensus_assembly.fasta"), env("COMPLETE"), emit: assembly
         tuple val(meta), path("${meta.sample_id}_consensus_assembly.gfa"), emit: gfa
         path("metrics.tsv"), emit: log
+        path("${meta.sample_id}.json.gz"), emit: json
 
     script:
     // TODO if exit 66 try flye only assembly or without subsampling
@@ -114,11 +117,13 @@ process AUTOCYCLER_CONSENSUS {
 
     mv autocycler_out/consensus_assembly.fasta ${meta.sample_id}_consensus_assembly.fasta
     mv autocycler_out/consensus_assembly.gfa ${meta.sample_id}_consensus_assembly.gfa
+    parse_assembly.py ${meta.sample_id}_consensus_assembly.fasta ${meta.sample_id} autocycler_consensus
     """
 
     stub:
     """
     touch ${meta.sample_id}_consensus_assembly.fasta
     COMPLETE="true"
+    touch ${meta.sample_id}.json.gz
     """
 }

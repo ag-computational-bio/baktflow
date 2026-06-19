@@ -12,10 +12,12 @@ process REFERENCESEEKER{
 
      output:
          tuple val(meta), path("${meta.sample_id}.ani.tsv"), emit: ani_tsv
+         path("${meta.sample_id}.json"), emit: json
 
      script:
      """
      referenceseeker --bidirectional --threads ${task.cpus} ${params.databaseDir}/bacteria-refseq ${assembly} > ${meta.sample_id}.ani.tsv
+     parse_referenceseeker.py ${meta.sample_id}.ani.tsv ${meta.sample_id}
      """
 
     stub:
