@@ -1,7 +1,6 @@
-name: chewbbaca
+name: vfdb
 channels:
   - conda-forge
   - bioconda
 dependencies:
-  - chewbbaca=3.5.4
-  - python<3.14
+  - diamond=2.2.1

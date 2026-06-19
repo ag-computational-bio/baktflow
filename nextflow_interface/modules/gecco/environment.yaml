@@ -1,6 +1,6 @@
-name: diamond
+name: gecco
 channels:
   - conda-forge
   - bioconda
 dependencies:
-  - diamond=2.1.24
+  - gecco==0.10.3

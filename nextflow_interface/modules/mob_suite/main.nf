@@ -11,14 +11,14 @@ process MOB_SUITE{
         tuple val(meta), path(assembly)
 
     output:
-        tuple val(meta), path("results/${meta.sample_id}.contig_report.txt"), emit: contig_report
-        tuple val(meta), path("results/${meta.sample_id}.mge_report.txt"), emit: mge_report, optional: true
-        tuple val(meta), path("results/${meta.sample_id}.chromosome.fasta"), emit: chromosome_fasta
-        tuple val(meta), path("results/${meta.sample_id}.plasmid_*.fasta"), emit: plasmids, optional: true
+        tuple val(meta), path("${meta.sample_id}.contig_report.txt"), emit: contig_report
+        tuple val(meta), path("${meta.sample_id}.mge_report.txt"), emit: mge_report, optional: true
+        tuple val(meta), path("${meta.sample_id}.chromosome.fasta"), emit: chromosome_fasta
+        tuple val(meta), path("${meta.sample_id}.plasmid_*.fasta"), emit: plasmids, optional: true
 
     script:
     """
-    mob_recon --infile ${assembly} --num_threads ${task.cpus} --outdir results --prefix ${meta.sample_id} -d ${params.databaseDir}/mob_suite
+    mob_recon --infile ${assembly} --num_threads ${task.cpus} --outdir ./ --prefix ${meta.sample_id} -d ${params.databaseDir}/mob_suite
     """
 
     stub:

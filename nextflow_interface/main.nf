@@ -3,13 +3,14 @@
 include { HYBRID_READ_PROCESSING_SUBWORKFLOW } from './subworkflows/hybrid_reads_subworkflows.nf'
 include { SHORT_READ_PROCESSING_SUBWORKFLOW } from './subworkflows/short_reads_subworkflows.nf'
 include { LONG_READ_PROCESSING_SUBWORKFLOW } from './subworkflows/long_reads_subworkflows.nf'
+include { TYPING_SUBWORKFLOW } from './subworkflows/typing_subworkflow.nf'
 include { BAKTA } from './modules/bakta/main.nf'
 include { MLST } from './modules/mlst/main.nf'
 include { MOB_SUITE } from './modules/mob_suite/main.nf'
 include { SKA } from './modules/ska/main.nf'
 include { RGI } from './modules/rgi/main.nf'
 include { AMRFINDERPLUS } from './modules/amrfinderplus/main.nf'
-include { DIAMOND } from './modules/diamond/main.nf'
+include { VFDB } from './modules/vfdb/main.nf'
 include { CHECKM2 } from './modules/checkm2/main.nf'
 include { PLATON } from './modules/platon/main.nf'
 include { SILVA_16S } from './modules/silva-16s/main.nf'
@@ -22,6 +23,8 @@ include { TXSSCAN } from './modules/macsyfinder/main.nf'
 include { CONJSCAN } from './modules/macsyfinder/main.nf'
 include { GTDBTK } from './modules/gtdbtk/main.nf'
 include { PLASMIDFINDER } from './modules/plasmidfinder/main.nf'
+include { ANTISMASH } from './modules/antismash/main.nf'
+include { GECCO } from './modules/gecco/main.nf'
 
 
 workflow {
@@ -118,8 +121,8 @@ workflow {
 
     AMRFINDERPLUS(amr_input)
 
-    // Call DIAMOND (VF database)
-    DIAMOND(bakta_annotation.faa)
+    // Call VFDB (VF database)
+    VFDB(bakta_annotation.faa)
 
     // Call PLATON
     PLATON(combined_output)
@@ -145,9 +148,45 @@ workflow {
     //Call pMLST
     PMLST(combined_output)
 
-    GTDBTK(combined_output)
-
     PLASMIDFINDER(combined_output)
+
+    GTDBTK(combined_output)
+    ch_taxonomy = GTDBTK.out.tax.map { meta, tax ->
+        def tax_list = ['', '', '', '', '', '', '']
+        def raw_tax_list = tax.text.split(";")
+        raw_tax_list.eachWithIndex{ it, i ->
+            tax_list[i] = it.contains("_") ? it.split("_")[2] : it
+        }
+
+        def species = ''
+        if (raw_tax_list.size() == 7) {
+            species = tax_list.last()
+        }
+
+        def new_meta = [
+            sample_id: meta.sample_id,
+            sample_type: meta.sample_type,
+            species: species,
+            taxonomy: tax_list
+        ]
+
+        return tuple(meta.sample_id, new_meta)
+    }
+    cf_assemblies_with_taxonomy = combined_output.map {
+        meta, assembly -> tuple(meta.sample_id, meta, assembly)
+    }.join(ch_taxonomy).map {
+        _sample_id, _meta, assembly, new_meta ->
+        tuple(new_meta, assembly)
+    }
+
+    TYPING_SUBWORKFLOW(cf_assemblies_with_taxonomy)
+
+    // Call antismash
+    antismash_input = combined_output.join(bakta_annotation.gff)
+    ANTISMASH(antismash_input)
+
+    // Call gecco
+    GECCO(bakta_annotation.gbff)
 
     /*
     workflow.onComplete {

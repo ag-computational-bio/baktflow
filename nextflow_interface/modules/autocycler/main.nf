@@ -72,6 +72,7 @@ process AUTOCYCLER_CONSENSUS {
     tag "$meta.sample_id"
     publishDir "${params.output}/${meta.sample_id}/autocycler", mode: 'copy'
     conda "${projectDir}/modules/autocycler/environment.yaml"
+    errorStrategy { task.exitStatus == 66 ? 'ignore' : 'retry' }
     memory { workflow.stubRun ? 64.MB : 8.GB * task.attempt }
     cpus { workflow.stubRun ? 1 : (params.threads >= 8 ? 8 : params.threads) }
 
@@ -84,6 +85,7 @@ process AUTOCYCLER_CONSENSUS {
         path("metrics.tsv"), emit: log
 
     script:
+    // TODO if exit 66 try flye only assembly or without subsampling
     """
     # Exclude failed empty assemblies
     for f in assemblies/*.fasta; do
@@ -91,6 +93,10 @@ process AUTOCYCLER_CONSENSUS {
             rm \$f
         fi
     done
+
+    if [ -z \$( ls assemblies/ ) ]; then
+       exit 66
+    fi
 
     autocycler compress -i assemblies -a autocycler_out --max_contigs ${params.maxContigs} --threads $task.cpus
 
