@@ -18,7 +18,7 @@ process GECCO {
 
     script:
     """
-    gecco run -j ${task.cpus} --genome ${genbank} --cds-feature CDS --merge-gbk --antismash-sideload --output ./
+    gecco run -j ${task.cpus} --genome ${genbank} --cds-feature CDS --merge-gbk --output ./
     """
 
     stub:
