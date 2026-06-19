@@ -15,7 +15,7 @@ BASE_URL = "https://www.cgmlst.org/ncs"
 SCHEMA_LIST_URL = f"{BASE_URL}/"
 
 
-def fetch_schema_list():
+def fetch_schema_list() -> list[dict[str, str | list[str]]]:
 
     with urlopen(SCHEMA_LIST_URL, timeout=30) as response:
         html = response.read().decode("utf-8")
@@ -168,6 +168,21 @@ def main():
     #     prep_schema(schema_dir)
     with cf.ProcessPoolExecutor(max_workers=args.threads) as ppe:
         ppe.map(prep_schema, schema_dirs)
+
+    # Link prepped tables for linked directories
+    for schemata in targets:
+        if len(schemata["organisms"]) > 1:
+            for organism in schemata["organisms"][1:]:
+                for suffix in (
+                    "_prepped_invalid_alleles.txt",
+                    "_prepped_invalid_loci.txt",
+                    "_prepped_summary_stats.tsv",
+                ):
+                    prepped_dir = organism.replace(" ", "_") + suffix
+                    os.symlink(
+                        schemata["organisms"][0].replace(" ", "_") + suffix,
+                        os.path.join("chewBBACA", prepped_dir),
+                    )
 
 
 if __name__ == "__main__":
