@@ -15,6 +15,7 @@ process GECCO {
         tuple val(meta), path("${meta.sample_id}.features.tsv"), emit: features
         tuple val(meta), path("${meta.sample_id}.clusters.tsv"), emit: clusters
         tuple val(meta), path("${meta.sample_id}.*.gbk"), emit: genbank
+        path("${meta.sample_id}.json.gz"), emit: json
 
     script:
     """
@@ -27,5 +28,6 @@ process GECCO {
     touch ${meta.sample_id}.features.tsv
     touch ${meta.sample_id}.clusters.tsv
     touch ${meta.sample_id}.1.gbk
+    touch ${meta.sample_id}.json.gz
     """
 }

@@ -25,11 +25,18 @@ def parse_ectyper(genes:str, features:str, cluster:str, sample_name:str):
     json_parse["meta_data"]["date"] = str(date).split()[0]
 
 
-    df_genes = pl.read_csv(genes, separator="\t")
+    df_genes = pl.read_csv(genes, separator="\t",
+                           new_columns=["sequence_id", "protein_id", "start", "end", "strand", "average_p", "max_p"])
 
-    df_features =  pl.read_csv(features, separator="\t")
+    df_features =  pl.read_csv(features, separator="\t",
+                               new_columns=["sequence_id", "protein_id", "start", "end", "domain", "hmm", "i_evalue",
+                                            "p_value", "domain_start", "domain_end", "cluster_probability"])
 
-    df_cluster =  pl.read_csv(cluster, separator="\t")
+    df_cluster =  pl.read_csv(cluster, separator="\t",
+                              new_columns=["sequence_id", "cluster_id", "start", "end", "average_p", "max_p", "type",
+                                           "alkaloid_probability", "nrp_probability", "polyketide_probability",
+                                           "ripp_probability", "saccharide_probability", "terpene_probability",
+                                           "proteins", "domains"])
 
 
     json_parse["data"].update({
@@ -43,7 +50,8 @@ def parse_ectyper(genes:str, features:str, cluster:str, sample_name:str):
 
 
 if __name__ == "__main__":
-    # alle drei result files einlesen
     genes = Path(sys.argv[1])
-    sample_name = sys.argv[2]
-    parse_ectyper(genes, sample_name)
+    features = Path(sys.argv[2])
+    cluster = Path(sys.argv[3])
+    sample_name = sys.argv[4]
+    parse_ectyper(genes, features, cluster, sample_name)
