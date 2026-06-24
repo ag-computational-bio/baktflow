@@ -13,7 +13,7 @@ process CHECKM2{
 
     output:
         tuple val(meta), path("${meta.sample_id}.checkm2.tsv"), emit: tsv
-        path("${meta.sample_id}.json"), emit: json
+        path("${meta.sample_id}.json.gz"), emit: json
 
     script:
     """
@@ -25,6 +25,6 @@ process CHECKM2{
     stub:
     """
     touch ${meta.sample_id}.checkm2.tsv
-    touch ${meta.sample_id}.json
+    touch ${meta.sample_id}.json.gz
     """
 }

@@ -19,8 +19,9 @@ process MOB_SUITE{
 
     script:
     """
-    mob_recon --infile ${assembly} --num_threads ${task.cpus} --outdir ./ --prefix ${meta.sample_id} -d ${params.databaseDir}/mob_suite
-    parse_mob.py results/${meta.sample_id}.contig_report.txt ${meta.sample_id}
+    mob_recon --infile ${assembly} --num_threads ${task.cpus} --outdir results --prefix ${meta.sample_id} -d ${params.databaseDir}/mob_suite
+    mv results/* ./
+    parse_mob.py ${meta.sample_id}.contig_report.txt ${meta.sample_id}
     """
 
     stub:

@@ -14,7 +14,7 @@ process GTDBTK{
      output:
          tuple val(meta), path("${meta.sample_id}.gtdbtk.tsv"), emit: tsv
          tuple val(meta), path("tax.txt"), emit: tax
-         path("${meta.sample_id}.json"), emit: json
+         path("${meta.sample_id}.json.gz"), emit: json
 
      script:
      """
@@ -28,6 +28,6 @@ process GTDBTK{
     stub:
     """
     touch ${meta.sample_id}.gtdbtk.tsv
-    touch ${meta.sample_id}.json
+    touch ${meta.sample_id}.json.gz
     """
 }

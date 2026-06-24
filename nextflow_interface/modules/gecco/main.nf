@@ -20,6 +20,7 @@ process GECCO {
     script:
     """
     gecco run -j ${task.cpus} --genome ${genbank} --cds-feature CDS --merge-gbk --output ./
+    parse_gecco.py ${meta.sample_id}.genes.tsv ${meta.sample_id}.features.tsv ${meta.sample_id}.clusters.tsv ${meta.sample_id}
     """
 
     stub:

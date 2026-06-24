@@ -12,7 +12,7 @@ process REFERENCESEEKER{
 
      output:
          tuple val(meta), path("${meta.sample_id}.ani.tsv"), emit: ani_tsv
-         path("${meta.sample_id}.json"), emit: json
+         path("${meta.sample_id}.json.gz"), emit: json
 
      script:
      """
@@ -23,5 +23,6 @@ process REFERENCESEEKER{
     stub:
     """
     touch ${meta.sample_id}.ani.tsv
+    touch ${meta.sample_id}.json.gz
     """
 }

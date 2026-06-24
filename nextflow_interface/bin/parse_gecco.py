@@ -8,16 +8,16 @@ from datetime import datetime
 import gzip
 import sys
 
-def parse_ectyper(genes:str, features:str, cluster:str, sample_name:str):
+def parse_gecco(genes:str, features:str, cluster:str, sample_name:str):
 
     json_parse = {
         "meta_data": {
             "version": "baktflow 0.1.0", # version command, env files
-            "module": "ectyper",
+            "module": "gecco",
             "date": None,
             "sample": sample_name
         },
-        "data": None
+        "data": {}
     }
 
     path_genes = Path(genes)
@@ -29,7 +29,7 @@ def parse_ectyper(genes:str, features:str, cluster:str, sample_name:str):
                            new_columns=["sequence_id", "protein_id", "start", "end", "strand", "average_p", "max_p"])
 
     df_features =  pl.read_csv(features, separator="\t",
-                               new_columns=["sequence_id", "protein_id", "start", "end", "domain", "hmm", "i_evalue",
+                               new_columns=["sequence_id", "protein_id", "start", "end", "strand", "domain", "hmm", "i_evalue",
                                             "p_value", "domain_start", "domain_end", "cluster_probability"])
 
     df_cluster =  pl.read_csv(cluster, separator="\t",
@@ -54,4 +54,4 @@ if __name__ == "__main__":
     features = Path(sys.argv[2])
     cluster = Path(sys.argv[3])
     sample_name = sys.argv[4]
-    parse_ectyper(genes, features, cluster, sample_name)
+    parse_gecco(genes, features, cluster, sample_name)

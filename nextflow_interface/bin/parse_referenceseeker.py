@@ -28,7 +28,7 @@ def parse_referenceseeker(result_dir, sample_name):
 
     df = pl.read_csv(result_dir,
                      separator="\t",
-                     columns=["id", "mash_distance", "qr_ani", "qr_con_dna", "rq_ani", "rq_con_dna", "taxonomy_id",
+                     new_columns=["id", "mash_distance", "qr_ani", "qr_con_dna", "rq_ani", "rq_con_dna", "taxonomy_id",
                               "assembly_status", "organism"])
 
 
