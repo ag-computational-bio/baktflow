@@ -22,7 +22,7 @@ def assembly_stats(fasta_file:str):
 
     if file_extension == ".gz":
         with gzip.open(fasta_file, "rt") as file:
-            sequences = list(SeqIO.parse(file, "fasta"))
+            sequences = list(SeqIO.parse(file, "fastq"))
     else:
         sequences = list(SeqIO.parse(fasta_file, "fasta"))
 
