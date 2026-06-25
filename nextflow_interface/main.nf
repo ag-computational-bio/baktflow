@@ -182,11 +182,12 @@ workflow {
     TYPING_SUBWORKFLOW(cf_assemblies_with_taxonomy)
 
     // Call antismash
-    antismash_input = combined_output.join(bakta_annotation.gff)
+    antismash_input = combined_output.join(bakta_annotation.gbff)
     ANTISMASH(antismash_input)
 
     // Call gecco
     GECCO(bakta_annotation.gbff)
+
 
     /*
     workflow.onComplete {
