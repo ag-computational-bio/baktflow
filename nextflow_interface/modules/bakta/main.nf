@@ -23,6 +23,7 @@ process BAKTA {
         tuple val(meta), path("${meta.sample_id}.hypotheticals.faa"), emit: hypotheticals_faa
         tuple val(meta), path("${meta.sample_id}.tsv"), emit: tsv
         tuple val(meta), path("${meta.sample_id}.txt"), emit: txt
+        tuple val(meta), path("${meta.sample_id}.json"), emit: json_output
 
     script:
     """
