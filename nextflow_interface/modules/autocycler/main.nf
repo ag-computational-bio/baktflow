@@ -39,6 +39,7 @@ process AUTOCYCLER_ASSEMBLY {
 
     output:
         tuple val(meta), path("${meta.sample_id}_${assembler}_*.fasta"), emit: assembly
+        path("${meta.sample}_${assembler}_*.json.gz")
 
     script:
     """
@@ -60,7 +61,7 @@ process AUTOCYCLER_ASSEMBLY {
         sed -i 's/^>.*\$/& Autocycler_consensus_weight=2/' \$f
     done
     shopt -u nullglob
-    parse_assembly.py ${meta.sample_id}_consensus_assembly.fasta ${meta.sample_id} autocycler_subsamples
+    parse_assembly.py ${meta.sample_id}_${assembler}_*.fasta ${meta.sample_id} autocycler_assembly
     """
 
     stub:
