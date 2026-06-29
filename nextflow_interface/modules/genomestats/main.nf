@@ -24,10 +24,10 @@ process GENOMESTATS {
         if [[ \$(zgrep -c '+' ${se}) -gt 0 ]]; then
             echo ${se} >> kmc_input.txt
             seqfu stats --noheader --threads $task.cpus --precision 0 ${r1} ${r2} ${se} > length_stats.log
-            parse_genomestats.py length_stats.log ${meta.sample_id}
+            parse_genomestats.py length_stats.log ${meta.sample_id} short
         else
             seqfu stats --noheader --threads $task.cpus --precision 0 ${r1} ${r2} > length_stats.log
-            parse_genomestats.py length_stats.log ${meta.sample_id}
+            parse_genomestats.py length_stats.log ${meta.sample_id} short
         fi
         NUMBASES=\$(awk '{ sum += \$3 } END { print sum }' length_stats.log)
 
