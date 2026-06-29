@@ -48,7 +48,7 @@ workflow {
         SETUP_BAKTA()
         SETUP_CHECKM2()
         SETUP_MOB_SUITE()
-        SETUP_DIAMOND()
+        SETUP_VFDB()
         SETUP_AMRFINDERPLUS()
         SETUP_SKA()
         SETUP_RGI()
