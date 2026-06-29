@@ -32,7 +32,7 @@ def parse_armfinder(result_dir:str, sample_name:str):
                      new_columns=["name", "protein_id", "contig_id", "start", "stop", "strand", "element_symbol",
                               "element_name", "scope", "type", "subtype", "class", "subclass", "method",
                               "target_length", "coverage_of_reference", "identity_to_reference", "alignment_length",
-                              "closest_reference_accession", "Closest reference name", "hmm_accession", "hmm_description"])
+                              "closest_reference_accession", "closest_reference_name", "hmm_accession", "hmm_description"])
 
 
     json_parse["data"] = df.to_dict(as_series=False)

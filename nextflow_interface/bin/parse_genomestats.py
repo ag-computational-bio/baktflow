@@ -26,14 +26,14 @@ def parse_genomestats(result_dir:str, sample_name:str, sample_type:str, result_s
     json_parse["meta_data"]["date"] = str(date).split()[0]
 
 
-    if sample_type == "long":
+    if sample_type in ("long", "short"):
         df_long = pl.read_csv(result_dir,
                          separator="\t",
                          new_columns=["file", "n_reads", "bp", "avg_length", "n50", "n75", "n90", "aun", "min", "max"])
 
         json_parse["data"] = df_long.to_dict(as_series=False)
 
-    if sample_type =="hybrid":
+    else:
         df_long = pl.read_csv(result_dir,
                               separator="\t",
                               new_columns=["file", "n_reads", "bp", "avg_length", "n50", "n75", "n90", "aun", "min", "max"])

@@ -33,7 +33,8 @@ def assembly_stats(fasta_file:str):
 
     return number_sequences, seq_lengths, lengths
 
-# TODO: weitere Metriken ausrechenen, welche?
+
+
 def calculate_n50(lengths:list):
     """
     This method calculates the n50 value vor an assembly based on the length of all contigs
@@ -58,11 +59,11 @@ def calculate_n50(lengths:list):
 
 def parse_assembly(result_dir:str, sample_name:str, module_name:str):
     """
-    This method creates an JSON file containing all important information regarding the assembly
+    This method creates a JSON file containing all important information regarding the assembly
 
     :param result_dir: Path where the results are stored (string)
     :param sample_name: Sample ID (string)
-    :param module_name: Name of module that where used to create the assembly (string)
+    :param module_name: Name of module that was  used to create the assembly (string)
     :return: None
     """
 
