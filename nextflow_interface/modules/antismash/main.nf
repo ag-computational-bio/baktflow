@@ -8,25 +8,24 @@ process ANTISMASH {
     cpus { workflow.stubRun ? 1 : (params.threads >= 4 ? 4 : params.threads) }
 
     input:
-        tuple val(meta), path(assemlby), path(gff3)
+        tuple val(meta), path(assembly), path(gbff)
 
     output:
-        tuple val(meta), path("${meta.sample_id}.genes.tsv"), emit: genes
-        tuple val(meta), path("${meta.sample_id}.features.tsv"), emit: features
-        tuple val(meta), path("${meta.sample_id}.clusters.tsv"), emit: clusters
-        tuple val(meta), path("${meta.sample_id}.*.gbk"), emit: genbank
+        tuple val(meta), path("${meta.sample_id}.gbk"), emit: genbank
+        tuple val(meta), path("${meta.sample_id}.json"),emit: json
+        tuple val(meta), path("index.html"), emit: html
 
     script:
     """
     mkdir res
-    antismash ${assemlby} --genefinding-gff3 ${gff3} --taxon bacteria --output-basename ${meta.sample_id} --output-dir ./res/ --databases ${params.databaseDir}/antismash --cpus ${task.cpus}
+    antismash ${gbff} --taxon bacteria --output-basename ${meta.sample_id} --output-dir ./res/ --databases ${params.databaseDir}/antismash --cpus ${task.cpus}
+    mv res/* ./
     """
 
     stub:
     """
-    touch ${meta.sample_id}.genes.tsv
-    touch ${meta.sample_id}.features.tsv
-    touch ${meta.sample_id}.clusters.tsv
-    touch ${meta.sample_id}.1.gbk
+    touch ${meta.sample_id}.gbk
+    touch ${meta.sample_id}.json
+    touch index.html
     """
 }

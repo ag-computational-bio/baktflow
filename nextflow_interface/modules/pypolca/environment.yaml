@@ -4,5 +4,5 @@ channels:
   - bioconda
 dependencies:
   - pypolca=0.4.0
-  - polars=1.1.0
+  - polars=1.41.0
   - biopython==1.87

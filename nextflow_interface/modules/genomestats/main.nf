@@ -15,7 +15,7 @@ process GENOMESTATS {
         tuple val(meta), env('GENOMESIZE'), env('COVERAGE'), path(long_reads), emit: long_genome_size
         tuple val(meta), env('GENOMESIZE'), env('SHORTCOVERAGE'), env('LONGCOVERAGE'), path(r1), path(r2), path(se), path(long_reads), emit: hybrid_genome_size
         path("*.log"), emit: logs
-        path("{meta.sample_id}.json.gz"), emit: json
+        path("${meta.sample_id}.json.gz"), emit: json, optional: true
 
     script:
     if( meta.sample_type == 'short' )
@@ -24,8 +24,10 @@ process GENOMESTATS {
         if [[ \$(zgrep -c '+' ${se}) -gt 0 ]]; then
             echo ${se} >> kmc_input.txt
             seqfu stats --noheader --threads $task.cpus --precision 0 ${r1} ${r2} ${se} > length_stats.log
+            parse_genomestats.py length_stats.log ${meta.sample_id}
         else
             seqfu stats --noheader --threads $task.cpus --precision 0 ${r1} ${r2} > length_stats.log
+            parse_genomestats.py length_stats.log ${meta.sample_id}
         fi
         NUMBASES=\$(awk '{ sum += \$3 } END { print sum }' length_stats.log)
 
@@ -53,7 +55,7 @@ process GENOMESTATS {
         seqfu stats --noheader --threads $task.cpus --precision 0 ${long_reads} > length_stats.log
         NUMREADS=\$(cut -f 2 length_stats.log)
         NUMBASES=\$(cut -f 3 length_stats.log)
-        parse_genomestats.py length_stats.log ${meta.sample_id}
+        parse_genomestats.py length_stats.log ${meta.sample_id} long
 
         # min number of reads for lrge is 5000
         if [[ \$NUMREADS -gt 5000 ]]; then
@@ -92,6 +94,8 @@ process GENOMESTATS {
             seqfu stats --noheader --threads $task.cpus --precision 0 ${r1} ${r2} > short_length_stats.log
         fi
         SHORTNUMBASES=\$(awk '{ sum += \$3 } END { print sum }' short_length_stats.log)
+
+        parse_genomestats.py long_length_stats.log ${meta.sample_id} hybrid short_length_stats.log
 
         # min number of reads for lrge is 5000
         if [[ \$LONGNUMREADS -gt 5000 ]]; then
