@@ -11,6 +11,8 @@ import zipfile
 from urllib.error import URLError
 from urllib.request import urlopen, urlretrieve
 
+import requests
+
 BASE_URL = "https://www.cgmlst.org/ncs"
 SCHEMA_LIST_URL = f"{BASE_URL}/"
 
@@ -106,7 +108,7 @@ def resolve_schema_id(schema_name):
         return schema_name
 
 
-def download_schema(schemata: dict[str, str | list[str]], outdir="chewBBACA", delay=0.5) -> str:
+def download_schema(schemata: dict[str, str | list[str]], outdir="chewBBACA", delay=1.5) -> str:
     print(f"\t{schemata['schema']}")
     schema_id = resolve_schema_id(schemata["schema"])
     if schema_id is None:
@@ -114,14 +116,19 @@ def download_schema(schemata: dict[str, str | list[str]], outdir="chewBBACA", de
 
     download_url = f"{BASE_URL}/schema/{schema_id}/alleles/"
 
-    schema_dir = os.path.join(outdir, schemata["organisms"][0].replace(" ", "_"))
+    schema_dir = os.path.join(outdir, f"{schemata['organisms'][0].replace(' ', '_').rstrip('.')}RAW")
     os.makedirs(schema_dir, exist_ok=True)
     zip_path = os.path.join(outdir, f"{schemata['schema']}.zip")
 
     try:
+        request = requests.get(download_url, timeout=30, stream=True)
+        with open(zip_path, "wb") as fh:
+            for chunk in request.iter_content(4 * 1024 * 1024):
+                fh.write(chunk)
+    except URLError or requests.exceptions.ReadTimeout as e:
+        print(e)
+        time.sleep(30)
         urlretrieve(download_url, zip_path)
-    except URLError as e:
-        raise e
 
     try:
         with zipfile.ZipFile(zip_path, "r") as zf:
@@ -139,13 +146,13 @@ def download_schema(schemata: dict[str, str | list[str]], outdir="chewBBACA", de
 
 
 def prep_schema(schema_dir: str, threads: int = 1):
-    print(f"\t{schema_dir.rstrip('/').split('/')[-1]}")
-    prepped_dir = schema_dir.rstrip("/") + "_prepped"
+    print(f"\t{schema_dir.rstrip('/').split('/')[-1]}".rstrip("RAW"))
+    prepped_dir = schema_dir.rstrip("/").rstrip("RAW")
     cmd = ["chewBBACA.py", "PrepExternalSchema", "-g", schema_dir, "-o", prepped_dir, "--cpu", str(threads)]
     subprocess.run(cmd)
 
     shutil.rmtree(schema_dir)
-    os.renames(prepped_dir, schema_dir)
+    # os.renames(prepped_dir, schema_dir)
     return prepped_dir
 
 
@@ -174,9 +181,9 @@ def main():
         if len(schemata["organisms"]) > 1:
             for organism in schemata["organisms"][1:]:
                 for suffix in (
-                    "_prepped_invalid_alleles.txt",
-                    "_prepped_invalid_loci.txt",
-                    "_prepped_summary_stats.tsv",
+                    "_invalid_alleles.txt",
+                    "_invalid_loci.txt",
+                    "_summary_stats.tsv",
                 ):
                     prepped_dir = organism.replace(" ", "_") + suffix
                     os.symlink(
