@@ -11,33 +11,34 @@ process CHEWBBACA {
         tuple val(meta), path(assembly), val(organism)
 
     output:
-        tuple val(meta), path("results/cds_coordinates.tsv"), emit: cds_coordinates
-        tuple val(meta), path("results/invalid_cds.txt"), emit: invalid_cds
-        tuple val(meta), path("results/loci_summary_stats.tsv"), emit: loci_summary_stats
-        tuple val(meta), path("results/results_statistics.tsv"), emit: results_statistics
-        tuple val(meta), path("results/results_contigsInfo.tsv"), emit: results_contigsInfo
-        tuple val(meta), path("results/results_alleles.tsv"), emit: results_alleles
-        tuple val(meta), path("results/paralogous_counts.tsv"), emit: paralogous_counts
-        tuple val(meta), path("results/paralogous_loci.tsv"), emit: paralogous_loci
-        tuple val(meta), path("results/logging_info.txt"), emit: logging_info
+        tuple val(meta), path("cds_coordinates.tsv"), emit: cds_coordinates
+        tuple val(meta), path("invalid_cds.txt"), emit: invalid_cds
+        tuple val(meta), path("loci_summary_stats.tsv"), emit: loci_summary_stats
+        tuple val(meta), path("results_statistics.tsv"), emit: results_statistics
+        tuple val(meta), path("results_contigsInfo.tsv"), emit: results_contigsInfo
+        tuple val(meta), path("results_alleles.tsv"), emit: results_alleles
+        tuple val(meta), path("paralogous_counts.tsv"), emit: paralogous_counts
+        tuple val(meta), path("paralogous_loci.tsv"), emit: paralogous_loci
+        tuple val(meta), path("logging_info.txt"), emit: logging_info
 
     script:
     """
     realpath ${assembly} > fasta_list.txt
-    chewBBACA.py AlleleCall -i fasta_list.txt -o ./results --cpu ${task.cpus} -g ${params.databaseDir}/chewBBACA/${organism}
+    chewBBACA.py AlleleCall --no-inferred -i fasta_list.txt -o ./results --cpu ${task.cpus} -g ${params.databaseDir}/chewBBACA/${organism}
+    mv results/* ./
+    rm -r results/
     """
 
     stub:
     """
-        mkdir -p results
-        touch results/cds_coordinates.tsv
-        touch results/invalid_cds.txt
-        touch results/loci_summary_stats.tsv
-        touch results/results_statistics.tsv
-        touch results/results_contigsInfo.tsv
-        touch results/results_alleles.tsv
-        touch results/paralogous_counts.tsv
-        touch results/paralogous_loci.tsv
-        touch results/logging_info.txt
+        touch cds_coordinates.tsv
+        touch invalid_cds.txt
+        touch loci_summary_stats.tsv
+        touch results_statistics.tsv
+        touch results_contigsInfo.tsv
+        touch results_alleles.tsv
+        touch paralogous_counts.tsv
+        touch paralogous_loci.tsv
+        touch logging_info.txt
     """
 }
