@@ -118,6 +118,7 @@ process AUTOCYCLER_CONSENSUS {
 
     stub:
     """
+    touch ${meta.sample_id}_consensus_assembly.gfa
     touch ${meta.sample_id}_consensus_assembly.fasta
     COMPLETE="true"
     """
