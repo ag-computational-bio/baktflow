@@ -4,7 +4,7 @@ process BANDAGE{
     tag "$meta.sample_id"
     publishDir "${params.output}/${meta.sample_id}/bandage", mode: 'copy'
     conda "${projectDir}/modules/bandage/environment.yaml"
-    memory { workflow.stubRun ? 64.MB : 128.MB * task.attempt }
+    memory { workflow.stubRun ? 64.MB : 128.MB * task.attempt * task.attempt }
 
     input:
         tuple val(meta), path(assembly)
