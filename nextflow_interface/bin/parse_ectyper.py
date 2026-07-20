@@ -8,11 +8,16 @@ from datetime import datetime
 import gzip
 import sys
 
+BASE_DIR = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(BASE_DIR))
+
+from baktflow import __version__
+
 def parse_ectyper(result_dir:str, sample_name:str):
 
     json_parse = {
         "meta_data": {
-            "version": "baktflow 0.1.0", # version command, env files
+            "version": __version__,
             "module": "ectyper",
             "date": None,
             "sample": sample_name

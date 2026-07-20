@@ -8,6 +8,11 @@ from pathlib import Path
 from datetime import datetime
 import gzip
 
+BASE_DIR = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(BASE_DIR))
+
+from baktflow import __version__
+
 
 def assembly_stats(fasta_file:str):
     """
@@ -31,7 +36,15 @@ def assembly_stats(fasta_file:str):
     seq_lengths = {rec.id: len(rec.seq) for rec in sequences}
     lengths = [len(rec.seq) for rec in sequences]
 
-    return number_sequences, seq_lengths, lengths
+    count_n = sum(rec.seq.count("N") for rec in sequences)
+    count_c = sum(rec.seq.count("C") for rec in sequences)
+    count_g = sum(rec.seq.count("G") for rec in sequences)
+
+    total_length = sum(len(rec.seq) for rec in sequences)
+
+    gc_content = (count_g + count_c) / float(total_length) * 100
+
+    return number_sequences, seq_lengths, lengths, gc_content, count_n
 
 
 
@@ -43,14 +56,29 @@ def calculate_n50(lengths:list):
     :return: N50 value
     """
 
-    lengths_sorted = sorted(lengths,reverse=True)
-
+    lengths_sorted = sorted(lengths, reverse=True)
     total = sum(lengths_sorted)
     cumulative = 0
 
     for length in lengths_sorted:
         cumulative += length
         if cumulative >= total / 2:
+            return length
+
+    return None
+
+
+
+def calculate_n90(lengths:list):
+    lengths_sorted = sorted(lengths, reverse=True)
+    total = sum(lengths_sorted)
+    cumulative = 0
+
+    target = total  * (90 / 100)
+
+    for length in lengths_sorted:
+        cumulative += length
+        if cumulative >= target:
             return length
 
     return None
@@ -69,7 +97,7 @@ def parse_assembly(result_dir:str, sample_name:str, module_name:str):
 
     json_parse = {
         "meta_data": {
-            "version": "baktflow 0.1.0", # version command, env files
+            "version": __version__,
             "module": module_name,
             "date": None,
             "sample": sample_name
@@ -82,12 +110,16 @@ def parse_assembly(result_dir:str, sample_name:str, module_name:str):
     json_parse["meta_data"]["date"] = str(date).split()[0]
 
 
-    number_sequences, seq_lengths, lengths = assembly_stats(result_dir)
+    number_sequences, seq_lengths, lengths, gc_content, count_n = assembly_stats(result_dir)
     n50 = calculate_n50(lengths)
+    n90 = calculate_n90(lengths)
 
 
     json_parse["data"] = {
         "n50": n50,
+        "n90": n90,
+        "n": count_n,
+        "gc_content": gc_content,
         "number_sequences": number_sequences,
         "seq_lengths": seq_lengths
     }

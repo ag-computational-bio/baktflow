@@ -8,13 +8,18 @@ from datetime import datetime
 import gzip
 import sys
 
+BASE_DIR = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(BASE_DIR))
+
+from baktflow import __version__
+
 
 def parse_chewbbaca(cds_coordinates:str, loci_summary_stats:str, contigs_results:str, alleles_results:str, paralogous:str, sample_name:str):
 
     json_parse = {
         "meta_data": {
-            "version": "baktflow 0.1.0", # version command, env files
-            "module": "gecco",
+            "version":__version__,
+            "module": "chewbbaca",
             "date": None,
             "sample": sample_name
         },

@@ -8,12 +8,17 @@ from pathlib import Path
 from datetime import datetime
 import gzip
 
+BASE_DIR = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(BASE_DIR))
 
-def parse_genomestats(result_dir:str, sample_name:str, sample_type:str, result_short=None):
+from baktflow import __version__
+
+
+def parse_genomestats(result_dir:str, sample_name:str, sample_type:str, result_hybrid=None):
 
     json_parse = {
         "meta_data": {
-            "version": "baktflow 0.1.0", # version command, env files
+            "version": __version__,
             "module": "genomestats",
             "date": None,
             "sample": sample_name
@@ -37,7 +42,7 @@ def parse_genomestats(result_dir:str, sample_name:str, sample_type:str, result_s
         df_long = pl.read_csv(result_dir,
                               separator="\t",
                               new_columns=["file", "n_reads", "bp", "avg_length", "n50", "n75", "n90", "aun", "min", "max"])
-        df_short = pl.read_csv(result_short,
+        df_short = pl.read_csv(result_hybrid,
                               separator="\t",
                               new_columns=["file", "n_reads", "bp", "avg_length", "n50", "n75", "n90", "aun", "min", "max"])
 
@@ -52,5 +57,5 @@ if __name__ == "__main__":
     result_dir = Path(sys.argv[1])
     sample_name = sys.argv[2]
     sample_type = sys.argv[3]
-    result_short = sys.argv[4]
-    parse_genomestats(result_dir, sample_name, sample_type, result_short)
+    result_hybrid = sys.argv[4] if len(sys.argv) > 4 else None
+    parse_genomestats(result_dir, sample_name, sample_type, result_hybrid)
