@@ -3,7 +3,7 @@
 process GENOMESTATS {
     tag "$meta.sample_id"
     conda "${projectDir}/modules/genomestats/environment.yaml"
-    publishDir "${params.output}/${meta.sample_id}/genomestats", pattern: "*.log", mode: 'copy'
+    publishDir "${params.output}/${meta.sample_id}/genomestats", pattern: "*.{log,json.gz}", mode: 'copy'
     memory { workflow.stubRun ? 1.GB : 4.GB * task.attempt }
     cpus { workflow.stubRun ? 1 : (params.threads >= 4 ? 4 : params.threads) }
 
@@ -15,7 +15,7 @@ process GENOMESTATS {
         tuple val(meta), env('GENOMESIZE'), env('COVERAGE'), path(long_reads), emit: long_genome_size
         tuple val(meta), env('GENOMESIZE'), env('SHORTCOVERAGE'), env('LONGCOVERAGE'), path(r1), path(r2), path(se), path(long_reads), emit: hybrid_genome_size
         path("*.log"), emit: logs
-        path("${meta.sample_id}.json.gz"), emit: json, optional: true
+        path("${meta.sample_id}.json.gz"), emit: json
 
     script:
     if( meta.sample_type == 'short' )

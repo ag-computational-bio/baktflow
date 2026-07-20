@@ -5,4 +5,4 @@ channels:
 dependencies:
   - chewbbaca=3.5.4
   - python<3.14
-  - polars=1.41.0
+  - polars>=1.41.0

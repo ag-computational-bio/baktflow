@@ -39,7 +39,7 @@ process AUTOCYCLER_ASSEMBLY {
 
     output:
         tuple val(meta), path("${meta.sample_id}_${assembler}_*.fasta"), emit: assembly
-        path("${meta.sample}_${assembler}_*.json.gz")
+        path("*.json.gz")
 
     script:
     """
@@ -86,7 +86,7 @@ process AUTOCYCLER_CONSENSUS {
         tuple val(meta), path("${meta.sample_id}_consensus_assembly.fasta"), env("COMPLETE"), emit: assembly
         tuple val(meta), path("${meta.sample_id}_consensus_assembly.gfa"), emit: gfa
         path("metrics.tsv"), emit: log
-        path("${meta.sample_id}.json.gz"), emit: json
+        path("*.json.gz"), emit: json
 
     script:
     // TODO if exit 66 try flye only assembly or without subsampling

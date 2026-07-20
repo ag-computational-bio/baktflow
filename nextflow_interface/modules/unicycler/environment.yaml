@@ -5,6 +5,7 @@ channels:
 dependencies:
   - unicycler==0.5.1
   - biopython==1.87
+  - polars>=1.41.0
 
 
 

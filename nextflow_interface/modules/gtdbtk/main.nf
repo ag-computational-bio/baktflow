@@ -2,7 +2,7 @@
 
 process GTDBTK{
     tag "$meta.sample_id"
-    publishDir "${params.output}/${meta.sample_id}/gtdbtk", mode: 'copy', pattern: "*.gtdbtk.tsv"
+    publishDir "${params.output}/${meta.sample_id}/gtdbtk", mode: 'copy', pattern: "*.{gtdbtk.tsv,json.gz}"
     conda "${projectDir}/modules/gtdbtk/environment.yaml"
     scratch true
     memory { workflow.stubRun ? 64.MB : 150.GB * task.attempt }

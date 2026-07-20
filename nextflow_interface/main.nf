@@ -183,7 +183,7 @@ workflow {
 
     // Call antismash
     antismash_input = combined_output.join(bakta_annotation.gbff)
-    ANTISMASH(antismash_input)
+    //ANTISMASH(antismash_input)
 
     // Call gecco
     GECCO(bakta_annotation.gbff)
