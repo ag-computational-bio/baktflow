@@ -74,27 +74,30 @@ workflow HYBRID_READ_PROCESSING_SUBWORKFLOW {
                 tuple(meta, r1, r2, se, long_reads)
             }
         ))
-        ch_assembly_unicylcer = ch_unicylcer.scaffolds
 
-        // Long read only Assembly with Autocycler with short read polishing
-        ch_autocycler_assembly = AUTOCYCLER_SUBWORKFLOW(ch_assembler_input.autocycler
+        // Long read only Assembly with Autocycler
+        ch_autocycler = AUTOCYCLER_SUBWORKFLOW(ch_assembler_input.autocycler
         .map { meta, genomesize, _short_coverage, _long_coverage, _r1, _r2, _se, long_reads ->
             tuple(meta, genomesize, long_reads)
-        }).map { meta, assembly, _closed -> tuple(meta, assembly) }
+        })
 
-        // Combine assembly with short reads for Pypolca polishing
-        ch_combined_for_pypolca = ch_autocycler_assembly.map { meta, scaffolds ->
-            tuple(meta.sample_id, meta, scaffolds)
+
+        // Reorient GFA with DNAAPLER
+        ch_reoriented = DNAAPLER(ch_unicylcer.gfa.mix(ch_autocycler.assembly_gfa))
+
+        // Short read polishing
+        // Combine autocycler assembly with short reads for Pypolca polishing
+        ch_pypolca_input = ch_reoriented.fasta.map { meta, assembly ->
+            tuple(meta.sample_id, meta, assembly)
         }.join(ch_keyed_short_reads)
-            .map { _sample_id, meta, scaffolds, _meta_short, r1, r2, _se ->
-                tuple(meta, scaffolds, r1, r2)
+            .map { _sample_id, meta, assembly, _meta_short, r1, r2, _se ->
+                tuple(meta, assembly, r1, r2)
             }
-
         // Pypolca Polishing
-        ch_pypolca_polished = PYPOLCA(ch_combined_for_pypolca).short_pypolca
+        ch_pypolca_polished = PYPOLCA(ch_pypolca_input)
 
         // Combine Pypolca-polished assembly with short reads for Polypolish polishing
-        ch_combined_for_pollypolish = ch_pypolca_polished.map { meta, pypolca ->
+        ch_combined_for_pollypolish = ch_pypolca_polished.short_pypolca.map { meta, pypolca ->
             tuple(meta.sample_id, meta, pypolca)
         }.join(ch_keyed_short_reads)
             .map { _sample_id, meta, pypolca, _meta_short, r1, r2, se ->
@@ -102,12 +105,10 @@ workflow HYBRID_READ_PROCESSING_SUBWORKFLOW {
             }
 
         // Final Polishing with Polypolish
-        ch_final_polished_assembly = POLYPOLISH(ch_combined_for_pollypolish).polished_output
+        ch_polished_assembly = POLYPOLISH(ch_combined_for_pollypolish).polished_output
         
-        ch_reoriented = DNAAPLER(ch_assembly_unicylcer.mix(ch_final_polished_assembly))
 
         emit:
-
-            final_output = ch_reoriented.assembly
-            assembly_gfa = ch_unicylcer.gfa
+            assembly_gfa = ch_reoriented.gfa
+            assembly_fasta = ch_polished_assembly
 }

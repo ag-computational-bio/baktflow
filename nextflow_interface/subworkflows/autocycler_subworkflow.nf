@@ -19,5 +19,6 @@ workflow AUTOCYCLER_SUBWORKFLOW {
     ch_final_assembly = AUTOCYCLER_CONSENSUS(ch_assemblies)
 
     emit:
-        ch_final_assembly.assembly
+        assembly_gfa = ch_final_assembly.gfa
+        assembly_scaffolds = ch_final_assembly.assembly
 }

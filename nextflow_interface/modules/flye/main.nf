@@ -12,9 +12,9 @@ process FLYE {
         tuple val(meta), val(genome_size), val(coverage), path(filtered_long_reads)
 
     output:
-        tuple val(meta), path("${meta.sample_id}_assembly.fasta"), emit: scaffolds
-        tuple val(meta), path("${meta.sample_id}_assembly_graph.gfa"), emit: graph
-        tuple val(meta), path("${meta.sample_id}_assembly_info.txt"), emit: info
+        tuple val(meta), path("${meta.sample_id}_assembly.fasta"), emit: fasta
+        tuple val(meta), path("${meta.sample_id}_assembly_graph.gfa"), emit: gfa
+        tuple val(meta), path("${meta.sample_id}_assembly_info.txt"), emit: log
         path("${meta.sample_id}.json.gz"), emit: json
 
     script:

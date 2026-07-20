@@ -78,41 +78,41 @@ workflow {
 
     // Process each type of read and gather the outputs
     ch_short_processed = SHORT_READ_PROCESSING_SUBWORKFLOW(ch_short_reads)
-    ch_short_output = ch_short_processed.final_output
+    ch_short_assemblies = ch_short_processed.assembly_fasta
     ch_short_gfa = ch_short_processed.assembly_gfa
 
     ch_long_processed = LONG_READ_PROCESSING_SUBWORKFLOW(ch_long_reads)
-    ch_long_output = ch_long_processed.final_output
+    ch_long_assemblies = ch_long_processed.assembly_fasta
     ch_long_gfa = ch_long_processed.assembly_gfa
 
     ch_hybrid_processed = HYBRID_READ_PROCESSING_SUBWORKFLOW(ch_hybrid_reads)
-    ch_hybrid_output = ch_hybrid_processed.final_output
+    ch_hybrid_assemblies = ch_hybrid_processed.assembly_fasta
     ch_hybrid_gfa = ch_hybrid_processed.assembly_gfa
 
     // Combine all outputs into a single channel
-    combined_output = ch_short_output.mix(ch_long_output, ch_hybrid_output, ch_assemblies)
+    combined_assemblies = ch_short_assemblies.mix(ch_long_assemblies, ch_hybrid_assemblies, ch_assemblies)
     combined_gfa = ch_short_gfa.mix(ch_long_gfa, ch_hybrid_gfa)
 
     // Call BAKTA with the combined output channel
-    bakta_annotation = BAKTA(combined_output)
+    bakta_annotation = BAKTA(combined_assemblies)
 
     // Call MLST with the combined output channel
-    MLST(combined_output)
+    MLST(combined_assemblies)
 
     // Call MOB_RECON with the combined output channel
-    mob_results = MOB_SUITE(combined_output)
+    mob_results = MOB_SUITE(combined_assemblies)
 
     // Call SKA with the combined output channel
-    SKA(combined_output)
+    SKA(combined_assemblies)
 
     // Call RGI with the combined output channel
-    RGI(combined_output)
+    RGI(combined_assemblies)
 
     // Call CheckM2
     CHECKM2(bakta_annotation.faa)
 
     // Call ReferenceSeeker (bacteria refseq database)
-    REFERENCESEEKER(combined_output)
+    REFERENCESEEKER(combined_assemblies)
 
     //Call AMRFINDERPLUS
     amr_input = bakta_annotation.gff
@@ -125,7 +125,7 @@ workflow {
     VFDB(bakta_annotation.faa)
 
     // Call PLATON
-    PLATON(combined_output)
+    PLATON(combined_assemblies)
 
     // Call SILVA_16S (SILVA database)
     SILVA_16S(bakta_annotation.ffn)
@@ -146,11 +146,11 @@ workflow {
     // PLING(mob_results.plasmids)
 
     //Call pMLST
-    PMLST(combined_output)
+    PMLST(combined_assemblies)
 
-    PLASMIDFINDER(combined_output)
+    PLASMIDFINDER(combined_assemblies)
 
-    GTDBTK(combined_output)
+    GTDBTK(combined_assemblies)
     ch_taxonomy = GTDBTK.out.tax.map { meta, tax ->
         def tax_list = ['', '', '', '', '', '', '']
         def raw_tax_list = tax.text.split(";")
@@ -172,7 +172,7 @@ workflow {
 
         return tuple(meta.sample_id, new_meta)
     }
-    cf_assemblies_with_taxonomy = combined_output.map {
+    cf_assemblies_with_taxonomy = combined_assemblies.map {
         meta, assembly -> tuple(meta.sample_id, meta, assembly)
     }.join(ch_taxonomy).map {
         _sample_id, _meta, assembly, new_meta ->
@@ -182,7 +182,7 @@ workflow {
     TYPING_SUBWORKFLOW(cf_assemblies_with_taxonomy)
 
     // Call antismash
-    antismash_input = combined_output.join(bakta_annotation.gbff)
+    antismash_input = combined_assemblies.join(bakta_annotation.gff)
     //ANTISMASH(antismash_input)
 
     // Call gecco
