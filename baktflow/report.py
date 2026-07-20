@@ -6,22 +6,25 @@ import warnings
 import json
 from datetime import datetime
 import gzip
+from baktflow import __version__
 
 # TODO: HTML/PDF report erstellen
 
 def check_output(output_dir):
 
-    results_dirs = [item for item in Path(output_dir).iterdir()if item.is_dir() and not item.name.startswith(".")]
+    results_dirs = [item for item in Path(output_dir).iterdir() if item.is_dir() and not item.name.startswith(".")]
 
-    paths_json_files = None
+    all_json_files = []
 
     for result_path in results_dirs:
         paths_json_files = list(result_path.rglob("*.json")) + list(result_path.rglob("*.json.gz"))
 
         if not paths_json_files:
             warnings.warn(f"No json result found in: {result_path}")
+        else:
+            all_json_files.extend(paths_json_files)
 
-    return paths_json_files
+    return all_json_files
 
 
 def normalize_keys(obj):
@@ -42,7 +45,7 @@ def parse_json(json_file, module_name:str, sample_id):
 
     json_parse = {
         "meta_data": {
-            "version": "baktflow 0.1.0", # version command, env files
+            "version": __version__,
             "module": module_name,
             "date": None,
             "sample": sample_id
@@ -71,7 +74,7 @@ def create_aggregated_json(path_json_files: list, output_dir: str, sample_id: st
         else:
 
             relative_output = file.relative_to(output_dir)
-            module_name = relative_output.parts[1]
+            module_name = relative_output.parent.name
 
             parsed = parse_json(
                 json_file=file,

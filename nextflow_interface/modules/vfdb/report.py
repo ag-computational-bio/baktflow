@@ -1,1 +1,0 @@
-../../bin/parse_diamond.py

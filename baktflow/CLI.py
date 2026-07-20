@@ -3,6 +3,7 @@ import logging
 import os
 import subprocess
 from pathlib import Path
+import polars as pl
 
 import baktflow.nextflow as bn
 import baktflow.utils as bu
@@ -118,7 +119,7 @@ def single_subcommand(args):
         resume=args.resume,
         stub=args.stub,
     )
-    
+    logger.info("Nextflow workflow executed successfully.")
 
     jsons = br.check_output(output_dir=output)
     br.create_aggregated_json(path_json_files=jsons, output_dir=output, sample_id=args.id)
@@ -167,6 +168,14 @@ def batch_subcommand(args):
     )
     logger.info("Nextflow workflow executed successfully.")
 
+    df = pl.read_csv(cleaned_tsv, separator="\t", has_header=False)
+    samples_id = df[:,0].to_list()
+    for sample in samples_id:
+        jsons = br.check_output(output_dir=f"{output}/{sample}")
+        br.create_aggregated_json(path_json_files=jsons, output_dir=f"{output}/{sample}", sample_id=sample)
+
+    logger.info("Report generation completed successfully.")
+
 
 def parse_arguments():
     """Parse command-line arguments."""
@@ -207,8 +216,8 @@ def parse_arguments():
 
     # Batch subcommand
     batch_parser = subparsers.add_parser("batch", help="Run baktflow batch analysis")
-    batch_parser.add_argument("--input_tsv", help="Output directory for batch analysis", required=True)
-    batch_parser.add_argument("--input_dir", help="Output directory for batch analysis", required=True)
+    batch_parser.add_argument("--input_tsv", help="Input TSV for batch analysis", required=True)
+    batch_parser.add_argument("--input_dir", help="Input directory for batch analysis", required=True)
     batch_parser.add_argument("--output", help="Output directory for batch analysis", required=True)
     batch_parser.add_argument("--setup_dir", help="Directory for the workflow setup", required=True)
     batch_parser.add_argument(
