@@ -11,7 +11,7 @@ process MEDAKA {
         tuple val(meta), path(long_reads), path(scaffolds)
 
     output:
-        tuple val(meta), path("${meta.sample_id}_polished_assembly.fasta"), emit: input_fasta
+        tuple val(meta), path("${meta.sample_id}_polished_assembly.fasta"), emit: fasta
 
     script:
     """

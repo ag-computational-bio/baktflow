@@ -21,14 +21,12 @@ workflow SHORT_READ_PROCESSING_SUBWORKFLOW {
 
         // Assemble with UNICYCLER
         assembly = UNICYCLER(ch_unicycler_input)
-        ch_scaffolds = assembly.scaffolds
 
-        // Reorient the scaffolds with DNAAPLER
-        ch_reoriented = DNAAPLER(ch_scaffolds)
+        // Reorient GFA with DNAAPLER
+        ch_reoriented = DNAAPLER(assembly.gfa)
 
     // Emit the final output
     emit:
-
-        final_output = ch_reoriented.assembly
-        assembly_gfa = assembly.gfa
+        assembly_gfa = ch_reoriented.gfa
+        assembly_fasta = ch_reoriented.fasta
 }

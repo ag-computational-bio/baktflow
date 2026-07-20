@@ -13,13 +13,13 @@ workflow LONG_READ_PROCESSING_SUBWORKFLOW {
         ch_long_reads
 
     main:
-    // Step 0: Create empty stub files
+    // Create empty stub files
     String[] emptyFiles = ["empty_R1.fastq.gz", "empty_R2.fastq.gz", "empty_SE.fastq.gz"]
     emptyFiles.each { fh ->
         file(fh).setText('')
     }
 
-    // Step 1: Filter long reads
+    // Filter long reads
     ch_filtered_long_reads = FILTLONG(ch_long_reads.map { it -> tuple(it.meta, it.long_reads) }).filtered_long_reads
 
     ch_filtered_long_reads_with_short_stubs = ch_filtered_long_reads.map { meta, long_reads ->
@@ -38,31 +38,29 @@ workflow LONG_READ_PROCESSING_SUBWORKFLOW {
         tuple(meta, genomesize, long_reads)
     }
 
-    // Step 2: Assemble with Flye or Autocycler
-    ch_autocycler_assembly = AUTOCYCLER_SUBWORKFLOW(ch_autocycler_input).map { meta, assembly, _closed ->
-        tuple(meta, assembly)
-    }
-
+    // Assemble with Flye or Autocycler
+    ch_autocycler = AUTOCYCLER_SUBWORKFLOW(ch_autocycler_input)
     ch_flye = FLYE(ch_flye_input)
-    ch_flye_assembly = ch_flye.scaffolds
 
+    // Reorient GFA with DNAAPLER
+    ch_reoriented = DNAAPLER(ch_flye.gfa.mix(ch_autocycler.assembly_gfa))
 
-    // Step 3: Polish with Medaka (only scaffolds + long reads)
-    ch_keyed_assembly = ch_flye_assembly.mix(ch_autocycler_assembly).map { meta, assembly ->
-        tuple(meta.sample_id, meta, assembly)
+    // Polish with Medaka (only scaffolds + long reads)
+    ch_keyed_assembly = ch_reoriented.fasta.map { meta, fasta ->
+        tuple(meta.sample_id, meta, fasta)
     }
     ch_keyed_long_reads = ch_filtered_long_reads.map { meta, long_reads ->
         tuple(meta.sample_id, long_reads)
     }
     ch_combined_reads = ch_keyed_assembly.join(ch_keyed_long_reads)
-    .map { _sample_id, meta, assembly, long_reads ->
-        tuple(meta, long_reads, assembly)
+    .map { _sample_id, meta, fasta, long_reads ->
+        tuple(meta, long_reads, fasta)
     }
 
+    // Polish with Medaka
     ch_medaka_polished = MEDAKA(ch_combined_reads)
-    ch_reoriented = DNAAPLER(ch_medaka_polished)
 
     emit:
-        final_output = ch_reoriented.assembly
-        assembly_gfa = ch_flye.graph
+        assembly_gfa = ch_reoriented.gfa
+        assembly_fasta = ch_medaka_polished.fasta
 }
