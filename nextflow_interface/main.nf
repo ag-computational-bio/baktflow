@@ -188,7 +188,6 @@ workflow {
     // Call gecco
     GECCO(bakta_annotation.gbff)
 
-
     /*
     workflow.onComplete {
         def separator = "=" * 60 // Creates a 60-character separator line

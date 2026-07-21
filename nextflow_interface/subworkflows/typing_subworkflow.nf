@@ -24,6 +24,6 @@ workflow TYPING_SUBWORKFLOW {
         ECTYPER(ch_e_coli)
         KLEBORATE(ch_klebsiella)
 
-        //CHEWBBACA(ch_chewbacca)
+        CHEWBBACA(ch_chewbacca)
 
 }
