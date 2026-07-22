@@ -30,13 +30,45 @@ def parse_mob(result_dir:str, sample_name:str):
     date  = datetime.fromtimestamp(os.path.getctime(path))
     json_parse["meta_data"]["date"] = str(date).split()[0]
 
+    columns = [
+        "sample_id",
+        "molecule_type",
+        "primary_cluster_id",
+        "secondary_cluster_id",
+        "contig_id",
+        "size",
+        "gc",
+        "md5",
+        "circularity_status",
+        "rep_type",
+        "rep_type_accession",
+        "relaxase_type",
+        "relaxase_type_accession",
+        "mpf_type",
+        "mpf_type_accession",
+        "orit_type",
+        "orit_accession",
+        "predicted_mobility",
+        "mash_nearest_neighbor",
+        "mash_neighbor_distance",
+        "mash_neighbor_identification",
+        "repetitive_dna_id",
+        "repetitive_dna_type",
+        "filtering_reason"
+    ]
 
-    df = pl.read_csv(result_dir,
-                     separator="\t",
-                     new_columns=["sample_id", "molecule_type", "primary_cluster_id", "secondary_cluster_id", "contig_id",
-                                  "size", "gc", "md5", "mge_id", "mge_acs", "mge_type", "mge_subtype", "mge_length",
-                                  "mge_start", "mge_end", "contig_start", "contig_end", "length", "sstrand", "qcovhsp",
-                                  "pident", "evalue", "bitscore"])
+    schema = {col: pl.String for col in columns}
+
+    try:
+        df = pl.read_csv(
+            result_dir,
+            separator="\t",
+            new_columns=columns,
+            schema=schema
+        )
+    except pl.exceptions.NoDataError:
+        df = pl.DataFrame(schema=schema)
+
 
 
     json_parse["data"] = df.to_dict(as_series=False)

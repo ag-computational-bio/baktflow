@@ -14,12 +14,12 @@ sys.path.insert(0, str(BASE_DIR))
 from baktflow import __version__
 
 
-def parse_silva16s(result_dir, sample_name):
+def parse_mob(result_dir:str, sample_name:str):
 
     json_parse = {
         "meta_data": {
             "version": __version__,
-            "module": "silva16s",
+            "module": "diamond",
             "date": None,
             "sample": sample_name
         },
@@ -30,24 +30,31 @@ def parse_silva16s(result_dir, sample_name):
     date  = datetime.fromtimestamp(os.path.getctime(path))
     json_parse["meta_data"]["date"] = str(date).split()[0]
 
-    columns = ["qseqid", "sseqid", "length", "nident", "bitscore", "stitle"]
+    columns = ["sample_id", "molecule_type", "primary_cluster_id", "secondary_cluster_id", "contig_id",
+               "size", "gc", "md5", "mge_id", "mge_acs", "mge_type", "mge_subtype", "mge_length",
+               "mge_start", "mge_end", "contig_start", "contig_end", "length", "sstrand", "qcovhsp",
+               "pident", "evalue", "bitscore"]
 
     try:
-        df = pl.read_csv(result_dir, separator="\t")
-        df = df[:, :6]
-        df.columns = columns
+        df = pl.read_csv(
+            result_dir,
+            separator="\t",
+            new_columns=columns
+        )
     except pl.exceptions.NoDataError:
         df = pl.DataFrame(schema=columns)
 
 
+
     json_parse["data"] = df.to_dict(as_series=False)
+
 
     with gzip.open(f"{sample_name}.json.gz", "wt", encoding="utf-8") as f:
         json.dump(json_parse, f, ensure_ascii=False, separators=(",", ":"), indent=4)
-    
+
 
 
 if __name__ == "__main__":
     result_dir = Path(sys.argv[1])
     sample_name = sys.argv[2]
-    parse_silva16s(result_dir, sample_name)
+    parse_mob(result_dir, sample_name)
