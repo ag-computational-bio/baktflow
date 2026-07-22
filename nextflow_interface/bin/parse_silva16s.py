@@ -15,7 +15,6 @@ from baktflow import __version__
 
 
 def parse_silva16s(result_dir, sample_name):
-
     json_parse = {
         "meta_data": {
             "version": __version__,
@@ -27,7 +26,7 @@ def parse_silva16s(result_dir, sample_name):
     }
 
     path = Path(result_dir)
-    date  = datetime.fromtimestamp(os.path.getctime(path))
+    date = datetime.fromtimestamp(os.path.getctime(path))
     json_parse["meta_data"]["date"] = str(date).split()[0]
 
     columns = ["qseqid", "sseqid", "length", "nident", "bitscore", "stitle"]
@@ -39,12 +38,10 @@ def parse_silva16s(result_dir, sample_name):
     except pl.exceptions.NoDataError:
         df = pl.DataFrame(schema=columns)
 
-
     json_parse["data"] = df.to_dict(as_series=False)
 
     with gzip.open(f"{sample_name}.json.gz", "wt", encoding="utf-8") as f:
         json.dump(json_parse, f, ensure_ascii=False, separators=(",", ":"), indent=4)
-    
 
 
 if __name__ == "__main__":

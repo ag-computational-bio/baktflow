@@ -13,8 +13,8 @@ sys.path.insert(0, str(BASE_DIR))
 
 from baktflow import __version__
 
-def parse_gecco(genes:str, features:str, cluster:str, sample_name:str):
 
+def parse_gecco(genes: str, features: str, cluster: str, sample_name: str):
     json_parse = {
         "meta_data": {
             "version": __version__,
@@ -25,11 +25,9 @@ def parse_gecco(genes:str, features:str, cluster:str, sample_name:str):
         "data": {}
     }
 
-    # Datum nur setzen, wenn genes existiert
     if genes is not None and Path(genes).exists():
         date = datetime.fromtimestamp(os.path.getctime(Path(genes)))
         json_parse["meta_data"]["date"] = str(date).split()[0]
-
 
     columns_genes = [
         "sequence_id", "protein_id", "start", "end",
@@ -52,14 +50,10 @@ def parse_gecco(genes:str, features:str, cluster:str, sample_name:str):
         "proteins", "domains"
     ]
 
-
-    # Immer initialisieren
     df_genes = pl.DataFrame(schema=columns_genes)
     df_features = pl.DataFrame(schema=columns_features)
     df_cluster = pl.DataFrame(schema=columns_cluster)
 
-
-    # Überschreiben wenn Dateien vorhanden
     if genes is not None:
         try:
             df_genes = pl.read_csv(
@@ -69,7 +63,6 @@ def parse_gecco(genes:str, features:str, cluster:str, sample_name:str):
             )
         except pl.exceptions.NoDataError:
             pass
-
 
     if features is not None:
         try:
@@ -81,7 +74,6 @@ def parse_gecco(genes:str, features:str, cluster:str, sample_name:str):
         except pl.exceptions.NoDataError:
             pass
 
-
     if cluster is not None:
         try:
             df_cluster = pl.read_csv(
@@ -91,7 +83,6 @@ def parse_gecco(genes:str, features:str, cluster:str, sample_name:str):
             )
         except pl.exceptions.NoDataError:
             pass
-
 
     json_parse["data"].update({
         "genes": df_genes.to_dict(as_series=False),

@@ -13,6 +13,7 @@ sys.path.insert(0, str(BASE_DIR))
 
 from baktflow import __version__
 
+
 def read_tsv_safe(path):
     try:
         df = pl.read_csv(path, separator="\t")
@@ -22,11 +23,11 @@ def read_tsv_safe(path):
     return df
 
 
-def parse_chewbbaca(cds_coordinates:str, loci_summary_stats:str, contigs_results:str, alleles_results:str, paralogous:str, sample_name:str):
-
+def parse_chewbbaca(cds_coordinates: str, loci_summary_stats: str, contigs_results: str, alleles_results: str,
+                    paralogous: str, sample_name: str):
     json_parse = {
         "meta_data": {
-            "version":__version__,
+            "version": __version__,
             "module": "chewbbaca",
             "date": None,
             "sample": sample_name
@@ -34,7 +35,7 @@ def parse_chewbbaca(cds_coordinates:str, loci_summary_stats:str, contigs_results
         "data": {}
     }
     path_genes = Path(cds_coordinates)
-    date  = datetime.fromtimestamp(os.path.getctime(path_genes))
+    date = datetime.fromtimestamp(os.path.getctime(path_genes))
     json_parse["meta_data"]["date"] = str(date).split()[0]
 
     df_cds_coordinates = read_tsv_safe(cds_coordinates)

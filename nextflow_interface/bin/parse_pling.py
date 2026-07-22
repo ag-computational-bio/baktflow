@@ -14,8 +14,7 @@ sys.path.insert(0, str(BASE_DIR))
 from baktflow import __version__
 
 
-def parse_pling(result_dir:str, sample_name:str):
-
+def parse_pling(result_dir: str, sample_name: str):
     json_parse = {
         "meta_data": {
             "version": __version__,
@@ -27,7 +26,7 @@ def parse_pling(result_dir:str, sample_name:str):
     }
 
     path = Path(result_dir)
-    date  = datetime.fromtimestamp(os.path.getctime(path))
+    date = datetime.fromtimestamp(os.path.getctime(path))
     json_parse["meta_data"]["date"] = str(date).split()[0]
 
     columns = ["plasmid_1", "plasmid_2", "dcj_distance"]
@@ -41,13 +40,10 @@ def parse_pling(result_dir:str, sample_name:str):
     except pl.exceptions.NoDataError:
         df = pl.DataFrame(schema=columns)
 
-
-
     json_parse["data"] = df.to_dict(as_series=False)
 
     with gzip.open(f"results/{sample_name}.json.gz", "wt", encoding="utf-8") as f:
         json.dump(json_parse, f, ensure_ascii=False, separators=(",", ":"), indent=4)
-
 
 
 if __name__ == "__main__":

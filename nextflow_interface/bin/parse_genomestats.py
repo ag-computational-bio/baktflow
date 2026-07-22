@@ -14,8 +14,7 @@ sys.path.insert(0, str(BASE_DIR))
 from baktflow import __version__
 
 
-def parse_genomestats(result_dir:str, sample_name:str, sample_type:str, result_hybrid=None):
-
+def parse_genomestats(result_dir: str, sample_name: str, sample_type: str, result_hybrid=None):
     json_parse = {
         "meta_data": {
             "version": __version__,
@@ -27,11 +26,10 @@ def parse_genomestats(result_dir:str, sample_name:str, sample_type:str, result_h
     }
 
     path = Path(result_dir)
-    date  = datetime.fromtimestamp(os.path.getctime(path))
+    date = datetime.fromtimestamp(os.path.getctime(path))
     json_parse["meta_data"]["date"] = str(date).split()[0]
 
     columns = ["file", "n_reads", "bp", "avg_length", "n50", "n75", "n90", "aun", "min", "max"]
-
 
     if sample_type in ("long", "short"):
 

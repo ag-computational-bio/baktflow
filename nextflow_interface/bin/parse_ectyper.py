@@ -30,13 +30,13 @@ def parse_ectyper(result_dir:str, sample_name:str):
     json_parse["meta_data"]["date"] = str(date).split()[0]
 
     columns = ["name", "species", "species_mash_ratio", "species_mash_distance", "species_mash_top_if",
-                              "o-type", "h-type", "serotype", "qc", "evidence", "gene_scores", "allele_keys", "gene_identities",
-                              "gene_coverages", "gene_contig_names", "gene_ranges", "gene_lengths", "database_version",
-                              "warnings", "pathotype", "pathotype_counts", "pathotype_genes", "pathotype_gene_names",
-                              "pathotype_accessions", "pathotype_allele_ids", "pathotype_identities", "pathotype_coverages",
-                              "pathotype_gene_length_ratios", "pathotype_rule_ids", "pathotype_gene_counts", "patho_database_version",
-                              "stx_subtypes", "stx_accessions", "stx_allele_iss", "stx_allele_names", "stx_identities",
-                              "stx_coverages", "stx_lengths", "stx_contig_sames", "stx_coordinates"]
+               "o-type", "h-type", "serotype", "qc", "evidence", "gene_scores", "allele_keys", "gene_identities",
+               "gene_coverages", "gene_contig_names", "gene_ranges", "gene_lengths", "database_version",
+               "warnings", "pathotype", "pathotype_counts", "pathotype_genes", "pathotype_gene_names",
+               "pathotype_accessions", "pathotype_allele_ids", "pathotype_identities", "pathotype_coverages",
+               "pathotype_gene_length_ratios", "pathotype_rule_ids", "pathotype_gene_counts", "patho_database_version",
+               "stx_subtypes", "stx_accessions", "stx_allele_iss", "stx_allele_names", "stx_identities",
+               "stx_coverages", "stx_lengths", "stx_contig_sames", "stx_coordinates"]
 
     try:
         df = pl.read_csv(

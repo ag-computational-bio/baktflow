@@ -14,8 +14,7 @@ sys.path.insert(0, str(BASE_DIR))
 from baktflow import __version__
 
 
-def parse_macsyfinder(result_dir:str, sample_name:str, model_name:str):
-
+def parse_macsyfinder(result_dir: str, sample_name: str, model_name: str):
     json_parse = {
         "meta_data": {
             "version": __version__,
@@ -27,7 +26,7 @@ def parse_macsyfinder(result_dir:str, sample_name:str, model_name:str):
     }
 
     path = Path(result_dir)
-    date  = datetime.fromtimestamp(os.path.getctime(path))
+    date = datetime.fromtimestamp(os.path.getctime(path))
     json_parse["meta_data"]["date"] = str(date).split()[0]
 
     columns = [
