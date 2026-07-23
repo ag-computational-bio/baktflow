@@ -32,13 +32,11 @@ def parse_kleborate(result_dir: str, sample_name: str):
     try:
         df = pl.read_csv(
             result_dir,
-            separator="\t",
-            new_columns=columns
+            separator="\t"
         )
+        df.columns = [col.lower() for col in df.columns]
     except pl.exceptions.NoDataError:
-        df = pl.DataFrame(schema=columns)
-
-    df.columns = [col.lower() for col in df.columns]
+        df = pl.DataFrame()
 
     json_parse["data"] = df.to_dict(as_series=False)
 

@@ -14,7 +14,7 @@ sys.path.insert(0, str(BASE_DIR))
 from baktflow import __version__
 
 
-def read_tsv_safe(path):
+def read_tsv(path):
     try:
         df = pl.read_csv(path, separator="\t")
         df.columns = [col.lower() for col in df.columns]
@@ -38,11 +38,11 @@ def parse_chewbbaca(cds_coordinates: str, loci_summary_stats: str, contigs_resul
     date = datetime.fromtimestamp(os.path.getctime(path_genes))
     json_parse["meta_data"]["date"] = str(date).split()[0]
 
-    df_cds_coordinates = read_tsv_safe(cds_coordinates)
-    df_loci = read_tsv_safe(loci_summary_stats)
-    df_contig = read_tsv_safe(contigs_results)
-    df_alleles = read_tsv_safe(alleles_results)
-    df_paralogous = read_tsv_safe(paralogous)
+    df_cds_coordinates = read_tsv(cds_coordinates)
+    df_loci = read_tsv(loci_summary_stats)
+    df_contig = read_tsv(contigs_results)
+    df_alleles = read_tsv(alleles_results)
+    df_paralogous = read_tsv(paralogous)
 
     json_parse["data"].update({
         "cds_coordinates": df_cds_coordinates.to_dict(as_series=False),
