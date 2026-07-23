@@ -3,4 +3,4 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - ska=1.0
+  - ska2=0.5.1

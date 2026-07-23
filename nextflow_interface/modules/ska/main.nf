@@ -14,7 +14,7 @@ process SKA{
 
     script:
     """
-    ska fasta -o ${meta.sample_id} ${assembly}
+    ska build -o ${meta.sample_id} ${assembly}
     """
 
     stub:

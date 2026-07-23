@@ -8,8 +8,8 @@ process UNICYCLER {
     conda "${projectDir}/modules/unicycler/environment.yaml"
     errorStrategy { (task.attempt <= 3) ? 'retry' : 'ignore' }
     scratch true
-    memory { workflow.stubRun ? 64.MB : 16.GB * task.attempt }
-    cpus { workflow.stubRun ? 1 : (params.threads >= 16 ? 16 : params.threads) }
+    memory { workflow.stubRun ? 64.MB : 8.GB * task.attempt }
+    cpus { workflow.stubRun ? 1 : (params.threads >= 8 ? 8 : params.threads) }
     
     input:
         tuple val(meta), path(r1), path(r2), path(se), path(ont)
@@ -18,6 +18,7 @@ process UNICYCLER {
         tuple val(meta), path("${meta.sample_id}_assembly.fasta"), emit: scaffolds
         tuple val(meta), path("${meta.sample_id}_assembly.gfa"), emit: gfa
         tuple val(meta), path("${meta.sample_id}_unicycler.log"), emit: log
+        path("${meta.sample_id}.json.gz"), emit: json
 
     // TODO --existing_long_read_assembly for hybrid?
     script:
@@ -32,6 +33,8 @@ process UNICYCLER {
         mv ./assembly.fasta ${meta.sample_id}_assembly.fasta
         mv ./assembly.gfa ${meta.sample_id}_assembly.gfa
         mv ./unicycler.log ${meta.sample_id}_unicycler.log
+
+        parse_assembly.py ${meta.sample_id}_assembly.fasta ${meta.sample_id} unicycler
 
         #python ${params.REPORT_SCRIPT} \\
         #--fasta ${meta.sample_id}_assembly.fasta \\
@@ -50,6 +53,8 @@ process UNICYCLER {
         mv ./assembly.gfa ${meta.sample_id}_assembly.gfa
         mv ./unicycler.log ${meta.sample_id}_unicycler.log
 
+        parse_assembly.py ${meta.sample_id}_assembly.fasta ${meta.sample_id} unicycler
+
         #python ${params.REPORT_SCRIPT} \\
         #--fasta ${meta.sample_id}_assembly.fasta \\
         #--log ${meta.sample_id}_unicycler.log \\
@@ -63,5 +68,6 @@ process UNICYCLER {
         touch ${meta.sample_id}_assembly.fasta
         touch ${meta.sample_id}_assembly.gfa
         touch ${meta.sample_id}_unicycler.log
+        touch ${meta.sample_id}.json.gz
         """
 }

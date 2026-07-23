@@ -15,6 +15,7 @@ process FLYE {
         tuple val(meta), path("${meta.sample_id}_assembly.fasta"), emit: fasta
         tuple val(meta), path("${meta.sample_id}_assembly_graph.gfa"), emit: gfa
         tuple val(meta), path("${meta.sample_id}_assembly_info.txt"), emit: log
+        path("${meta.sample_id}.json.gz"), emit: json
 
     script:
     """
@@ -29,6 +30,8 @@ process FLYE {
     mv assembly.fasta ${meta.sample_id}_assembly.fasta
     mv assembly_graph.gfa ${meta.sample_id}_assembly_graph.gfa
     mv assembly_info.txt ${meta.sample_id}_assembly_info.txt
+
+    parse_assembly.py ${meta.sample_id}_assembly.fasta ${meta.sample_id} flye
     """
 
     stub:
@@ -36,5 +39,6 @@ process FLYE {
     touch ${meta.sample_id}_assembly.fasta
     touch ${meta.sample_id}_assembly_graph.gfa
     touch ${meta.sample_id}_assembly_info.txt
+    touch ${meta.sample_id}.json.gz
     """
 }

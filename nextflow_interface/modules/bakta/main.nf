@@ -8,6 +8,7 @@ process BAKTA {
     conda "${projectDir}/modules/bakta/environment.yaml"
     memory { workflow.stubRun ? 64.MB : 8.GB * task.attempt }
     cpus { workflow.stubRun ? 1 : (params.threads >= 8 ? 8 : params.threads) }
+    errorStrategy { (task.attempt <= 3) ? 'retry' : 'ignore' }
 
     input:
         tuple val(meta), path(assembly)
@@ -23,6 +24,7 @@ process BAKTA {
         tuple val(meta), path("${meta.sample_id}.hypotheticals.faa"), emit: hypotheticals_faa
         tuple val(meta), path("${meta.sample_id}.tsv"), emit: tsv
         tuple val(meta), path("${meta.sample_id}.txt"), emit: txt
+        tuple val(meta), path("${meta.sample_id}.json"), emit: json_output
 
     script:
     """

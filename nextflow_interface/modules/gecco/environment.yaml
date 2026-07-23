@@ -4,3 +4,4 @@ channels:
   - bioconda
 dependencies:
   - gecco==0.10.3
+  - polars<2.0

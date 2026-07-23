@@ -4,3 +4,5 @@ channels:
   - bioconda
 dependencies:
   - flye=2.9.6
+  - polars<2.0
+  - biopython==1.87

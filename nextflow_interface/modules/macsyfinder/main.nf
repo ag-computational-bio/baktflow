@@ -22,16 +22,19 @@ process CASFINDER{
         tuple val(meta),  path("CasFinder/all_best_solutions.tsv"), emit: all_best_solutions, optional: true
         tuple val(meta),  path("CasFinder/macsyfinder.log"), emit: log
         tuple val(meta),  path("CasFinder/hmmer_results/"), emit: hmmer, optional: true
+        path("CasFinder/${meta.sample_id}.json.gz"), emit:json
 
     script:
     """
     macsyfinder --db-type ordered_replicon --sequence-db ${prot} --models-dir ${params.databaseDir}/macsyfinder --models CASFinder all --mute -o CasFinder -w ${task.cpus}
+    parse_macsyfinder.py CasFinder/best_solution.tsv ${meta.sample_id} CasFinder
     """
 
     stub:
     """
     mkdir CasFinder
     touch CasFinder/macsyfinder.log
+    touch CasFinder/${meta.sample_id}.json.gz
     """
 }
 
@@ -57,16 +60,19 @@ process CONJSCAN{
         tuple val(meta),  path("CONJScan/all_best_solutions.tsv"), emit: all_best_solutions, optional: true
         tuple val(meta),  path("CONJScan/macsyfinder.log"), emit: log
         tuple val(meta),  path("CONJScan/hmmer_results/"), emit: hmmer, optional: true
+        path("CONJScan/${meta.sample_id}.json.gz"), emit: json
 
     script:
     """
     macsyfinder --db-type ordered_replicon --sequence-db ${prot} --models-dir ${params.databaseDir}/macsyfinder --models CONJScan all --mute -o CONJScan -w ${task.cpus}
+    parse_macsyfinder.py CONJScan/best_solution.tsv ${meta.sample_id} CONJScan
     """
 
     stub:
     """
     mkdir CONJScan
     touch CONJScan/macsyfinder.log
+    touch CONJScan/${meta.sample_id}.json.gz
     """
 }
 
@@ -92,15 +98,18 @@ process TXSSCAN{
         tuple val(meta),  path("TXSScan/all_best_solutions.tsv"), emit: all_best_solutions, optional: true
         tuple val(meta),  path("TXSScan/macsyfinder.log"), emit: log
         tuple val(meta),  path("TXSScan/hmmer_results/"), emit: hmmer, optional: true
+        path("TXSScan/${meta.sample_id}.json.gz"), emit: json
 
     script:
     """
     macsyfinder --db-type ordered_replicon --sequence-db ${prot} --models-dir ${params.databaseDir}/macsyfinder --models TXSScan all --mute -o TXSScan -w ${task.cpus}
+    parse_macsyfinder.py TXSScan/best_solution.tsv ${meta.sample_id} TXSScan
     """
 
     stub:
     """
     mkdir TXSScan
     touch TXSScan/macsyfinder.log
+    touch TXSScan/${meta.sample_id}.json.gz
     """
 }
