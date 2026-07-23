@@ -4,4 +4,4 @@ channels:
   - bioconda
 dependencies:
   - dnaapler=1.4.0
-  - polars<2
+  - polars<2.0

@@ -4,4 +4,4 @@ channels:
   - bioconda
 dependencies:
   - diamond=2.2.1
-  - polars<2
+  - polars<2.0
