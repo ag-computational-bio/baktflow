@@ -59,7 +59,7 @@ def assembly_stats(fasta_file:str):
 
 def calculate_n50(lengths:list):
     """
-    This method calculates the n50 value vor an assembly based on the length of all contigs
+    This method calculates the n50 value for an assembly based on the length of all contigs
 
     :param lengths: List of all contig lengths
     :return: N50 value
@@ -80,7 +80,7 @@ def calculate_n50(lengths:list):
 
 def calculate_n90(lengths:list):
     """
-       This method calculates the n90 value vor an assembly based on the length of all contigs
+       This method calculates the n90 value for an assembly based on the length of all contigs
 
        :param lengths: List of all contig lengths
        :return: N90 value
