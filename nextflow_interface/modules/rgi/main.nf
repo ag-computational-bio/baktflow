@@ -16,7 +16,7 @@ process RGI{
 
     script:
     """
-    rgi main -i ${assembly} --output_file ${meta.sample_id}.card --input_type contig --data wgs --orf_finder PYRODIGAL --alignment_tool DIAMOND --num_threads ${task.cpus}
+    rgi main -i ${assembly} --output_file ${meta.sample_id}.card --input_type contig --data wgs --orf_finder PYRODIGAL --alignment_tool DIAMOND --threads ${task.cpus}
     """
 
     stub:
