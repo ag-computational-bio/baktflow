@@ -9,7 +9,9 @@ from pathlib import Path
 
 import polars as pl
 
-__version__ = "0.1.0"
+from utils import get_version
+
+__version__ = get_version()
 
 
 def parse_gecco(genes: str | None, features: str | None, cluster: str | None, sample_name: str):

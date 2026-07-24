@@ -8,8 +8,9 @@ from datetime import datetime
 from pathlib import Path
 
 import polars as pl
+from utils import get_version
 
-__version__ = "0.1.0"
+__version__ = get_version()
 
 
 def parse_gtdbtk(result_dir: str | Path, sample_name: str):

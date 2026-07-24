@@ -7,8 +7,10 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-__version__ = "0.1.0"
 from Bio import SeqIO
+from utils import get_version
+
+__version__ = get_version()
 
 
 def assembly_stats(fasta_file: str | Path):
