@@ -64,5 +64,5 @@ if __name__ == "__main__":
     contigs_results = Path(sys.argv[3])
     alleles_results = Path(sys.argv[4])
     paralogous = Path(sys.argv[5])
-    sample_name = sys.argv[6]
+    sample_name = Path(sys.argv[6])
     parse_chewbbaca(cds_coordinates, loci_summary_stats, contigs_results, alleles_results, paralogous, sample_name)

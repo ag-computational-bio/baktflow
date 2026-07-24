@@ -20,6 +20,7 @@ process CHEWBBACA {
         tuple val(meta), path("paralogous_counts.tsv"), emit: paralogous_counts
         tuple val(meta), path("paralogous_loci.tsv"), emit: paralogous_loci
         tuple val(meta), path("logging_info.txt"), emit: logging_info
+        path("${meta.sample_id}.json.gz"), emit: json
 
     script:
     """
@@ -32,6 +33,7 @@ process CHEWBBACA {
 
     stub:
     """
+        touch ${meta.sample_id}.json.gz
         touch cds_coordinates.tsv
         touch invalid_cds.txt
         touch loci_summary_stats.tsv
