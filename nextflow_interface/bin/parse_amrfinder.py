@@ -1,45 +1,54 @@
 #!/usr/bin/env python3
 
-import os
-import json
-import polars as pl
-from pathlib import Path
-from datetime import datetime
 import gzip
+import json
+import os
 import sys
+from datetime import datetime
+from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(BASE_DIR))
+import polars as pl
 
-from baktflow import __version__
+__version__ = "0.1.0"
 
 
-def parse_armfinder(result_dir: str, sample_name: str):
+def parse_armfinder(result_dir: str | Path, sample_name: str):
     json_parse = {
-        "meta_data": {
-            "version": __version__,
-            "module": "amrfinderplus",
-            "date": None,
-            "sample": sample_name
-        },
-        "data": None
+        "meta_data": {"version": __version__, "module": "amrfinderplus", "date": None, "sample": sample_name},
+        "data": None,
     }
 
     path = Path(result_dir)
     date = datetime.fromtimestamp(os.path.getctime(path))
     json_parse["meta_data"]["date"] = str(date).split()[0]
 
-    columns = ["name", "protein_id", "contig_id", "start", "stop", "strand", "element_symbol",
-               "element_name", "scope", "type", "subtype", "class", "subclass", "method",
-               "target_length", "coverage_of_reference", "identity_to_reference", "alignment_length",
-               "closest_reference_accession", "closest_reference_name", "hmm_accession", "hmm_description"]
+    columns = [
+        "name",
+        "protein_id",
+        "contig_id",
+        "start",
+        "stop",
+        "strand",
+        "element_symbol",
+        "element_name",
+        "scope",
+        "type",
+        "subtype",
+        "class",
+        "subclass",
+        "method",
+        "target_length",
+        "coverage_of_reference",
+        "identity_to_reference",
+        "alignment_length",
+        "closest_reference_accession",
+        "closest_reference_name",
+        "hmm_accession",
+        "hmm_description",
+    ]
 
     try:
-        df = pl.read_csv(
-            result_dir,
-            separator="\t",
-            new_columns=columns
-        )
+        df = pl.read_csv(result_dir, separator="\t", new_columns=columns)
     except pl.exceptions.NoDataError:
         df = pl.DataFrame(schema=columns)
 

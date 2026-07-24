@@ -1,28 +1,21 @@
 #!/usr/bin/env python3
 
-import os
-import json
-import polars as pl
-import sys
-from pathlib import Path
-from datetime import datetime
 import gzip
+import json
+import os
+import sys
+from datetime import datetime
+from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(BASE_DIR))
+import polars as pl
 
-from baktflow import __version__
+__version__ = "0.1.0"
 
 
-def parse_kleborate(result_dir: str, sample_name: str):
+def parse_kleborate(result_dir: str | Path, sample_name: str):
     json_parse = {
-        "meta_data": {
-            "version": __version__,
-            "module": "kleborate",
-            "date": None,
-            "sample": sample_name
-        },
-        "data": None
+        "meta_data": {"version": __version__, "module": "kleborate", "date": None, "sample": sample_name},
+        "data": None,
     }
 
     path = Path(result_dir)
@@ -30,10 +23,7 @@ def parse_kleborate(result_dir: str, sample_name: str):
     json_parse["meta_data"]["date"] = str(date).split()[0]
 
     try:
-        df = pl.read_csv(
-            result_dir,
-            separator="\t"
-        )
+        df = pl.read_csv(result_dir, separator="\t")
         df.columns = [col.lower() for col in df.columns]
     except pl.exceptions.NoDataError:
         df = pl.DataFrame()

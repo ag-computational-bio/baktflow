@@ -1,28 +1,23 @@
 #!/usr/bin/env python3
 
-import os
-import json
-import sys
-import polars as pl
-from pathlib import Path
-from datetime import datetime
 import gzip
+import json
+import os
+import sys
+from datetime import datetime
+from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(BASE_DIR))
+import polars as pl
 
-from baktflow import __version__
+__version__ = "0.1.0"
 
 
-def parse_genomestats(result_dir: str, sample_name: str, sample_type: str, result_hybrid=None):
+def parse_genomestats(
+    result_dir: str | Path, sample_name: str, sample_type: str, result_hybrid: str | Path | None = None
+):
     json_parse = {
-        "meta_data": {
-            "version": __version__,
-            "module": "genomestats",
-            "date": None,
-            "sample": sample_name
-        },
-        "data": {}
+        "meta_data": {"version": __version__, "module": "genomestats", "date": None, "sample": sample_name},
+        "data": {},
     }
 
     path = Path(result_dir)
@@ -32,37 +27,21 @@ def parse_genomestats(result_dir: str, sample_name: str, sample_type: str, resul
     columns = ["file", "n_reads", "bp", "avg_length", "n50", "n75", "n90", "aun", "min", "max"]
 
     if sample_type in ("long", "short"):
-
         try:
-            df_long = pl.read_csv(
-                result_dir,
-                separator="\t",
-                has_header=False,
-                new_columns=columns
-            )
+            df_long = pl.read_csv(result_dir, separator="\t", has_header=False, new_columns=columns)
         except pl.exceptions.NoDataError:
             df_long = pl.DataFrame(schema=columns)
-
 
         json_parse["data"] = df_long.to_dict(as_series=False)
 
     else:
         try:
-            df_long = pl.read_csv(
-                result_dir,
-                separator="\t",
-                has_header=False,
-                new_columns=columns
-            )
-            df_short = pl.read_csv(
-                result_hybrid,
-                separator="\t",
-                has_header=False,
-                new_columns=columns
-            )
+            df_long = pl.read_csv(result_dir, separator="\t", has_header=False, new_columns=columns)
+            if result_hybrid:
+                df_short = pl.read_csv(result_hybrid, separator="\t", has_header=False, new_columns=columns)
 
-            print(df_long)
-            print(df_short)
+            # print(df_long)
+            # print(df_short)
 
         except pl.exceptions.NoDataError:
             df_long = pl.DataFrame(schema=columns)

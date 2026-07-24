@@ -1,28 +1,21 @@
 #!/usr/bin/env python3
 
-import os
-import json
-import sys
-import polars as pl
-from pathlib import Path
-from datetime import datetime
 import gzip
+import json
+import os
+import sys
+from datetime import datetime
+from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(BASE_DIR))
+import polars as pl
 
-from baktflow import __version__
+__version__ = '0.1.0'
 
 
-def parse_macsyfinder(result_dir: str, sample_name: str, model_name: str):
+def parse_macsyfinder(result_dir: str | Path, sample_name: str, model_name: str):
     json_parse = {
-        "meta_data": {
-            "version": __version__,
-            "module": model_name,
-            "date": None,
-            "sample": sample_name
-        },
-        "data": None
+        "meta_data": {"version": __version__, "module": model_name, "date": None, "sample": sample_name},
+        "data": None,
     }
 
     path = Path(result_dir)
@@ -30,11 +23,28 @@ def parse_macsyfinder(result_dir: str, sample_name: str, model_name: str):
     json_parse["meta_data"]["date"] = str(date).split()[0]
 
     columns = [
-        "replicon", "hit_id", "gene_name", "hit_pos", "model_fqn", "sys_id",
-        "sys_loci", "locus_num", "sys_wholeness", "sys_score", "sys_occ",
-        "hit_gene_ref", "hit_status", "hit_seq_len", "hit_i_eval", "hit_score",
-        "hit_profile_cov", "hit_seq_cov", "hit_begin_match", "hit_end_match",
-        "counterpart", "used_in"
+        "replicon",
+        "hit_id",
+        "gene_name",
+        "hit_pos",
+        "model_fqn",
+        "sys_id",
+        "sys_loci",
+        "locus_num",
+        "sys_wholeness",
+        "sys_score",
+        "sys_occ",
+        "hit_gene_ref",
+        "hit_status",
+        "hit_seq_len",
+        "hit_i_eval",
+        "hit_score",
+        "hit_profile_cov",
+        "hit_seq_cov",
+        "hit_begin_match",
+        "hit_end_match",
+        "counterpart",
+        "used_in",
     ]
 
     with open(result_dir, "r") as f:
@@ -43,12 +53,7 @@ def parse_macsyfinder(result_dir: str, sample_name: str, model_name: str):
     if not content.strip() or "No System found" in content:
         df = pl.DataFrame(schema={col: pl.Utf8 for col in columns})
     else:
-        df = pl.read_csv(
-            result_dir,
-            separator="\t",
-            skip_rows=4,
-            new_columns=columns
-        )
+        df = pl.read_csv(result_dir, separator="\t", skip_rows=4, new_columns=columns)
 
     json_parse["data"] = df.to_dict(as_series=False)
 

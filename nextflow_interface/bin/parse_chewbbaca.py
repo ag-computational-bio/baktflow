@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 
-import os
-import json
-import polars as pl
-from pathlib import Path
-from datetime import datetime
 import gzip
+import json
+import os
 import sys
+from datetime import datetime
+from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(BASE_DIR))
+import polars as pl
 
-from baktflow import __version__
+__version__ = "0.1.0"
 
 
 def read_tsv(path):
@@ -23,16 +21,17 @@ def read_tsv(path):
     return df
 
 
-def parse_chewbbaca(cds_coordinates: str, loci_summary_stats: str, contigs_results: str, alleles_results: str,
-                    paralogous: str, sample_name: str):
+def parse_chewbbaca(
+    cds_coordinates: str | Path,
+    loci_summary_stats: str | Path,
+    contigs_results: str | Path,
+    alleles_results: str | Path,
+    paralogous: str | Path,
+    sample_name: str,
+):
     json_parse = {
-        "meta_data": {
-            "version": __version__,
-            "module": "chewbbaca",
-            "date": None,
-            "sample": sample_name
-        },
-        "data": {}
+        "meta_data": {"version": __version__, "module": "chewbbaca", "date": None, "sample": sample_name},
+        "data": {},
     }
     path_genes = Path(cds_coordinates)
     date = datetime.fromtimestamp(os.path.getctime(path_genes))
@@ -44,13 +43,15 @@ def parse_chewbbaca(cds_coordinates: str, loci_summary_stats: str, contigs_resul
     df_alleles = read_tsv(alleles_results)
     df_paralogous = read_tsv(paralogous)
 
-    json_parse["data"].update({
-        "cds_coordinates": df_cds_coordinates.to_dict(as_series=False),
-        "loci": df_loci.to_dict(as_series=False),
-        "contig": df_contig.to_dict(as_series=False),
-        "alleles": df_alleles.to_dict(as_series=False),
-        "paralogous": df_paralogous.to_dict(as_series=False)
-    })
+    json_parse["data"].update(
+        {
+            "cds_coordinates": df_cds_coordinates.to_dict(as_series=False),
+            "loci": df_loci.to_dict(as_series=False),
+            "contig": df_contig.to_dict(as_series=False),
+            "alleles": df_alleles.to_dict(as_series=False),
+            "paralogous": df_paralogous.to_dict(as_series=False),
+        }
+    )
 
     with gzip.open(f"{sample_name}.json.gz", "wt", encoding="utf-8") as f:
         json.dump(json_parse, f, ensure_ascii=False, separators=(",", ":"), indent=4)

@@ -1,47 +1,52 @@
 #!/usr/bin/env python3
 
-import os
-import json
-import sys
-import polars as pl
-from pathlib import Path
-from datetime import datetime
 import gzip
+import json
+import os
+import sys
+from datetime import datetime
+from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(BASE_DIR))
+import polars as pl
 
-from baktflow import __version__
+__version__ = "0.1.0"
 
 
-def parse_gtdbtk(result_dir: str, sample_name: str):
+def parse_gtdbtk(result_dir: str | Path, sample_name: str):
     json_parse = {
-        "meta_data": {
-            "version": __version__,
-            "module": "gtdbtk",
-            "date": None,
-            "sample": sample_name
-        },
-        "data": None
+        "meta_data": {"version": __version__, "module": "gtdbtk", "date": None, "sample": sample_name},
+        "data": None,
     }
 
     path = Path(result_dir)
     date = datetime.fromtimestamp(os.path.getctime(path))
     json_parse["meta_data"]["date"] = str(date).split()[0]
 
-    columns = ["user_genome", "classification", "closest_genome_reference", "closest_genome_reference_radius",
-               "closest_genome_taxonomy", "closest_genome_ani", "closest_genome_af",
-               "closest_placement_reference", "closest_placement_radius", "closest_placement_taxonomy",
-               "closest_placement_ani",
-               "closest_placement_af", "pplacer_taxonomy", "classification_method", "note",
-               "other_related_references", "msa_percent", "translation_table", "red_value", "warnings"]
+    columns = [
+        "user_genome",
+        "classification",
+        "closest_genome_reference",
+        "closest_genome_reference_radius",
+        "closest_genome_taxonomy",
+        "closest_genome_ani",
+        "closest_genome_af",
+        "closest_placement_reference",
+        "closest_placement_radius",
+        "closest_placement_taxonomy",
+        "closest_placement_ani",
+        "closest_placement_af",
+        "pplacer_taxonomy",
+        "classification_method",
+        "note",
+        "other_related_references",
+        "msa_percent",
+        "translation_table",
+        "red_value",
+        "warnings",
+    ]
 
     try:
-        df = pl.read_csv(
-            result_dir,
-            separator="\t",
-            new_columns=columns
-        )
+        df = pl.read_csv(result_dir, separator="\t", new_columns=columns)
     except pl.exceptions.NoDataError:
         df = pl.DataFrame(schema=columns)
 

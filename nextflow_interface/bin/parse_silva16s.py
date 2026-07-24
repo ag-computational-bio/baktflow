@@ -1,28 +1,21 @@
 #!/usr/bin/env python3
 
-import os
-import json
-import sys
-import polars as pl
-from pathlib import Path
-from datetime import datetime
 import gzip
+import json
+import os
+import sys
+from datetime import datetime
+from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(BASE_DIR))
+import polars as pl
 
-from baktflow import __version__
+__version__ = "0.1.0"
 
 
-def parse_silva16s(result_dir, sample_name):
+def parse_silva16s(result_dir: Path, sample_name: str):
     json_parse = {
-        "meta_data": {
-            "version": __version__,
-            "module": "silva16s",
-            "date": None,
-            "sample": sample_name
-        },
-        "data": None
+        "meta_data": {"version": __version__, "module": "silva16s", "date": None, "sample": sample_name},
+        "data": None,
     }
 
     path = Path(result_dir)

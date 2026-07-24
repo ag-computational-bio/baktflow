@@ -1,28 +1,21 @@
 #!/usr/bin/env python3
 
-import os
-import json
-import sys
-import polars as pl
-from pathlib import Path
-from datetime import datetime
 import gzip
+import json
+import os
+import sys
+from datetime import datetime
+from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(BASE_DIR))
+import polars as pl
 
-from baktflow import __version__
+__version__ = "0.1.0"
 
 
-def parse_mob(result_dir: str, sample_name: str):
+def parse_mob(result_dir: str | Path, sample_name: str):
     json_parse = {
-        "meta_data": {
-            "version": __version__,
-            "module": "diamond",
-            "date": None,
-            "sample": sample_name
-        },
-        "data": None
+        "meta_data": {"version": __version__, "module": "diamond", "date": None, "sample": sample_name},
+        "data": None,
     }
 
     path = Path(result_dir)
@@ -53,18 +46,13 @@ def parse_mob(result_dir: str, sample_name: str):
         "mash_neighbor_identification",
         "repetitive_dna_id",
         "repetitive_dna_type",
-        "filtering_reason"
+        "filtering_reason",
     ]
 
     schema = {col: pl.String for col in columns}
 
     try:
-        df = pl.read_csv(
-            result_dir,
-            separator="\t",
-            new_columns=columns,
-            schema=schema
-        )
+        df = pl.read_csv(result_dir, separator="\t", new_columns=columns, schema=schema)
     except pl.exceptions.NoDataError:
         df = pl.DataFrame(schema=schema)
 
