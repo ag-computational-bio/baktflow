@@ -54,3 +54,13 @@ def parse_chewbbaca(cds_coordinates: str, loci_summary_stats: str, contigs_resul
 
     with gzip.open(f"{sample_name}.json.gz", "wt", encoding="utf-8") as f:
         json.dump(json_parse, f, ensure_ascii=False, separators=(",", ":"), indent=4)
+
+
+if __name__ == "__main__":
+    cds_coordinates = Path(sys.argv[1])
+    loci_summary_stats = Path(sys.argv[2])
+    contigs_results = Path(sys.argv[3])
+    alleles_results = Path(sys.argv[4])
+    paralogous = Path(sys.argv[5])
+    sample_name = sys.argv[6]
+    parse_chewbbaca(cds_coordinates, loci_summary_stats, contigs_results, alleles_results, paralogous, sample_name)

@@ -27,6 +27,7 @@ process CHEWBBACA {
     chewBBACA.py AlleleCall --no-inferred -i fasta_list.txt -o ./results --cpu ${task.cpus} -g ${params.databaseDir}/chewBBACA/${organism}
     mv results/* ./
     rm -r results/
+    parse_chewbbaca.py cds_coordinates.tsv loci_summary_stats.tsv results_contigsInfo.tsv results_alleles.tsv paralogous_loci.tsv ${meta.sample_id}
     """
 
     stub:

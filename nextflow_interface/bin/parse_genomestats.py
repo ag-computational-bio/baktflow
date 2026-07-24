@@ -37,10 +37,12 @@ def parse_genomestats(result_dir: str, sample_name: str, sample_type: str, resul
             df_long = pl.read_csv(
                 result_dir,
                 separator="\t",
+                has_header=False,
                 new_columns=columns
             )
         except pl.exceptions.NoDataError:
             df_long = pl.DataFrame(schema=columns)
+
 
         json_parse["data"] = df_long.to_dict(as_series=False)
 
@@ -49,13 +51,19 @@ def parse_genomestats(result_dir: str, sample_name: str, sample_type: str, resul
             df_long = pl.read_csv(
                 result_dir,
                 separator="\t",
+                has_header=False,
                 new_columns=columns
             )
             df_short = pl.read_csv(
-                result_dir,
+                result_hybrid,
                 separator="\t",
+                has_header=False,
                 new_columns=columns
             )
+
+            print(df_long)
+            print(df_short)
+
         except pl.exceptions.NoDataError:
             df_long = pl.DataFrame(schema=columns)
             df_short = pl.DataFrame(schema=columns)
