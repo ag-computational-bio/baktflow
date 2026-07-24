@@ -1,64 +1,67 @@
 #!/usr/bin/env python3
 
-import gzip
-import json
-import os
-import sys
-from datetime import datetime
-from pathlib import Path
-
 from Bio import SeqIO
-from utils import get_version
+import os
+import json
+import sys
+from pathlib import Path
+from datetime import datetime
+import gzip
 
-__version__ = get_version()
+BASE_DIR = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(BASE_DIR))
+
+from baktflow import __version__
 
 
-def assembly_stats(fasta_file: str | Path):
-    """
-    This method determines basic stats values of a given assembly fasta file
-
-    :param fasta_file: Path to where the assembly file is stored
-    :return: number of all sequences (int), dictionary with statistics for all sequences,
-    lengths of all sequences (list), gc_content (float), count_n (int)
-    """
+def assembly_stats(fasta_file: str):
 
     _, file_extension = os.path.splitext(str(fasta_file))
 
-    if file_extension == ".gz":
-        with gzip.open(fasta_file, "rt") as file:
-            sequences = list(SeqIO.parse(file, "fastq"))
-    else:
-        sequences = list(SeqIO.parse(fasta_file, "fasta"))
-
-    number_sequences = len(sequences)
+    opener = gzip.open if file_extension == ".gz" else open
+    fmt = "fastq" if file_extension == ".gz" else "fasta"
 
     stats_single_sequences = []
+    lengths = []
 
-    for rec in sequences:
-        stats_single_sequences.append(
-            {
+    count_n = 0
+    count_c = 0
+    count_g = 0
+    total_length = 0
+    number_sequences = 0
+
+    with opener(fasta_file, "rt") as handle:
+        for rec in SeqIO.parse(handle, fmt):
+            seq = str(rec.seq)
+            length = len(seq)
+
+            n = seq.count("N")
+            c = seq.count("C")
+            g = seq.count("G")
+
+            stats_single_sequences.append({
                 "id": rec.id,
-                "n": rec.seq.count("N"),
-                "gc_content": round((rec.seq.count("G") + rec.seq.count("C")) / len(rec.seq) * 100, 2),
-                "length": len(rec.seq),
-                "seq": str(rec.seq),
-            }
-        )
+                "n": n,
+                "gc_content": round((g + c) / length * 100, 2),
+                "length": length,
+                "seq": seq,
+            })
 
-    lengths = [len(rec.seq) for rec in sequences]
+            lengths.append(length)
 
-    count_n = sum(rec.seq.count("N") for rec in sequences)
-    count_c = sum(rec.seq.count("C") for rec in sequences)
-    count_g = sum(rec.seq.count("G") for rec in sequences)
+            number_sequences += 1
+            count_n += n
+            count_c += c
+            count_g += g
+            total_length += length
 
-    total_length = sum(len(rec.seq) for rec in sequences)
+    gc_content = round((count_g + count_c) / total_length * 100, 2)
 
-    gc_content = round((count_g + count_c) / float(total_length) * 100, 2)
-
-    return number_sequences, stats_single_sequences, lengths, gc_content, count_n
+    return number_sequences, stats_single_sequences, lengths, gc_content, count_n,
 
 
-def calculate_n50(lengths: list):
+
+def calculate_n50(lengths:list):
     """
     This method calculates the n50 value for an assembly based on the length of all contigs
 
@@ -78,18 +81,19 @@ def calculate_n50(lengths: list):
     return None
 
 
-def calculate_n90(lengths: list):
-    """
-    This method calculates the n90 value for an assembly based on the length of all contigs
 
-    :param lengths: List of all contig lengths
-    :return: N90 value
+def calculate_n90(lengths:list):
     """
+       This method calculates the n90 value for an assembly based on the length of all contigs
+
+       :param lengths: List of all contig lengths
+       :return: N90 value
+       """
     lengths_sorted = sorted(lengths, reverse=True)
     total = sum(lengths_sorted)
     cumulative = 0
 
-    target = total * (90 / 100)
+    target = total  * (90 / 100)
 
     for length in lengths_sorted:
         cumulative += length
@@ -99,7 +103,8 @@ def calculate_n90(lengths: list):
     return None
 
 
-def parse_assembly(result_dir: str | Path, sample_name: str, module_name: str):
+
+def parse_assembly(result_dir:str, sample_name:str, module_name:str):
     """
     This method creates a JSON file containing all important information regarding the assembly
 
@@ -118,9 +123,11 @@ def parse_assembly(result_dir: str | Path, sample_name: str, module_name: str):
     date = datetime.fromtimestamp(os.path.getctime(path))
     json_parse["meta_data"]["date"] = str(date).split()[0]
 
+
     number_sequences, stats_single_sequences, lengths, gc_content, count_n = assembly_stats(result_dir)
     n50 = calculate_n50(lengths)
     n90 = calculate_n90(lengths)
+
 
     json_parse["data"] = {
         "n50": n50,
@@ -128,7 +135,7 @@ def parse_assembly(result_dir: str | Path, sample_name: str, module_name: str):
         "n": count_n,
         "gc_content": gc_content,
         "number_sequences": number_sequences,
-        "sequences": stats_single_sequences,
+        "sequences": stats_single_sequences
     }
 
     with gzip.open(f"{sample_name}.json.gz", "wt", encoding="utf-8") as f:
