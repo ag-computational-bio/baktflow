@@ -1,7 +1,6 @@
-name: gtdbtk
+name: hamronization
 channels:
   - conda-forge
   - bioconda
 dependencies:
-  - gtdbtk=2.7.2
-  - polars<2.0
+  - hamronization==1.2.1

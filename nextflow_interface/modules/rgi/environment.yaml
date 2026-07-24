@@ -3,4 +3,4 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - rgi=6.0.5
+  - rgi=6.0.8

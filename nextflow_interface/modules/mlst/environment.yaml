@@ -3,4 +3,4 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - mlst=2.33.1
+  - mlst=2.35.0
