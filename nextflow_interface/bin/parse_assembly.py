@@ -12,8 +12,6 @@ from utils import get_version
 
 __version__ = get_version()
 
-from baktflow import __version__
-
 
 def assembly_stats(fasta_file: str):
 
