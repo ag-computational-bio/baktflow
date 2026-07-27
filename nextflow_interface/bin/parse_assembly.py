@@ -8,8 +8,9 @@ from pathlib import Path
 from datetime import datetime
 import gzip
 
-BASE_DIR = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(BASE_DIR))
+from utils import get_version
+
+__version__ = get_version()
 
 from baktflow import __version__
 
