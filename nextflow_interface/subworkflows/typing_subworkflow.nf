@@ -18,8 +18,9 @@ workflow TYPING_SUBWORKFLOW {
             chewbacca_organism.replace("_", " ").replaceAll("\\s+","") == meta.species.replaceAll("\\s+","")
         }
 
-        ch_e_coli = ch_input.filter { meta, _assembly -> meta.species == "Escherichia coli" }
-        ch_klebsiella = ch_input.filter { meta, _assembly -> meta.taxonomy[5] == "Klebsiella" }
+        ch_e_coli = ch_input.filter { meta, _assembly -> meta.species.strip() == "Escherichia coli" }
+        ch_klebsiella = ch_input.filter { meta, _assembly -> meta.taxonomy[5].strip() == "Klebsiella" }
+        ch_input.view()
 
         ECTYPER(ch_e_coli)
         KLEBORATE(ch_klebsiella)
