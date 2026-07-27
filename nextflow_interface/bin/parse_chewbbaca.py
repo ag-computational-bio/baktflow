@@ -23,15 +23,15 @@ def read_tsv(path):
 
 
 def parse_chewbbaca(
-    cds_coordinates: str | Path,
-    loci_summary_stats: str | Path,
-    contigs_results: str | Path,
-    alleles_results: str | Path,
-    paralogous: str | Path,
-    sample_name: str,
+    cds_coordinates: Path,
+    loci_summary_stats: Path,
+    contigs_results: Path,
+    alleles_results: Path,
+    paralogous: Path,
+    sample_name: Path,
 ):
     json_parse = {
-        "meta_data": {"version": __version__, "module": "chewbbaca", "date": None, "sample": sample_name},
+        "meta_data": {"version": __version__, "module": "chewbbaca", "date": None, "sample": str(sample_name)},
         "data": {},
     }
     path_genes = Path(cds_coordinates)
