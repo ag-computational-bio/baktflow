@@ -17,13 +17,14 @@ process POLYPOLISH {
 
     script:
     """
-    bwa index ${short_pypolca}
-    bwa mem -t $task.cpus -a ${short_pypolca} ${r1} > alignments_1.sam
-    bwa mem -t $task.cpus -a ${short_pypolca} ${r2} > alignments_2.sam
-    bwa mem -t $task.cpus -a ${short_pypolca} ${se} > alignments_se.sam
+    minibwa index ${short_pypolca}
+    minibwa map -t $task.cpus -N 1000 --outn=1000 ${short_pypolca} ${r1} > alignments_1.sam
+    minibwa map -t $task.cpus -N 1000 --outn=1000 ${short_pypolca} ${r2} > alignments_2.sam
+    minibwa map -t $task.cpus -N 1000 --outn=1000 ${short_pypolca} ${se} > alignments_se.sam
 
     polypolish filter --in1 alignments_1.sam --in2 alignments_2.sam --out1 filtered_1.sam --out2 filtered_2.sam
     polypolish polish ${short_pypolca} filtered_1.sam filtered_2.sam alignments_se.sam > ${meta.sample_id}_polypolish.fasta
+    rm *.l2b *.mbw *.sam
 
     parse_assembly.py ${meta.sample_id}_polypolish.fasta ${meta.sample_id} polypolish
     """
