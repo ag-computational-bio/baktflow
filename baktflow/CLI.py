@@ -1,11 +1,12 @@
 import argparse
 import logging
 from pathlib import Path
+
 import polars as pl
 
 import baktflow.nextflow as bn
-import baktflow.utils as bu
 import baktflow.report as br
+import baktflow.utils as bu
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -104,7 +105,6 @@ def single_subcommand(args):
         args.setup_dir, args.bakta_db_type, args.work_dir, output
     )
 
-
     bn.run_baktflow_workflow(
         workflow_script=bu.get_nf_script("main.nf"),
         input_tsv=tsv_path,
@@ -167,7 +167,7 @@ def batch_subcommand(args):
     logger.info("Nextflow workflow executed successfully.")
 
     df = pl.read_csv(cleaned_tsv, separator="\t", has_header=False)
-    samples_id = df[:,0].to_list()
+    samples_id = df.get_column("column_1").to_list()
     for sample in samples_id:
         jsons = br.check_output(output_dir=f"{output}/{sample}")
         br.create_aggregated_json(path_json_files=jsons, output_dir=f"{output}/{sample}", sample_id=sample)
