@@ -20,7 +20,6 @@ workflow TYPING_SUBWORKFLOW {
 
         ch_e_coli = ch_input.filter { meta, _assembly -> meta.species.strip() == "Escherichia coli" }
         ch_klebsiella = ch_input.filter { meta, _assembly -> meta.taxonomy[5].strip() == "Klebsiella" }
-        ch_input.view()
 
         ECTYPER(ch_e_coli)
         KLEBORATE(ch_klebsiella)
