@@ -80,3 +80,8 @@ def create_aggregated_json(path_json_files: list, output_dir: str | Path, sample
 
     with gzip.open(f"{output_dir}/{sample_id}.json.gz", "wt", encoding="utf-8") as f:
         json.dump(json_files, f, ensure_ascii=False, indent=4)
+
+
+def aio_create_aggregated_json(output: Path, sample: str):
+    jsons = check_output(output_dir=f"{output}/{sample}")
+    create_aggregated_json(path_json_files=jsons, output_dir=f"{output}/{sample}", sample_id=sample)

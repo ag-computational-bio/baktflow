@@ -1,4 +1,5 @@
 import argparse
+import concurrent.futures as cf
 import logging
 from pathlib import Path
 
@@ -168,9 +169,11 @@ def batch_subcommand(args):
 
     df = pl.read_csv(cleaned_tsv, separator="\t", has_header=False)
     samples_id = df.get_column("column_1").to_list()
-    for sample in samples_id:
-        jsons = br.check_output(output_dir=f"{output}/{sample}")
-        br.create_aggregated_json(path_json_files=jsons, output_dir=f"{output}/{sample}", sample_id=sample)
+
+    futures = []
+    with cf.ThreadPoolExecutor() as tpe:
+        for sample in samples_id:
+            futures.append(tpe.submit(br.aio_create_aggregated_json, output, sample))
 
     logger.info("Report generation completed successfully.")
 
