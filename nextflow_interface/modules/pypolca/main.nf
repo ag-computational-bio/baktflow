@@ -12,7 +12,7 @@ process PYPOLCA {
         tuple val(meta), path(input_fasta), path(r1), path(r2)
 
     output:
-        tuple val(meta), path("${meta.sample_id}_pypolca.fasta"), emit: short_pypolca
+        tuple val(meta), path("${meta.sample_id}_pypolca.fasta.gz"), emit: short_pypolca
         tuple val(meta), path("${meta.sample_id}_pypolca.report"), emit: short_pypolca_report
         path("${meta.sample_id}.json.gz"), emit: json
 
@@ -25,11 +25,12 @@ process PYPOLCA {
     rm -r out
 
     parse_assembly.py ${meta.sample_id}_pypolca.fasta ${meta.sample_id} pypolca
+    pigz -9 -p $task.cpus ${meta.sample_id}_pypolca.fasta
     """
 
     stub:
     """
-    touch ${meta.sample_id}_pypolca.fasta
+    touch ${meta.sample_id}_pypolca.fasta.gz
     touch ${meta.sample_id}_pypolca.report
     touch ${meta.sample}.json.gz
     """

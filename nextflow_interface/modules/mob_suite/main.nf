@@ -13,7 +13,7 @@ process MOB_SUITE{
     output:
         tuple val(meta), path("${meta.sample_id}.contig_report.txt"), emit: contig_report
         tuple val(meta), path("${meta.sample_id}.mge_report.txt"), emit: mge_report, optional: true
-        tuple val(meta), path("${meta.sample_id}.chromosome.fasta"), emit: chromosome_fasta
+        tuple val(meta), path("${meta.sample_id}.chromosome.fasta.gz"), emit: chromosome_fasta
         tuple val(meta), path("${meta.sample_id}.plasmid_*.fasta"), emit: plasmids, optional: true
         path("${meta.sample_id}.json.gz"), emit: json
 
@@ -21,6 +21,7 @@ process MOB_SUITE{
     """
     mob_recon --infile ${assembly} --num_threads ${task.cpus} --outdir results --prefix ${meta.sample_id} -d ${params.databaseDir}/mob_suite
     mv results/* ./
+    pigz -9 -p ${task.cpus} ${meta.sample_id}.chromosome.fasta
     parse_mob.py ${meta.sample_id}.contig_report.txt ${meta.sample_id}
     """
 
@@ -28,7 +29,7 @@ process MOB_SUITE{
     """
     touch ${meta.sample_id}.mge_report.txt
     touch ${meta.sample_id}.contig_report.txt
-    touch ${meta.sample_id}.chromosome.fasta
+    touch ${meta.sample_id}.chromosome.fasta.gz
     touch ${meta.sample_id}.plasmid_XX.fasta
     touch ${meta.sample_id}.json.gz
     """

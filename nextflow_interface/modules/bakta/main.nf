@@ -14,7 +14,7 @@ process BAKTA {
         tuple val(meta), path(assembly)
 
     output:
-        tuple val(meta), path("${meta.sample_id}.embl"), emit: embl
+        tuple val(meta), path("${meta.sample_id}.embl.gz"), emit: embl
         tuple val(meta), path("${meta.sample_id}.faa"), emit: faa
         tuple val(meta), path("${meta.sample_id}.ffn"), emit: ffn
         tuple val(meta), path("${meta.sample_id}.fna"), emit: fna
@@ -24,16 +24,18 @@ process BAKTA {
         tuple val(meta), path("${meta.sample_id}.hypotheticals.faa"), emit: hypotheticals_faa
         tuple val(meta), path("${meta.sample_id}.tsv"), emit: tsv
         tuple val(meta), path("${meta.sample_id}.txt"), emit: txt
-        tuple val(meta), path("${meta.sample_id}.json"), emit: json_output
+        tuple val(meta), path("${meta.sample_id}.json.gz"), emit: json
 
     script:
     """
     bakta --db "${params.baktaDb}" --prefix ${meta.sample_id} --force --output ./ --threads $task.cpus ${assembly}
+    pigz -9 -p ${task.cpus} ${meta.sample_id}.embl
+    pigz -9 -p ${task.cpus} ${meta.sample_id}.json
     """
 
     stub:
     """
-    touch ${meta.sample_id}.embl
+    touch ${meta.sample_id}.embl.gz
     touch ${meta.sample_id}.faa
     touch ${meta.sample_id}.ffn
     touch ${meta.sample_id}.fna
@@ -43,5 +45,6 @@ process BAKTA {
     touch ${meta.sample_id}.hypotheticals.faa
     touch ${meta.sample_id}.tsv
     touch ${meta.sample_id}.txt
+    touch ${meta.sample_id}.json.gz
     """
 }
