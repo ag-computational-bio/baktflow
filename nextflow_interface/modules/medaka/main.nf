@@ -16,10 +16,11 @@ process MEDAKA {
 
     script:
     """
-    medaka_consensus -i ${long_reads} -d ${scaffolds} -o ./ -t ${task.cpus} --bacteria || \
-    medaka_consensus -i ${long_reads} -d ${scaffolds} -o ./ -t ${task.cpus}
+    medaka_consensus -i ${long_reads} -d ${scaffolds} -o ./out -t ${task.cpus} --bacteria || \
+    medaka_consensus -i ${long_reads} -d ${scaffolds} -o ./out -t ${task.cpus}
 
-    mv consensus.fasta ${meta.sample_id}_polished_assembly.fasta
+    mv out/consensus.fasta ${meta.sample_id}_polished_assembly.fasta
+    rm -r out
 
     parse_assembly.py ${meta.sample_id}_polished_assembly.fasta ${meta.sample_id} medaka
     """
