@@ -3,5 +3,5 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - gecco==0.10.3
+  - gecco==0.11.0
   - polars<2.0

@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - polypolish=0.6.1
-  - minibwa=0.5
+  - polypolish=0.7.1
+  - minibwa=0.6
   - polars<2.0
   - biopython==1.87
