@@ -20,11 +20,18 @@ process POLYPOLISH {
     minibwa index ${short_pypolca}
     minibwa map -t $task.cpus -N 1000 --outn=1000 ${short_pypolca} ${r1} > alignments_1.sam
     minibwa map -t $task.cpus -N 1000 --outn=1000 ${short_pypolca} ${r2} > alignments_2.sam
-    minibwa map -t $task.cpus -N 1000 --outn=1000 ${short_pypolca} ${se} > alignments_se.sam
+    if [ \$(wc -l ${se}) -gt 0 ]; then
+        minibwa map -t $task.cpus -N 1000 --outn=1000 ${short_pypolca} ${se} > alignments_se.sam
+    fi
+    rm *.l2b *.mbw
 
     polypolish filter --in1 alignments_1.sam --in2 alignments_2.sam --out1 filtered_1.sam --out2 filtered_2.sam
-    polypolish polish ${short_pypolca} filtered_1.sam filtered_2.sam alignments_se.sam > ${meta.sample_id}_polypolish.fasta
-    rm *.l2b *.mbw *.sam
+    if [ \$(wc -l ${se}) -gt 0 ]; then
+        polypolish polish ${short_pypolca} filtered_1.sam filtered_2.sam alignments_se.sam > ${meta.sample_id}_polypolish.fasta
+    else
+        polypolish polish ${short_pypolca} filtered_1.sam filtered_2.sam > ${meta.sample_id}_polypolish.fasta
+    fi
+    rm *.sam
 
     parse_assembly.py ${meta.sample_id}_polypolish.fasta ${meta.sample_id} polypolish
     """
