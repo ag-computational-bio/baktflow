@@ -54,7 +54,7 @@ def parse_macsyfinder(result_dir: str | Path, sample_name: str, model_name: str)
     if not content.strip() or "No System found" in content:
         df = pl.DataFrame(schema={col: pl.Utf8 for col in columns})
     else:
-        df = pl.read_csv(result_dir, separator="\t", skip_rows=4, new_columns=columns)
+        df = pl.read_csv(result_dir, separator="\t", comment_prefix="#", new_columns=columns)
 
     json_parse["data"] = df.to_dict(as_series=False)
 
