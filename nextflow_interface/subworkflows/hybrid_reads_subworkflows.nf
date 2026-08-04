@@ -85,9 +85,12 @@ workflow HYBRID_READ_PROCESSING_SUBWORKFLOW {
         // Reorient GFA with DNAAPLER
         ch_reoriented = DNAAPLER(ch_unicylcer.gfa.mix(ch_autocycler.assembly_gfa))
 
+        ch_unicylcer_final = ch_unicylcer.gfa.map { meta, _gfa -> meta }.join(ch_reoriented.fasta)
+        ch_polishing_input = ch_autocycler.assembly_gfa.map { meta, _gfa -> meta }.join(ch_reoriented.fasta)
+
         // Short read polishing
         // Combine autocycler assembly with short reads for Pypolca polishing
-        ch_pypolca_input = ch_reoriented.fasta.map { meta, assembly ->
+        ch_pypolca_input = ch_polishing_input.map { meta, assembly ->
             tuple(meta.sample_id, meta, assembly)
         }.join(ch_keyed_short_reads)
             .map { _sample_id, meta, assembly, _meta_short, r1, r2, _se ->
@@ -110,5 +113,5 @@ workflow HYBRID_READ_PROCESSING_SUBWORKFLOW {
 
         emit:
             assembly_gfa = ch_reoriented.gfa
-            assembly_fasta = ch_polished_assembly
+            assembly_fasta = ch_unicylcer_final.mix(ch_polished_assembly)
 }
