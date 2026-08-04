@@ -3,5 +3,5 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - diamond=2.2.4
+  - diamond==2.2.5
   - polars<2.0
