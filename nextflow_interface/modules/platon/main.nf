@@ -18,7 +18,10 @@ process PLATON{
     script:
     """
     platon --db ${params.databaseDir}/platon_db --prefix ${meta.sample_id} --threads ${task.cpus} ${assembly}
-    pigz -9 -p ${task.cpus} ${meta.sample_id}.chromosome.fasta
+
+    if [ -s ${meta.sample_id}.chromosome.fasta ]; then
+        pigz -9 -p ${task.cpus} ${meta.sample_id}.chromosome.fasta
+    fi
     """
 
     stub:
