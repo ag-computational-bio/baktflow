@@ -4,7 +4,7 @@ channels:
   - bioconda
 dependencies:
   - unicycler==0.5.1
-  - biopython==1.87
+  - biopython==1.88
   - polars<2.0
 
 
