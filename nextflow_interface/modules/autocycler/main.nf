@@ -62,7 +62,7 @@ process AUTOCYCLER_ASSEMBLY {
     done
     shopt -u nullglob
 
-    if [ \$(wc -l ${meta.sample_id}_${assembler}_*.fasta) -gt 0 ]; then
+    if [ -s ${meta.sample_id}_${assembler}_*.fasta ]; then
         parse_assembly.py ${meta.sample_id}_${assembler}_*.fasta ${meta.sample_id} autocycler_assembly
     fi
     """
@@ -101,6 +101,7 @@ process AUTOCYCLER_CONSENSUS {
         fi
     done
 
+    # When all assemblies failed ignore the sample
     if [ -z \$( ls assemblies/ ) ]; then
        exit 66
     fi
