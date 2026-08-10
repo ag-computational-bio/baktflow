@@ -1,6 +1,7 @@
 #!/usr/bin/env nextflow
 
 include {FASTP} from '../modules/fastp/main.nf'
+include {FASTPLONG} from '../modules/fastplong/main.nf'
 include {FILTLONG} from '../modules/filtlong/main.nf'
 include {GENOMESTATS} from '../modules/genomestats/main.nf'
 include {UNICYCLER} from '../modules/unicycler/main.nf'
@@ -19,20 +20,26 @@ workflow HYBRID_READ_PROCESSING_SUBWORKFLOW {
         short_read_samples = ch_hybrid_reads.filter { it -> it.r1 && it.r2 }
         long_read_samples = ch_hybrid_reads.filter { it -> !it.long_reads.isEmpty() }
 
-        // Process short and long reads using FastP and Filtlong
+        // Process short and long reads using FastP, FastPlong and Filtlong
         ch_processed_short_reads = FASTP(short_read_samples.map { sample -> 
             tuple(sample.meta, sample.r1, sample.r2)
         })
-        ch_filtered_long_reads = FILTLONG(long_read_samples.map { sample -> 
-            tuple(sample.meta, sample.long_reads)
-        })
+
+        if ( params.longReadTrimming.toBoolean() ) {
+            ch_trimmed_long_reads = FASTPLONG(long_read_samples.map { it -> tuple(it.meta, it.long_reads) }).trimmed_long_reads
+            ch_filtered_long_reads = FILTLONG(ch_trimmed_long_reads).filtered_long_reads
+        } else {
+            ch_filtered_long_reads = FILTLONG(long_read_samples.map { sample ->
+                tuple(sample.meta, sample.long_reads)
+            }).filtered_long_reads
+        }
 
         // Get processed reads for assembly
         // Key channels with sample_id for easy joining
         ch_keyed_short_reads = ch_processed_short_reads.trimmed_reads.map { meta, r1, r2, se ->
             tuple(meta.sample_id, meta, r1, r2, se)
         }
-        ch_keyed_long_reads = ch_filtered_long_reads.filtered_long_reads.map { meta, long_reads ->
+        ch_keyed_long_reads = ch_filtered_long_reads.map { meta, long_reads ->
             tuple(meta.sample_id, long_reads)
         }
         combined_reads = ch_keyed_short_reads.join(ch_keyed_long_reads)

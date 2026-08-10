@@ -113,6 +113,7 @@ def single_subcommand(args):
         conda_dir=conda_dir,
         database_dir=database_dir,
         bakta_db_type=bakta_db_type,
+        long_read_trimming=args.long_read_trimming,
         work_dir=work_dir,
         profile=args.profile,
         resume=args.resume,
@@ -160,6 +161,7 @@ def batch_subcommand(args):
         conda_dir=conda_dir,
         database_dir=database_dir,
         bakta_db_type=bakta_db_type,
+        long_read_trimming=args.long_read_trimming,
         work_dir=work_dir,
         profile=args.profile,
         resume=args.resume,
@@ -206,13 +208,14 @@ def parse_arguments():
     single_parser.add_argument(
         "--bakta_db_type", type=str, default="light", help="Bakta database type [light, full]. default = 'light'"
     )
-    single_parser.add_argument("--work_dir", help="Directory for the nextflow work folder (default: output/work)")
-    single_parser.add_argument("--profile", type=str, default="standard", help="Nextflow execution profile")
-    single_parser.add_argument("--resume", help="Resume the workflow", action="store_true")
     single_parser.add_argument("--r1", default=None, help="Input file for R1 sequencing reads (FASTQ format)")
     single_parser.add_argument("--r2", default=None, help="Input file for R2 sequencing reads (FASTQ format)")
     single_parser.add_argument("--long", default=None, help="Input file for long reads (FASTQ format)")
     single_parser.add_argument("--assembly", default=None, help="Input assembly file (FASTQ format)")
+    single_parser.add_argument("--long_read_trimming", action="store_true", help="Enable trimming for long reads")
+    single_parser.add_argument("--work_dir", help="Directory for the nextflow work folder (default: output/work)")
+    single_parser.add_argument("--profile", type=str, default="standard", help="Nextflow execution profile")
+    single_parser.add_argument("--resume", help="Resume the workflow", action="store_true")
     single_parser.add_argument("--stub", action="store_true", help="Executed pipeline with the -stub-run option")
 
     # Batch subcommand
@@ -224,6 +227,7 @@ def parse_arguments():
     batch_parser.add_argument(
         "--bakta_db_type", type=str, default="light", help="Bakta database type [light, full]. default = 'light'"
     )
+    batch_parser.add_argument("--long_read_trimming", action="store_true", help="Enable trimming for long reads")
     batch_parser.add_argument("--work_dir", "-w", help="Directory for the nextflow work folder (default: output/work)")
     batch_parser.add_argument("--profile", type=str, default="standard", help="Nextflow execution profile")
     batch_parser.add_argument("--resume", help="Resume the workflow", action="store_true")

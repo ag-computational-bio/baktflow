@@ -1,5 +1,6 @@
 #!/usr/bin/env nextflow
 
+include {FASTPLONG} from '../modules/fastplong/main.nf'
 include {FILTLONG} from '../modules/filtlong/main.nf'
 include {GENOMESTATS} from '../modules/genomestats/main.nf'
 include {FLYE} from '../modules/flye/main.nf'
@@ -19,8 +20,13 @@ workflow LONG_READ_PROCESSING_SUBWORKFLOW {
         file(fh).setText('')
     }
 
-    // Filter long reads
-    ch_filtered_long_reads = FILTLONG(ch_long_reads.map { it -> tuple(it.meta, it.long_reads) }).filtered_long_reads
+    // Trim and filter long reads
+    if ( params.longReadTrimming.toBoolean() ) {
+        ch_trimmed_long_reads = FASTPLONG(ch_long_reads.map { it -> tuple(it.meta, it.long_reads) }).trimmed_long_reads
+        ch_filtered_long_reads = FILTLONG(ch_trimmed_long_reads).filtered_long_reads
+    } else {
+        ch_filtered_long_reads = FILTLONG(ch_long_reads.map { it -> tuple(it.meta, it.long_reads) }).filtered_long_reads
+    }
 
     ch_filtered_long_reads_with_short_stubs = ch_filtered_long_reads.map { meta, long_reads ->
         tuple(meta, file("empty_R1.fastq.gz"), file("empty_R2.fastq.gz"), file("empty_SE.fastq.gz"), long_reads)

@@ -47,6 +47,7 @@ def run_baktflow_workflow(
     conda_dir: Path,
     database_dir: Path,
     bakta_db_type: str,
+    long_read_trimming: bool,
     work_dir: Path,
     profile: str,
     resume: bool,
@@ -81,6 +82,9 @@ def run_baktflow_workflow(
 
     if stub:
         nextflow_cmd.append("-stub")
+
+    if long_read_trimming:
+        nextflow_cmd.extend(["--longReadTrimming", "true"])
 
     conda_implementation: str = bu.get_conda_implementation()
     if conda_implementation == "micromamba":
