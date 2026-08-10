@@ -17,7 +17,7 @@ process MEDAKA {
     script:
     """
     medaka_consensus -i ${long_reads} -d ${scaffolds} -o ./out -t ${task.cpus} --bacteria || \
-    medaka_consensus -i ${long_reads} -d ${scaffolds} -o ./out -t ${task.cpus}
+    medaka_consensus -i ${long_reads} -d ${scaffolds} -o ./out -t ${task.cpus} -m r1041_e82_400bps_bacterial_methylation
 
     mv out/consensus.fasta ${meta.sample_id}_polished_assembly.fasta
     rm -r out
