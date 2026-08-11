@@ -1,0 +1,8 @@
+name: fastplong
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - fastplong==0.4.1
+  - polars<2.0
+  - biopython==1.88
