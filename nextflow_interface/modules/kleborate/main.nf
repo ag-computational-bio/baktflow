@@ -12,17 +12,15 @@ process KLEBORATE {
 
     output:
         tuple val(meta), path("*_output.txt"), emit: txt
-        path("${meta.sample_id}.json.gz"), emit: json
+        tuple val(meta), val('kleborate'), path("*_output.txt"), emit: report
 
     script:
     """
     kleborate -a ${assembly} -o ./ -p kpsc --trim_headers
-    parse_kleborate.py *_output.txt ${meta.sample_id}
     """
 
     stub:
     """
-    touch ${meta.sample_id}.json.gz
     touch klebsiella_pneumo_complex_output.txt
     """
 }

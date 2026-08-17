@@ -25,6 +25,7 @@ include { GTDBTK } from './modules/gtdbtk/main.nf'
 include { PLASMIDFINDER } from './modules/plasmidfinder/main.nf'
 include { ANTISMASH } from './modules/antismash/main.nf'
 include { GECCO } from './modules/gecco/main.nf'
+include { REPORTS } from './modules/reports/main.nf'
 
 
 workflow {
@@ -141,6 +142,7 @@ workflow {
 
     // Call MacSyFinder using CONJSCAN model
     CONJSCAN(bakta_annotation.faa)
+    ch_macsyfinder_reports = TXSSCAN.out.report.mix(CASFINDER.out.report).mix(CONJSCAN.out.report)
 
     // Call PLING
     // PLING(mob_results.plasmids)
@@ -186,6 +188,16 @@ workflow {
 
     // Call gecco
     GECCO(bakta_annotation.gbff)
+
+    // Create reports
+    REPORTS(
+        ch_short_processed.reports.mix(ch_long_processed.reports).mix(ch_hybrid_processed.reports).mix(
+        AMRFINDERPLUS.out.report).mix(CHECKM2.out.report).mix(TYPING_SUBWORKFLOW.out.reports).mix(GTDBTK.out.report).mix(
+        mob_results.report).mix(ch_macsyfinder_reports).mix(
+        GECCO.out.report.map { it -> return [it[0], it[1], it[2..-1]] }).mix(REFERENCESEEKER.out.report).mix(
+        SILVA_16S.out.report).mix(VFDB.out.report)
+    )
+    // .mix(PLING.out.report)
 
     /*
     workflow.onComplete {

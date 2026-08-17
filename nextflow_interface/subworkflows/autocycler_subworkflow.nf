@@ -21,4 +21,5 @@ workflow AUTOCYCLER_SUBWORKFLOW {
     emit:
         assembly_gfa = ch_final_assembly.gfa
         assembly_scaffolds = ch_final_assembly.assembly
+        reports = ch_final_assembly.report
 }

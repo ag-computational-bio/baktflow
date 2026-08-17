@@ -3,7 +3,7 @@
 process GENOMESTATS {
     tag "$meta.sample_id"
     conda "${projectDir}/modules/genomestats/environment.yaml"
-    publishDir "${params.output}/${meta.sample_id}/genomestats", pattern: "*.{log,json.gz}", mode: 'copy'
+    publishDir "${params.output}/${meta.sample_id}/genomestats", pattern: "*.log", mode: 'copy'
     memory { workflow.stubRun ? 1.GB : 4.GB * task.attempt }
     cpus { workflow.stubRun ? 1 : (params.threads >= 4 ? 4 : params.threads) }
 
@@ -15,7 +15,8 @@ process GENOMESTATS {
         tuple val(meta), env('GENOMESIZE'), env('COVERAGE'), path(long_reads), emit: long_genome_size
         tuple val(meta), env('GENOMESIZE'), env('SHORTCOVERAGE'), env('LONGCOVERAGE'), path(r1), path(r2), path(se), path(long_reads), emit: hybrid_genome_size
         path("*.log"), emit: logs
-        path("${meta.sample_id}.json.gz"), emit: json
+        tuple val(meta), val("genomestats"), path("length_stats.log"), emit: report, optional: true
+        tuple val(meta), val("genomestats"), path("long_length_stats.log"), path("hybrid short_length_stats.log"), emit: report_hybrid, optional: true
 
     script:
     if( meta.sample_type == 'short' )
@@ -24,10 +25,8 @@ process GENOMESTATS {
         if [[ \$(zgrep -c '+' ${se}) -gt 0 ]]; then
             echo ${se} >> kmc_input.txt
             seqfu stats --noheader --threads $task.cpus --precision 0 ${r1} ${r2} ${se} > length_stats.log
-            parse_genomestats.py length_stats.log ${meta.sample_id} short
         else
             seqfu stats --noheader --threads $task.cpus --precision 0 ${r1} ${r2} > length_stats.log
-            parse_genomestats.py length_stats.log ${meta.sample_id} short
         fi
         NUMBASES=\$(awk '{ sum += \$3 } END { print sum }' length_stats.log)
 
@@ -55,7 +54,6 @@ process GENOMESTATS {
         seqfu stats --noheader --threads $task.cpus --precision 0 ${long_reads} > length_stats.log
         NUMREADS=\$(cut -f 2 length_stats.log)
         NUMBASES=\$(cut -f 3 length_stats.log)
-        parse_genomestats.py length_stats.log ${meta.sample_id} long
 
         # min number of reads for lrge is 5000
         if [[ \$NUMREADS -gt 5000 ]]; then
@@ -94,8 +92,6 @@ process GENOMESTATS {
             seqfu stats --noheader --threads $task.cpus --precision 0 ${r1} ${r2} > short_length_stats.log
         fi
         SHORTNUMBASES=\$(awk '{ sum += \$3 } END { print sum }' short_length_stats.log)
-
-        parse_genomestats.py long_length_stats.log ${meta.sample_id} hybrid short_length_stats.log
 
         # min number of reads for lrge is 5000
         if [[ \$LONGNUMREADS -gt 5000 ]]; then

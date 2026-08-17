@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import gzip
 import json
 import os
 import sys
@@ -8,21 +7,12 @@ from datetime import datetime
 from pathlib import Path
 
 import polars as pl
-
-from utils import get_version
-
-__version__ = get_version()
+from versions import get_module_tool_versions
+from xopen import xopen
 
 
-def parse_gecco(genes: str | None, features: str | None, cluster: str | None, sample_name: str):
-    json_parse = {
-        "meta_data": {"version": __version__, "module": "gecco", "date": None, "sample": sample_name},
-        "data": {},
-    }
-
-    if genes is not None and Path(genes).exists():
-        date = datetime.fromtimestamp(os.path.getctime(Path(genes)))
-        json_parse["meta_data"]["date"] = str(date).split()[0]
+def parse_gecco(genes: str, features: str, cluster: str, sample_name: str):
+    date: str = str(datetime.fromtimestamp(os.path.getctime(Path(genes)))).split()[0]
 
     columns_genes = ["sequence_id", "protein_id", "start", "end", "strand", "average_p", "max_p"]
 
@@ -81,7 +71,7 @@ def parse_gecco(genes: str | None, features: str | None, cluster: str | None, sa
         except pl.exceptions.NoDataError:
             pass
 
-    json_parse["data"].update(
+    data = (
         {
             "genes": df_genes.to_dict(as_series=False),
             "features": df_features.to_dict(as_series=False),
@@ -89,13 +79,19 @@ def parse_gecco(genes: str | None, features: str | None, cluster: str | None, sa
         }
     )
 
-    with gzip.open(f"{sample_name}.json.gz", "wt", encoding="utf-8") as f:
+    json_parse = {
+        "meta_data": {"version": get_module_tool_versions("gecco"), "module": "gecco", "date": date,
+                      "sample": sample_name},
+        "data": data,
+    }
+
+    with xopen(f"report-{sample_name}.json.gz", "wt", compresslevel=9) as f:
         json.dump(json_parse, f, ensure_ascii=False, separators=(",", ":"), indent=4)
 
 
 if __name__ == "__main__":
-    genes = None if sys.argv[1] == "None" else sys.argv[1]
-    features = None if sys.argv[2] == "None" else sys.argv[2]
-    clusters = None if sys.argv[3] == "None" else sys.argv[3]
+    genes = sys.argv[1]
+    features = sys.argv[2]
+    clusters = sys.argv[3]
     sample_name = sys.argv[4]
     parse_gecco(genes, features, clusters, sample_name)

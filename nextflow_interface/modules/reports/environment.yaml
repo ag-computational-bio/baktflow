@@ -1,0 +1,9 @@
+name: reports
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - polars<2.0
+  - xopen<3.0
+  - biopython<2.0
+  - pyyaml<7.0

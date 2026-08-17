@@ -4,4 +4,3 @@ channels:
   - bioconda
 dependencies:
   - gtdbtk=2.7.2
-  - polars<2.0

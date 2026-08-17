@@ -1,19 +1,21 @@
-#!/usr/bin/env python3
-
-import gzip
-import json
 import os
-import warnings
 from datetime import datetime
 from pathlib import Path
 
+import pysimdjson
+from xopen import xopen
+
 from baktflow import __version__
+from versions import get_module_tool_versions
+
+
+# TODO parse version number from toml file
+# TODO parse tool version numbers from yaml env files
 
 # TODO: HTML/PDF report erstellen
 
 
 def check_output(output_dir: str | Path) -> list[Path]:
-
     skip_dirs: list[str] = ["ska", "bandage"]
 
     results_dirs: list[Path] = [
@@ -28,7 +30,8 @@ def check_output(output_dir: str | Path) -> list[Path]:
         paths_json_files: list[Path] = list(result_path.rglob("*.json")) + list(result_path.rglob("*.json.gz"))
 
         if not paths_json_files:
-            warnings.warn(f"No json result found in: {result_path}")
+            # warnings.warn(f"No json result found in: {result_path}")
+            pass
         else:
             all_json_files.extend(paths_json_files)
 
@@ -43,34 +46,39 @@ def normalize_keys(obj):
     return obj
 
 
-def parse_json(json_file, module_name: str, sample_id):
+def parse_json(json_file: Path, module_name: str, sample_id: str):
+    with xopen(json_file, "r") as file:
+        data = pysimdjson.load(file)
 
-    with open(json_file, "r") as file:
-        data = json.load(file)
-
+    date: str = str(datetime.fromtimestamp(os.path.getctime(json_file))).split()[0]
     json_parse = {
-        "meta_data": {"version": __version__, "module": module_name, "date": None, "sample": sample_id},
-        "data": None,
+        "meta_data": {"version": get_module_tool_versions(module_name), "module": module_name, "date": date,
+                      "sample": sample_id},
+        "data": normalize_keys(data),
     }
-
-    date = datetime.fromtimestamp(os.path.getctime(json_file))
-    json_parse["meta_data"]["date"] = str(date).split()[0]
-
-    json_parse["data"] = normalize_keys(data)
 
     return json_parse
 
 
 def create_aggregated_json(path_json_files: list, output_dir: str | Path, sample_id: str):
-
-    json_files = []
+    json_files = [
+        {
+            "meta_data": {
+                "module": "baktflow",
+                "version": {"baktflow": __version__},
+                "date": str(datetime.today()).split()[0],
+                "sample": sample_id,
+            },
+            "data": None,
+        }
+    ]
 
     for file in path_json_files:
         file = Path(file)
 
-        if file.suffix == ".gz":
-            with gzip.open(file, "rt", encoding="utf-8") as f:
-                json_files.append(json.load(f))
+        if file.name.startswith("report-"):
+            with xopen(file, "rt", encoding="utf-8") as f:
+                json_files.append(pysimdjson.load(f))
         else:
             relative_output = file.relative_to(output_dir)
             module_name = relative_output.parent.name
@@ -78,8 +86,8 @@ def create_aggregated_json(path_json_files: list, output_dir: str | Path, sample
             parsed = parse_json(json_file=file, module_name=module_name, sample_id=sample_id)
             json_files.append(parsed)
 
-    with gzip.open(f"{output_dir}/{sample_id}.json.gz", "wt", encoding="utf-8") as f:
-        json.dump(json_files, f, ensure_ascii=False, indent=4)
+    with xopen(f"{output_dir}/{sample_id}.json.gz", "wt", encoding="utf-8", compresslevel=9) as f:
+        pysimdjson.dump(json_files, f, ensure_ascii=False, indent=4)
 
 
 def aio_create_aggregated_json(output: Path, sample: str):

@@ -33,6 +33,7 @@ workflow LONG_READ_PROCESSING_SUBWORKFLOW {
     }
 
     ch_genomestats = GENOMESTATS(ch_filtered_long_reads_with_short_stubs).long_genome_size
+    ch_genomestats_reports = GENOMESTATS.out.report.mix(GENOMESTATS.out.report_hybrid.map { it -> return [it[0], it[1], it[2..-1]] })
 
     ch_flye_input = ch_genomestats.filter { _meta, genomesize, coverage, _long_reads ->
         genomesize.toInteger() == 1 || coverage.toInteger() < params.minReadDepth
@@ -69,4 +70,6 @@ workflow LONG_READ_PROCESSING_SUBWORKFLOW {
     emit:
         assembly_gfa = ch_reoriented.gfa
         assembly_fasta = ch_medaka_polished.fasta
+        reports = FILTLONG.out.report.mix(ch_genomestats_reports).mix(ch_autocycler.reports).mix(ch_flye.report).mix(
+            ch_reoriented.report).mix(ch_medaka_polished.report)
 }

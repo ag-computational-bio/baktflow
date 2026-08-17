@@ -4,5 +4,3 @@ channels:
   - bioconda
 dependencies:
   - filtlong=0.3.1
-  - polars<2.0
-  - biopython==1.88

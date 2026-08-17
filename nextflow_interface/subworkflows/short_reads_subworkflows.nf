@@ -29,4 +29,5 @@ workflow SHORT_READ_PROCESSING_SUBWORKFLOW {
     emit:
         assembly_gfa = ch_reoriented.gfa
         assembly_fasta = ch_reoriented.fasta
+        reports = assembly.report.mix(ch_reoriented.report)
 }

@@ -1,6 +1,5 @@
 #!/usr/bin/env nextflow
 
-params.REPORT_SCRIPT = "$projectDir/modules/unicycler/report.py"
 
 process UNICYCLER {
     tag "$meta.sample_id"
@@ -18,7 +17,7 @@ process UNICYCLER {
         tuple val(meta), path("${meta.sample_id}_assembly.fasta"), emit: scaffolds
         tuple val(meta), path("${meta.sample_id}_assembly.gfa"), emit: gfa
         tuple val(meta), path("${meta.sample_id}_unicycler.log"), emit: log
-        path("${meta.sample_id}.json.gz"), emit: json
+        tuple val(meta), val('unicycler'), path("${meta.sample_id}_assembly.fasta"), emit: report
 
     // TODO --existing_long_read_assembly for hybrid?
     script:
@@ -33,13 +32,6 @@ process UNICYCLER {
         mv ./assembly.fasta ${meta.sample_id}_assembly.fasta
         mv ./assembly.gfa ${meta.sample_id}_assembly.gfa
         mv ./unicycler.log ${meta.sample_id}_unicycler.log
-
-        parse_assembly.py ${meta.sample_id}_assembly.fasta ${meta.sample_id} unicycler
-
-        #python ${params.REPORT_SCRIPT} \\
-        #--fasta ${meta.sample_id}_assembly.fasta \\
-        #--log ${meta.sample_id}_unicycler.log \\
-        #--output ${params.output}/${meta.sample_id}/unicycler
         """
     else if( meta.sample_type == 'hybrid' )
         """
@@ -52,13 +44,6 @@ process UNICYCLER {
         mv ./assembly.fasta ${meta.sample_id}_assembly.fasta
         mv ./assembly.gfa ${meta.sample_id}_assembly.gfa
         mv ./unicycler.log ${meta.sample_id}_unicycler.log
-
-        parse_assembly.py ${meta.sample_id}_assembly.fasta ${meta.sample_id} unicycler
-
-        #python ${params.REPORT_SCRIPT} \\
-        #--fasta ${meta.sample_id}_assembly.fasta \\
-        #--log ${meta.sample_id}_unicycler.log \\
-        #--output ${params.output}/${meta.sample_id}/unicycler
         """
     else
         error "Invalid alignment mode: ${meta.sample_type}"
@@ -68,6 +53,5 @@ process UNICYCLER {
         touch ${meta.sample_id}_assembly.fasta
         touch ${meta.sample_id}_assembly.gfa
         touch ${meta.sample_id}_unicycler.log
-        touch ${meta.sample_id}.json.gz
         """
 }

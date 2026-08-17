@@ -4,5 +4,3 @@ channels:
   - bioconda
 dependencies:
   - medaka=2.2.2
-  - polars<2.0
-  - biopython==1.88

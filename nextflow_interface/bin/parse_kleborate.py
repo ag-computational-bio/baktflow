@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import gzip
 import json
 import os
 import sys
@@ -8,20 +7,12 @@ from datetime import datetime
 from pathlib import Path
 
 import polars as pl
-from utils import get_version
-
-__version__ = get_version()
+from versions import get_module_tool_versions
+from xopen import xopen
 
 
 def parse_kleborate(result_dir: str | Path, sample_name: str):
-    json_parse = {
-        "meta_data": {"version": __version__, "module": "kleborate", "date": None, "sample": sample_name},
-        "data": None,
-    }
-
-    path = Path(result_dir)
-    date = datetime.fromtimestamp(os.path.getctime(path))
-    json_parse["meta_data"]["date"] = str(date).split()[0]
+    date: str = str(datetime.fromtimestamp(os.path.getctime(Path(result_dir)))).split()[0]
 
     try:
         df = pl.read_csv(result_dir, separator="\t")
@@ -29,9 +20,15 @@ def parse_kleborate(result_dir: str | Path, sample_name: str):
     except pl.exceptions.NoDataError:
         df = pl.DataFrame()
 
-    json_parse["data"] = df.to_dict(as_series=False)
+    data = df.to_dict(as_series=False)
 
-    with gzip.open(f"{sample_name}.json.gz", "wt", encoding="utf-8") as f:
+    json_parse = {
+        "meta_data": {"version": get_module_tool_versions("kleborate"), "module": "kleborate", "date": date,
+                      "sample": sample_name},
+        "data": data,
+    }
+
+    with xopen(f"report-{sample_name}.json.gz", "wt", compresslevel=9) as f:
         json.dump(json_parse, f, ensure_ascii=False, separators=(",", ":"), indent=4)
 
 

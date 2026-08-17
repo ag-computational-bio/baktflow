@@ -1,50 +1,46 @@
 #!/usr/bin/env python3
 
-from Bio import SeqIO
-import os
 import json
+import os
 import sys
-from pathlib import Path
 from datetime import datetime
-import gzip
+from pathlib import Path
 
-from utils import get_version
+from Bio import SeqIO
+from versions import get_module_tool_versions
+from xopen import xopen
 
-__version__ = get_version()
 
+def assembly_stats(fasta_file: str | Path) -> tuple[int, list[dict[str, str | int | float]], list[int], float, int]:
+    fmt = "fastq" if str(fasta_file).rstrip(".gz").endswith("fastq") else "fasta"
 
-def assembly_stats(fasta_file: str):
+    stats_single_sequences: list[dict[str, str | int | float]] = []
+    lengths: list[int] = []
 
-    _, file_extension = os.path.splitext(str(fasta_file))
+    count_n: int = 0
+    count_c: int = 0
+    count_g: int = 0
+    total_length: int = 0
+    number_sequences: int = 0
 
-    opener = gzip.open if file_extension == ".gz" else open
-    fmt = "fastq" if file_extension == ".gz" else "fasta"
-
-    stats_single_sequences = []
-    lengths = []
-
-    count_n = 0
-    count_c = 0
-    count_g = 0
-    total_length = 0
-    number_sequences = 0
-
-    with opener(fasta_file, "rt") as handle:
+    with xopen(fasta_file, "rt") as handle:
         for rec in SeqIO.parse(handle, fmt):
-            seq = str(rec.seq)
-            length = len(seq)
+            seq: str = str(rec.seq)
+            length: int = len(seq)
 
-            n = seq.count("N")
-            c = seq.count("C")
-            g = seq.count("G")
+            n: int = seq.count("N")
+            c: int = seq.count("C")
+            g: int = seq.count("G")
 
-            stats_single_sequences.append({
-                "id": rec.id,
-                "n": n,
-                "gc_content": round((g + c) / length * 100, 2),
-                "length": length,
-                "seq": seq,
-            })
+            stats_single_sequences.append(
+                {
+                    "id": rec.id,
+                    "n": n,
+                    "gc_content": round((g + c) / length * 100, 2),
+                    "length": length,
+                    "seq": seq,
+                }
+            )
 
             lengths.append(length)
 
@@ -54,13 +50,18 @@ def assembly_stats(fasta_file: str):
             count_g += g
             total_length += length
 
-    gc_content = round((count_g + count_c) / total_length * 100, 2)
+    gc_content: float = round((count_g + count_c) / total_length * 100, 2)
 
-    return number_sequences, stats_single_sequences, lengths, gc_content, count_n,
+    return (
+        number_sequences,
+        stats_single_sequences,
+        lengths,
+        gc_content,
+        count_n,
+    )
 
 
-
-def calculate_n50(lengths:list):
+def calculate_n50(lengths: list[int]) -> int:
     """
     This method calculates the n50 value for an assembly based on the length of all contigs
 
@@ -68,8 +69,8 @@ def calculate_n50(lengths:list):
     :return: N50 value
     """
 
-    lengths_sorted = sorted(lengths, reverse=True)
-    total = sum(lengths_sorted)
+    lengths_sorted: list[int] = sorted(lengths, reverse=True)
+    total: int = sum(lengths_sorted)
     cumulative = 0
 
     for length in lengths_sorted:
@@ -77,33 +78,31 @@ def calculate_n50(lengths:list):
         if cumulative >= total / 2:
             return length
 
-    return None
+    return 0
 
 
-
-def calculate_n90(lengths:list):
+def calculate_n90(lengths: list[int]) -> int:
     """
-       This method calculates the n90 value for an assembly based on the length of all contigs
+    This method calculates the n90 value for an assembly based on the length of all contigs
 
-       :param lengths: List of all contig lengths
-       :return: N90 value
-       """
-    lengths_sorted = sorted(lengths, reverse=True)
-    total = sum(lengths_sorted)
+    :param lengths: List of all contig lengths
+    :return: N90 value
+    """
+    lengths_sorted: list[int] = sorted(lengths, reverse=True)
+    total: int = sum(lengths_sorted)
     cumulative = 0
 
-    target = total  * (90 / 100)
+    target = total * (90 / 100)
 
     for length in lengths_sorted:
         cumulative += length
         if cumulative >= target:
             return length
 
-    return None
+    return 0
 
 
-
-def parse_assembly(result_dir:str, sample_name:str, module_name:str):
+def parse_assembly(result_dir: Path, sample_name: str, module_name: str):
     """
     This method creates a JSON file containing all important information regarding the assembly
 
@@ -112,32 +111,28 @@ def parse_assembly(result_dir:str, sample_name:str, module_name:str):
     :param module_name: Name of module that was  used to create the assembly (string)
     :return: None
     """
-
-    json_parse = {
-        "meta_data": {"version": __version__, "module": module_name, "date": None, "sample": sample_name},
-        "data": {},
-    }
-
-    path = Path(result_dir)
-    date = datetime.fromtimestamp(os.path.getctime(path))
-    json_parse["meta_data"]["date"] = str(date).split()[0]
-
+    date: str = str(datetime.fromtimestamp(os.path.getctime(Path(result_dir)))).split()[0]
 
     number_sequences, stats_single_sequences, lengths, gc_content, count_n = assembly_stats(result_dir)
-    n50 = calculate_n50(lengths)
-    n90 = calculate_n90(lengths)
+    n50: int = calculate_n50(lengths)
+    n90: int = calculate_n90(lengths)
 
-
-    json_parse["data"] = {
+    data = {
         "n50": n50,
         "n90": n90,
         "n": count_n,
         "gc_content": gc_content,
         "number_sequences": number_sequences,
-        "sequences": stats_single_sequences
+        "sequences": stats_single_sequences,
     }
 
-    with gzip.open(f"{sample_name}.json.gz", "wt", encoding="utf-8") as f:
+    json_parse = {
+        "meta_data": {"version": get_module_tool_versions(module_name), "module": module_name, "date": date,
+                      "sample": sample_name},
+        "data": data,
+    }
+
+    with xopen(f"report-{sample_name}.json.gz", "wt", compresslevel=9) as f:
         json.dump(json_parse, f, ensure_ascii=False, separators=(",", ":"), indent=4)
 
 

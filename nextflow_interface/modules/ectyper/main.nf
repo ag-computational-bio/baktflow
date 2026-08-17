@@ -14,17 +14,15 @@ process ECTYPER{
         tuple val(meta), path("output.tsv"), emit: tsv
         tuple val(meta), path("ectyper.log"), emit: log
         tuple val(meta), path("blastn_output_alleles.txt"), emit: blast
-        path("${meta.sample_id}.json.gz"), emit: json
+        tuple val(meta), val('ectyper'), path("output.tsv"), emit: report
 
      script:
      """
      ectyper -i ${assembly} -o ./ -c ${task.cpus}
-     parse_ectyper.py output.tsv ${meta.sample_id}
      """
 
     stub:
     """
-    touch ${meta.sample_id}.json.gz
     touch output.csv
     touch ectyper.log
     touch blast_output_alleles.txt
