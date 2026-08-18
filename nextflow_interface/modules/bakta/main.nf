@@ -1,6 +1,5 @@
 #!/usr/bin/env nextflow
 
-params.baktaDb = "${params.databaseDir}/bakta/db-${params.baktaDbType}"
 
 process BAKTA {
     tag "$meta.sample_id"
@@ -27,8 +26,14 @@ process BAKTA {
         tuple val(meta), path("${meta.sample_id}.json.gz"), emit: json
 
     script:
+    if ( "${params.baktaDbType}" == "light" ) {
+        baktaDb = "${params.databaseDir}/bakta/db-light"
+    } else {
+        baktaDb = "${params.databaseDir}/bakta/db"
+    }
+
     """
-    bakta --db "${params.baktaDb}" --prefix ${meta.sample_id} --force --output ./ --threads $task.cpus ${assembly}
+    bakta --db "${baktaDb}" --prefix ${meta.sample_id} --force --output ./ --threads $task.cpus ${assembly}
     pigz -9 -p ${task.cpus} ${meta.sample_id}.embl
     pigz -9 -p ${task.cpus} ${meta.sample_id}.json
     """

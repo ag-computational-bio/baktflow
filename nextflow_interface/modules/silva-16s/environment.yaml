@@ -4,4 +4,3 @@ channels:
   - bioconda
 dependencies:
   - blast=2.17.0
-  - polars<2.0

@@ -48,6 +48,7 @@ workflow HYBRID_READ_PROCESSING_SUBWORKFLOW {
             }
 
         ch_genomestats = GENOMESTATS(combined_reads).hybrid_genome_size
+        ch_genomestats_reports = GENOMESTATS.out.report.mix(GENOMESTATS.out.report_hybrid.map { it -> return [it[0], it[1], it[2..-1]] })
 
         /*
         Assembly based on read set depths
@@ -121,4 +122,6 @@ workflow HYBRID_READ_PROCESSING_SUBWORKFLOW {
         emit:
             assembly_gfa = ch_reoriented.gfa
             assembly_fasta = ch_unicylcer_final.mix(ch_polished_assembly)
+            reports = FILTLONG.out.report.mix(ch_genomestats_reports).mix(ch_autocycler.reports).mix(ch_unicylcer.report
+                ).mix(ch_reoriented.report).mix(PYPOLCA.out.report).mix(POLYPOLISH.out.report)
 }

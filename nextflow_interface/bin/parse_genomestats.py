@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import gzip
 import json
 import os
 import sys
@@ -8,22 +7,14 @@ from datetime import datetime
 from pathlib import Path
 
 import polars as pl
-from utils import get_version
-
-__version__ = get_version()
+from versions import get_module_tool_versions
+from xopen import xopen
 
 
 def parse_genomestats(
-    result_dir: str | Path, sample_name: str, sample_type: str, result_hybrid: str | Path | None = None
+        result_dir: str | Path, sample_name: str, sample_type: str, result_hybrid: str | Path | None = None
 ):
-    json_parse = {
-        "meta_data": {"version": __version__, "module": "genomestats", "date": None, "sample": sample_name},
-        "data": {},
-    }
-
-    path = Path(result_dir)
-    date = datetime.fromtimestamp(os.path.getctime(path))
-    json_parse["meta_data"]["date"] = str(date).split()[0]
+    date: str = str(datetime.fromtimestamp(os.path.getctime(Path(result_dir)))).split()[0]
 
     columns = ["file", "n_reads", "bp", "avg_length", "n50", "n75", "n90", "aun", "min", "max"]
 
@@ -33,7 +24,7 @@ def parse_genomestats(
         except pl.exceptions.NoDataError:
             df_long = pl.DataFrame(schema=columns)
 
-        json_parse["data"] = df_long.to_dict(as_series=False)
+        data = df_long.to_dict(as_series=False)
 
     else:
         try:
@@ -41,17 +32,22 @@ def parse_genomestats(
             if result_hybrid:
                 df_short = pl.read_csv(result_hybrid, separator="\t", has_header=False, new_columns=columns)
 
-            # print(df_long)
-            # print(df_short)
-
         except pl.exceptions.NoDataError:
             df_long = pl.DataFrame(schema=columns)
             df_short = pl.DataFrame(schema=columns)
 
-        json_parse["data"]["long"] = df_long.to_dict(as_series=False)
-        json_parse["data"]["short"] = df_short.to_dict(as_series=False)
+        data = {
+            "long": df_long.to_dict(as_series=False),
+            "short": df_short.to_dict(as_series=False)
+        }
 
-    with gzip.open(f"{sample_name}.json.gz", "wt", encoding="utf-8") as f:
+    json_parse = {
+        "meta_data": {"version": get_module_tool_versions("genomestats"), "module": "genomestats", "date": date,
+                      "sample": sample_name},
+        "data": data,
+    }
+
+    with xopen(f"report-{sample_name}.json.gz", "wt", compresslevel=9) as f:
         json.dump(json_parse, f, ensure_ascii=False, separators=(",", ":"), indent=4)
 
 

@@ -20,7 +20,7 @@ process CHEWBBACA {
         tuple val(meta), path("paralogous_counts.tsv"), emit: paralogous_counts
         tuple val(meta), path("paralogous_loci.tsv"), emit: paralogous_loci
         tuple val(meta), path("logging_info.txt"), emit: logging_info
-        path("${meta.sample_id}.json.gz"), emit: json
+        tuple val(meta), val('chewbbaca'), path("cds_coordinates.tsv"), path("loci_summary_stats.tsv"), path("results_contigsInfo.tsv"), path("results_alleles.tsv"), path("paralogous_loci.tsv"), emit: report
 
     script:
     """
@@ -28,12 +28,10 @@ process CHEWBBACA {
     chewBBACA.py AlleleCall --no-inferred -i fasta_list.txt -o ./results --cpu ${task.cpus} -g ${params.databaseDir}/chewBBACA/${organism}
     mv results/* ./
     rm -r results/
-    parse_chewbbaca.py cds_coordinates.tsv loci_summary_stats.tsv results_contigsInfo.tsv results_alleles.tsv paralogous_loci.tsv ${meta.sample_id}
     """
 
     stub:
     """
-        touch ${meta.sample_id}.json.gz
         touch cds_coordinates.tsv
         touch invalid_cds.txt
         touch loci_summary_stats.tsv

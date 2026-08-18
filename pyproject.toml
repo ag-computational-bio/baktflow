@@ -19,18 +19,19 @@ classifiers = [
     "Development Status :: 1 - Planning",
     "Programming Language :: Python",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "nextflow>=25.10.4",
-    "polars>=1.40.1"
+    "nextflow~=25.10.4",
+    "polars>=1.43.2",
+    "pysimdjson~=7.0.2",
+    "xopen~=2.1.0",
 ]
 
 [dependency-groups]
 dev = [
-    "ruff>=0.15.11",
-    "ty>=0.0.31"
+    "ruff>=0.16.3",
+    "ty>=0.0.71"
 ]
 
 [project.urls]
@@ -42,7 +43,7 @@ Repository = "github.com/ag-computational-bio/baktflow"
 baktflow = "baktflow.CLI:main"
 
 [build-system]
-requires = ["uv_build >= 0.11.7,<0.12"]
+requires = ["uv_build >= 0.12.3,<0.13"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]

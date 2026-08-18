@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import gzip
 import json
 import os
 import sys
@@ -8,9 +7,8 @@ from datetime import datetime
 from pathlib import Path
 
 import polars as pl
-from utils import get_version
-
-__version__ = get_version()
+from versions import get_module_tool_versions
+from xopen import xopen
 
 
 def read_tsv(path):
@@ -23,20 +21,14 @@ def read_tsv(path):
 
 
 def parse_chewbbaca(
-    cds_coordinates: Path,
-    loci_summary_stats: Path,
-    contigs_results: Path,
-    alleles_results: Path,
-    paralogous: Path,
-    sample_name: Path,
+        cds_coordinates: Path,
+        loci_summary_stats: Path,
+        contigs_results: Path,
+        alleles_results: Path,
+        paralogous: Path,
+        sample_name: Path,
 ):
-    json_parse = {
-        "meta_data": {"version": __version__, "module": "chewbbaca", "date": None, "sample": str(sample_name)},
-        "data": {},
-    }
-    path_genes = Path(cds_coordinates)
-    date = datetime.fromtimestamp(os.path.getctime(path_genes))
-    json_parse["meta_data"]["date"] = str(date).split()[0]
+    date: str = str(datetime.fromtimestamp(os.path.getctime(Path(cds_coordinates)))).split()[0]
 
     df_cds_coordinates = read_tsv(cds_coordinates)
     df_loci = read_tsv(loci_summary_stats)
@@ -44,7 +36,7 @@ def parse_chewbbaca(
     df_alleles = read_tsv(alleles_results)
     df_paralogous = read_tsv(paralogous)
 
-    json_parse["data"].update(
+    data = (
         {
             "cds_coordinates": df_cds_coordinates.to_dict(as_series=False),
             "loci": df_loci.to_dict(as_series=False),
@@ -53,8 +45,12 @@ def parse_chewbbaca(
             "paralogous": df_paralogous.to_dict(as_series=False),
         }
     )
-
-    with gzip.open(f"{sample_name}.json.gz", "wt", encoding="utf-8") as f:
+    json_parse = {
+        "meta_data": {"version": get_module_tool_versions("chewbbaca"), "module": "chewbbaca", "date": date,
+                      "sample": str(sample_name)},
+        "data": data,
+    }
+    with xopen(f"report-{sample_name}.json.gz", "wt", compresslevel=9) as f:
         json.dump(json_parse, f, ensure_ascii=False, separators=(",", ":"), indent=4)
 
 

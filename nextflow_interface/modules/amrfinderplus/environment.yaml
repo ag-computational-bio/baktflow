@@ -4,4 +4,3 @@ channels:
   - bioconda
 dependencies:
   - ncbi-amrfinderplus=4.2.7
-  - polars<2.0

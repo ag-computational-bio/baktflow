@@ -4,4 +4,3 @@ channels:
   - bioconda
 dependencies:
   - mob_suite=3.1.9
-  - polars<2.0

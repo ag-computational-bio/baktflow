@@ -5,5 +5,3 @@ channels:
 dependencies:
   - polypolish=0.7.1
   - minibwa=0.7
-  - polars<2.0
-  - biopython==1.88

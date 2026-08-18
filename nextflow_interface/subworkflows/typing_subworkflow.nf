@@ -26,4 +26,6 @@ workflow TYPING_SUBWORKFLOW {
 
         CHEWBBACA(ch_chewbacca)
 
+    emit:
+        reports = CHEWBBACA.out.report.map { it -> return [it[0], it[1], it[2..-1]] }.mix(ECTYPER.out.report).mix(KLEBORATE.out.report)
 }
