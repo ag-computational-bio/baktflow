@@ -74,7 +74,7 @@ def create_aggregated_json(path_json_files: list, output_dir: str | Path, sample
         file = Path(file)
 
         if file.name.startswith("report-"):
-            with xopen(file, "rt", encoding="utf-8") as f:
+            with xopen(file, "rt") as f:
                 json_files.append(pysimdjson.load(f))
         else:
             relative_output = file.relative_to(output_dir)
@@ -83,7 +83,7 @@ def create_aggregated_json(path_json_files: list, output_dir: str | Path, sample
             parsed = parse_json(json_file=file, module_name=module_name, sample_id=sample_id)
             json_files.append(parsed)
 
-    with xopen(f"{output_dir}/{sample_id}.json.gz", "wt", encoding="utf-8", compresslevel=9) as f:
+    with xopen(f"{output_dir}/{sample_id}.json.gz", "wt", compresslevel=9) as f:
         pysimdjson.dump(json_files, f, ensure_ascii=False, indent=4)
 
 

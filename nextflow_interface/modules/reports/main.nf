@@ -72,7 +72,7 @@ process REPORTS {
         """
         parse_genomestats.py ${files} ${meta.sample_id} ${meta.sample_type}
         """
-    else if (tool == 'genomestats' && meta.sample_type == 'hybrid' )
+    else if ( tool == 'genomestats' && meta.sample_type == 'hybrid' )
         """
         parse_genomestats.py ${files[0]} ${meta.sample_id} hybrid ${files[1]}
         """
