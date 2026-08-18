@@ -11,8 +11,13 @@ from versions import get_module_tool_versions
 from xopen import xopen
 
 
-def parse_gecco(genes: str, features: str, cluster: str, sample_name: str):
-    date: str = str(datetime.fromtimestamp(os.path.getctime(Path(genes)))).split()[0]
+def parse_gecco(genes: str | None, features: str | None, cluster: str | None, sample_name: str):
+    for in_file in (genes, features, cluster):
+        if in_file:
+            date: str = str(datetime.fromtimestamp(os.path.getctime(Path(in_file)))).split()[0]
+            break
+    else:
+        date: str = str(datetime.today()).split()[0]
 
     columns_genes = ["sequence_id", "protein_id", "start", "end", "strand", "average_p", "max_p"]
 
@@ -90,8 +95,8 @@ def parse_gecco(genes: str, features: str, cluster: str, sample_name: str):
 
 
 if __name__ == "__main__":
-    genes = sys.argv[1]
-    features = sys.argv[2]
-    clusters = sys.argv[3]
+    genes = None if sys.argv[1] == "None" else sys.argv[1]
+    features = None if sys.argv[2] == "None" else sys.argv[2]
+    clusters = None if sys.argv[3] == "None" else sys.argv[3]
     sample_name = sys.argv[4]
     parse_gecco(genes, features, clusters, sample_name)

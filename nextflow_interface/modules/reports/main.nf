@@ -4,7 +4,8 @@ process REPORTS {
     tag "$meta.sample_id" + "#" + "$tool"
     publishDir "${params.output}/${meta.sample_id}/${tool}", mode: 'copy'
     conda "${projectDir}/modules/reports/environment.yaml"
-    queue "${params.long_queue}"
+    // queue "${params.long_queue}"
+    executor 'local'
 
     input:
         tuple val(meta), val(tool), path(files)
@@ -47,7 +48,25 @@ process REPORTS {
         """
     else if ( tool == 'gecco' )
         """
-        parse_gecco.py ${files} ${meta.sample_id}
+        if [ -s ${files[0]} ]; then
+            genes=${files[0]}
+        else
+            genes=None
+        fi
+
+        if [ -s ${files[1]} ]; then
+            features=${files[1]}
+        else
+            features=None
+        fi
+
+        if [ -s ${files[2]} ]; then
+            clusters=${files[2]}
+        else
+            clusters=None
+        fi
+
+        parse_gecco.py \$genes \$features \$clusters ${meta.sample_id}
         """
     else if ( tool == 'genomestats' && ( meta.sample_type == 'short' || meta.sample_type == 'long' ) )
         """
