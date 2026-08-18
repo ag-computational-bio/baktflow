@@ -9,9 +9,6 @@ from baktflow import __version__
 from versions import get_module_tool_versions
 
 
-# TODO parse version number from toml file
-# TODO parse tool version numbers from yaml env files
-
 # TODO: HTML/PDF report erstellen
 
 
