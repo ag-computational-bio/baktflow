@@ -121,7 +121,7 @@ def single_subcommand(args):
     )
     logger.info("Nextflow workflow executed successfully.")
 
-    jsons = br.check_output(output_dir=output)
+    jsons = br.check_output(output_dir=f"{output}/{args.id}")
     br.create_aggregated_json(path_json_files=jsons, output_dir=output, sample_id=args.id)
 
     logger.info("Report generation completed successfully.")
