@@ -16,7 +16,7 @@ process GENOMESTATS {
         tuple val(meta), env('GENOMESIZE'), env('SHORTCOVERAGE'), env('LONGCOVERAGE'), path(r1), path(r2), path(se), path(long_reads), emit: hybrid_genome_size
         path("*.log"), emit: logs
         tuple val(meta), val("genomestats"), path("length_stats.log"), emit: report, optional: true
-        tuple val(meta), val("genomestats"), path("long_length_stats.log"), path("hybrid short_length_stats.log"), emit: report_hybrid, optional: true
+        tuple val(meta), val("genomestats"), path("long_length_stats.log"), path("short_length_stats.log"), emit: report_hybrid, optional: true
 
     script:
     if( meta.sample_type == 'short' )
