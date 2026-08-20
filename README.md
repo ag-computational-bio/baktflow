@@ -1,20 +1,32 @@
 # Baktflow: Automated Bacterial Genome Analysis workflow
 
-Welcome to the Baktflow documentation, a user-friendly workflow for bacterial genome analysis. Built on Python and Nextflow, Baktflow focuses on preprocessing and annotation tasks, offering both single-sample and batch processing capabilities. Its design ensures portability and reliability across diverse computing environments, making it suitable for both novice and experienced users.
+Welcome to the Baktflow documentation, a user-friendly workflow for bacterial genome analysis. Built on Python and
+Nextflow, Baktflow focuses on preprocessing and annotation tasks, offering both single-sample and batch processing
+capabilities. Its design ensures portability and reliability across diverse computing environments, making it suitable
+for both novice and experienced users.
 
 ## workflow Objectives
 
-The Baktflow workflow is designed with the following key objectives in mind to ensure a seamless and efficient experience for users at all expertise levels:
+The Baktflow workflow is designed with the following key objectives in mind to ensure a seamless and efficient
+experience for users at all expertise levels:
+
 - **Technical Abstraction**: Shields users from complex technical processes, allowing them to focus on their analysis.
 - **End-to-End Automation**: Fully automates the process from data input to result generation.
 - **Accessibility Across Expertise Levels**: Suitable for both beginners and advanced users.
 
 ## Features
 
-- **Sequencing Data Types**: Supports Paired-End Illumina Reads for high-coverage short-read applications, Long Reads (Nanopore) for structural variant analysis and complex genome assembly, Hybrid Data combining short and long reads for enhanced genome assemblies, and Assembled Genomes in FASTA format for downstream analysis like annotation or comparative genomics.
-- **Automated Preprocessing and Annotation** Baktflow handles preprocessing steps including quality checks,read trimming , and genome assembly . These steps prepare the data for downstream analysis, which includes genome annotation.
-- **Aggregated Report** Baktflow generates a summarized report that consolidates key analysis results across all samples, including quality assessments from FastQC, assembly statistics from Unicycler, and read trimming data from Fastp. This report provides an overview of the entire analysis workflow, summarizing results from different sequencing technologies and sample types.
-
+- **Sequencing Data Types**: Supports Paired-End Illumina Reads for high-coverage short-read applications, Long Reads
+  (Nanopore) for structural variant analysis and complex genome assembly, Hybrid Data combining short and long reads for
+  enhanced genome assemblies, and Assembled Genomes in FASTA format for downstream analysis like annotation or
+  comparative genomics.
+- **Automated Preprocessing and Annotation** Baktflow handles preprocessing steps including quality checks,read
+  trimming , and genome assembly . These steps prepare the data for downstream analysis, which includes genome
+  annotation.
+- **Aggregated Report** Baktflow generates a summarized report that consolidates key analysis results across all
+  samples, including quality assessments from FastQC, assembly statistics from Unicycler, and read trimming data from
+  Fastp. This report provides an overview of the entire analysis workflow, summarizing results from different sequencing
+  technologies and sample types.
 
 ## Installation
 
@@ -23,22 +35,27 @@ The Baktflow workflow is designed with the following key objectives in mind to e
 Before starting the installation, ensure you have the following prerequisites installed:
 
 - **Python** >= 3.11
-- **Micromamba** or **Mamba**: An alternative for Conda, providing faster package and environment management. ([Installation](https://github.com/mamba-org/mamba))
+- **Micromamba** or **Mamba**: An alternative for Conda, providing faster package and environment management.
+  ([Installation](https://github.com/mamba-org/mamba))
 
 ### Install the Baktflow package
 
 Baktflow can easily be installed it using uv or pip. This will automatically install all required dependencies:
 
 Recommended:
+
 ```bash
 uv pip install baktflow
 ```
+
 or
+
 ```bash
 pip install baktflow
 ```
 
 ### Verify the Installation
+
 After installing Baktflow, you can verify the installation by running:
 
 ```bash
@@ -47,8 +64,8 @@ baktflow --help
 
 ### Development
 
-You can install Baktflow in an editable mode directly from the GitHub repository.
-This is useful if you plan to contribute to the development or modify the package.
+You can install Baktflow in an editable mode directly from the GitHub repository. This is useful if you plan to
+contribute to the development or modify the package.
 
 First, clone the repository and checkout the ma-ned-dev branch:
 
@@ -57,28 +74,30 @@ git clone https://github.com/oschwengers/baktflow.git
 cd baktflow
 git checkout development
 ```
+
 Then, install using uv in editable mode:
 
 ```bash
 uv pip install -e .
 ```
 
-This method installs the package from the local copy of the development branch, allowing you to make changes and see 
+This method installs the package from the local copy of the development branch, allowing you to make changes and see
 them immediately without needing to reinstall.
 
-
 ## Input
+
 The workflow accepts the following input data types:
 
-FASTQ files: Sequencing data files from various platforms (e.g., Illumina, Nanopore).
-FASTA files: Assembly or reference genome files (if applicable).
-TSV files: Metadata file that provides information about the samples and their corresponding sequencing files. 
-The file must contain the following columns:
+FASTQ files: Sequencing data files from various platforms (e.g., Illumina, Nanopore). FASTA files: Assembly or reference
+genome files (if applicable). TSV files: Metadata file that provides information about the samples and their
+corresponding sequencing files. The file must contain the following columns:
+
 - `id`: sample ID
 - `type`: type of sample (hybrid, long, short, etc.)
 - `file_1`: path to the first FASTQ file
 - `file_2`: path to the second FASTQ file (if paired-end)
 - `file_3`: path to the third FASTQ file (if applicable)
+
 ```
 | id  | type   | file_1               | file_2             | file_3            |
 | --- | ------ | -------------------- | ------------------ | ----------------- |
@@ -88,8 +107,9 @@ The file must contain the following columns:
 
 ## Output
 
-Each sample is stored in its own folder within the output/ directory, containing subfolders for different modules. 
+Each sample is stored in its own folder within the output/ directory, containing subfolders for different modules.
 Additionally, an aggregated report (aggregated_report.html) at the top level summarizes results across all samples.
+
 ```
 output
 ├── sample_id1
@@ -113,13 +133,16 @@ output
 ## Main Subcommands
 
 ### Setup
-The `setup` subcommand initializes the workflow environment, ensuring all necessary configurations and dependencies are 
+
+The `setup` subcommand initializes the workflow environment, ensuring all necessary configurations and dependencies are
 in place.
 
 **Example Execution:**
+
 ```bash
 baktflow setup --directory /path/to/home --nextflow_path /path/to/nextflow
 ```
+
 Parameters:
 
 **`--directory (Required)`**: Directory for the workflow and database setup.
@@ -128,21 +151,23 @@ Parameters:
 
 **`--force (Optional)`**: Force the reinstallation of the setup.
 
+### Single
 
-### Single 
-The single subcommand processes an individual sample by specifying sequencing files directly. Ideal for analyzing a 
+The single subcommand processes an individual sample by specifying sequencing files directly. Ideal for analyzing a
 single dataset without needing a TSV file.
 
 Example Execution:
+
 ```bash
 baktflow single --r1 /path/to/m3.fastq.gz --r2 /path/to/m4.fastq.gz --id sample_32 --output /path/to/results
 ```
+
 **Parameters:**
 
-**`--r1`**: Specifies the path for the R1 (forward) read file for Illumina short-read sequencing.
-**`--r2`**: Specifies the path for the R2 (reverse) read file for Illumina short-read sequencing.
+**`--r1`**: Specifies the path for the R1 (forward) read file for Illumina short-read sequencing. **`--r2`**: Specifies
+the path for the R2 (reverse) read file for Illumina short-read sequencing.
 
-**`--long`**:  Specifies the path for the long-read sequencing data 
+**`--long`**:  Specifies the path for the long-read sequencing data
 
 **`--assembly`**: Specifies the path for the assembly data.
 
@@ -151,13 +176,16 @@ baktflow single --r1 /path/to/m3.fastq.gz --r2 /path/to/m4.fastq.gz --id sample_
 **`--output`**(Optional): Specifies the output directory for the analysis results.
 
 ### Batch
-For batch analyses, a TSV file containing sample information and the input directory for the sequencing data are 
-required. 
+
+For batch analyses, a TSV file containing sample information and the input directory for the sequencing data are
+required.
 
 **Example Execution:**
+
 ```bash
 baktflow batch --input_tsv /path/to/samples.tsv --input_dir /path/to/reads --output /path/to/results
 ```
+
 Parameters:
 
 **`--input_tsv (Required)`**: Path to the TSV file containing sample details.
@@ -167,47 +195,53 @@ Parameters:
 **`--output (Optional)`**: Output directory for results.
 
 ### Reporting
-The report subcommand generates summary reports from previously processed data, consolidating results into structured 
+
+The report subcommand generates summary reports from previously processed data, consolidating results into structured
 outputs.
 
 **Example Execution:**
+
 ```bash
 baktflow report --input_dir /path/to/output --output_dir /path/to/reports
 ```
+
 Parameters:
 
-**`--input_dir (Required)`**: Directory containing output files (e.g., JSON files) from previous workflow steps like 
+**`--input_dir (Required)`**: Directory containing output files (e.g., JSON files) from previous workflow steps like
 FastQC.
 
 **`--output_dir (Required)`**: Directory to save the aggregated report.
 
-
 ## Workflow Overview
 
-The Baktflow workflow combines a Python-based command-line interface (CLI) with Nextflow to streamline and automate 
-sequencing data analysis. Users interact with Baktflow through the CLI, providing input data and parameters, while Baktflow handles data preprocessing, validation, and formatting.
+The Baktflow workflow combines a Python-based command-line interface (CLI) with Nextflow to streamline and automate
+sequencing data analysis. Users interact with Baktflow through the CLI, providing input data and parameters, while
+Baktflow handles data preprocessing, validation, and formatting.
 
-Nextflow orchestrates the analysis by parallelizing tasks and triggering subworkflows based on sequencing technology 
+Nextflow orchestrates the analysis by parallelizing tasks and triggering subworkflows based on sequencing technology
 (Illumina, Nanopore, or Hybrid). It manages the execution of processes such as quality control, read trimming, assembly,
-polishing, and annotation, ensuring tasks are run efficiently and in the correct order. Nextflow also handles resource 
-management, running the workflow across local machines, clusters, or cloud platforms, and provides error handling for 
+polishing, and annotation, ensuring tasks are run efficiently and in the correct order. Nextflow also handles resource
+management, running the workflow across local machines, clusters, or cloud platforms, and provides error handling for
 robust execution.
 
-Once the analysis is complete, Baktflow organizes the results by sample ID and compiles them into user-friendly reports 
+Once the analysis is complete, Baktflow organizes the results by sample ID and compiles them into user-friendly reports
 for easy interpretation.
 
-
-
 ## Sequencing Data Types and Tools
+
 Baktflow supports multiple sequencing data types, each requiring specific preprocessing and analysis steps. The workflow
-includes quality control, read trimming, genome assembly, polishing, reorientation, and annotation to ensure high-quality 
-genomic data for downstream applications.
+includes quality control, read trimming, genome assembly, polishing, reorientation, and annotation to ensure
+high-quality genomic data for downstream applications.
 
-- **Paired-End** Illumina Reads undergo quality control (FastQC) [1], trimming (Fast) [2], and assembly (Unicycler) [3]. Following the reorientation (Dnaapler) [4], the data is annotated (Bakta) [5].
+- **Paired-End** Illumina Reads undergo quality control (FastQC) [1], trimming (Fast) [2], and assembly (Unicycler) [3].
+  Following the reorientation (Dnaapler) [4], the data is annotated (Bakta) [5].
 
-- **Long Reads** (Nanopore) are processed using quality control (FastQC), trimming (Filtlong) [6], assembly (Flye) [7], and polishing (Medaka) [8]. The final reoriented assembly (Dnaapler) is annotated with Bakta.
+- **Long Reads** (Nanopore) are processed using quality control (FastQC), trimming (Filtlong) [6], assembly (Flye) [7],
+  and polishing (Medaka) [8]. The final reoriented assembly (Dnaapler) is annotated with Bakta.
 
-- **Hybrid Data** combines Illumina (short-read) and Nanopore (long-read) technologies, integrating FastQC, Fastp (Illumina), Filtlong (Nanopore), Unicycler (assembly), Medaka (long-read polishing), and Pypolca [9] / PolyPolish [110] (short-read polishing). After reorientation with Dnaapler, the data is annotated with Bakta.
+- **Hybrid Data** combines Illumina (short-read) and Nanopore (long-read) technologies, integrating FastQC, Fastp
+  (Illumina), Filtlong (Nanopore), Unicycler (assembly), Medaka (long-read polishing), and Pypolca [9] /
+  PolyPolish [110] (short-read polishing). After reorientation with Dnaapler, the data is annotated with Bakta.
 
 - **Assembled Genomes** skip trimming, assembly, and polishing steps, proceeding directly to annotation (Bakta).
 
@@ -220,7 +254,7 @@ genomic data for downstream applications.
 | **Assembled Genomes (FASTA)**    |                           | No trimming                           | No assembly          | No polishing                                                     | Bakta                |
 ```
 
-## Usage 
+## Usage
 
 ```
 Baktflow: An Automated Bacterial Genome Analysis workflow
@@ -264,33 +298,48 @@ General Flags
 ```
 
 ## Troubleshooting
-Common Issues
-Error in Processing Sample Data: Ensure that the paths to input files in the TSV are correct and files are accessible.
-Dependencies: If any dependencies are missing, ensure the requirements.txt is properly installed
+
+Common Issues Error in Processing Sample Data: Ensure that the paths to input files in the TSV are correct and files are
+accessible. Dependencies: If any dependencies are missing, ensure the requirements.txt is properly installed
 
 ## FAQs
-How can I customize my workflow configuration?
-You can modify the env.yaml inside the nextflow modules.
+
+How can I customize my workflow configuration? You can modify the env.yaml inside the nextflow modules.
 
 ## References
-[1] Babraham Bioinformatics - FastQC A Quality Control tool for High Throughput Sequence Data. (2025). Retrieved March 6, 2025, from Babraham.ac.uk website: https://www.bioinformatics.babraham.ac.uk/projects/fastqc/
 
-[2] Chen, S., Zhou, Y., Chen, Y., & Gu, J. (2018). fastp: an ultra-fast all-in-one FASTQ preprocessor. Bioinformatics, 34(17), i884–i890. https://doi.org/10.1093/bioinformatics/bty560
+[1] Babraham Bioinformatics - FastQC A Quality Control tool for High Throughput Sequence Data. (2025). Retrieved March
+6, 2025, from Babraham.ac.uk website: https://www.bioinformatics.babraham.ac.uk/projects/fastqc/
 
-[3] Wick, R. R., Judd, L. M., Gorrie, C. L., & Holt, K. E. (2017). Unicycler: Resolving bacterial genome assemblies from short and long sequencing reads. PLoS Computational Biology, 13(6), e1005595–e1005595. https://doi.org/10.1371/journal.pcbi.1005595
+[2] Chen, S., Zhou, Y., Chen, Y., & Gu, J. (2018). fastp: an ultra-fast all-in-one FASTQ preprocessor. Bioinformatics,
+34 (17), i884–i890. https://doi.org/10.1093/bioinformatics/bty560
 
-[4] Bouras, G., Grigson, S. R., Bhavya Papudeshi, Vijini Mallawaarachchi, & Roach, M. J. (2024). Dnaapler: A tool to reorient circular microbial genomes. The Journal of Open Source Software, 9(93), 5968–5968. https://doi.org/10.21105/joss.05968
+[3] Wick, R. R., Judd, L. M., Gorrie, C. L., & Holt, K. E. (2017). Unicycler: Resolving bacterial genome assemblies from
+short and long sequencing reads. PLoS Computational Biology, 13 (6),
+e1005595–e1005595. https://doi.org/10.1371/journal.pcbi.1005595
 
-[5] Schwengers, O., Jelonek, L., Dieckmann, M. A., Beyvers, S., Blom, J., & Goesmann, A. (2021). Bakta: rapid and standardized annotation of bacterial genomes via alignment-free sequence identification. Microbial Genomics, 7(11). https://doi.org/10.1099/mgen.0.000685
+[4] Bouras, G., Grigson, S. R., Bhavya Papudeshi, Vijini Mallawaarachchi, & Roach, M. J. (2024). Dnaapler: A tool to
+reorient circular microbial genomes. The Journal of Open Source Software, 9 (93),
+5968–5968. https://doi.org/10.21105/joss.05968
+
+[5] Schwengers, O., Jelonek, L., Dieckmann, M. A., Beyvers, S., Blom, J., & Goesmann, A. (2021). Bakta: rapid and
+standardized annotation of bacterial genomes via alignment-free sequence identification. Microbial Genomics, 7
+(11). https://doi.org/10.1099/mgen.0.000685
 
 [6] https://github.com/rrwick/Filtlong
 
-[7] Mikhail Kolmogorov, Yuan, J., Lin, Y., & Pevzner, P. A. (2019). Assembly of long, error-prone reads using repeat graphs. Nature Biotechnology, 37(5), 540–546. https://doi.org/10.1038/s41587-019-0072-8
+[7] Mikhail Kolmogorov, Yuan, J., Lin, Y., & Pevzner, P. A. (2019). Assembly of long, error-prone reads using repeat
+graphs. Nature Biotechnology, 37 (5), 540–546. https://doi.org/10.1038/s41587-019-0072-8
 
-[8] nanoporetech. (2024, October 11). GitHub - nanoporetech/medaka: Sequence correction provided by ONT Research. Retrieved March 6, 2025, from GitHub website: https://github.com/nanoporetech/medaka
+[8] nanoporetech. (2024, October 11). GitHub - nanoporetech/medaka: Sequence correction provided by ONT Research.
+Retrieved March 6, 2025, from GitHub website: https://github.com/nanoporetech/medaka
 
-[9]Bouras, G., Judd, L. M., Edwards, R. A., Vreugde, S., Stinear, T. P., & Wick, R. R. (2024). How low can you go? Short-read polishing of Oxford Nanopore bacterial genome assemblies. Microbial Genomics, 10(6). https://doi.org/10.1099/mgen.0.001254
+[9]Bouras, G., Judd, L. M., Edwards, R. A., Vreugde, S., Stinear, T. P., & Wick, R. R. (2024). How low can you go?
+Short-read polishing of Oxford Nanopore bacterial genome assemblies. Microbial Genomics, 10
+(6). https://doi.org/10.1099/mgen.0.001254
 
-[9] Zimin, A. V., & Salzberg, S. L. (2020). The genome polishing tool POLCA makes fast and accurate corrections in genome assemblies. PLoS Computational Biology, 16(6), e1007981–e1007981. https://doi.org/10.1371/journal.pcbi.1007981
+[9] Zimin, A. V., & Salzberg, S. L. (2020). The genome polishing tool POLCA makes fast and accurate corrections in
+genome assemblies. PLoS Computational Biology, 16 (6), e1007981–e1007981. https://doi.org/10.1371/journal.pcbi.1007981
 
-[10] Wick, R. R., & Holt, K. E. (2022). Polypolish: Short-read polishing of long-read bacterial genome assemblies. PLOS Computational Biology, 18(1), e1009802. https://doi.org/10.1371/journal.pcbi.1009802
+[10] Wick, R. R., & Holt, K. E. (2022). Polypolish: Short-read polishing of long-read bacterial genome assemblies. PLOS
+Computational Biology, 18 (1), e1009802. https://doi.org/10.1371/journal.pcbi.1009802
