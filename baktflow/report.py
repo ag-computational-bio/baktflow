@@ -2,11 +2,11 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-import pysimdjson
+import json
 from xopen import xopen
 
 from baktflow import __version__
-from versions import get_module_tool_versions
+from baktflow.versions import get_module_tool_versions
 
 
 # TODO: HTML/PDF report erstellen
@@ -45,7 +45,7 @@ def normalize_keys(obj):
 
 def parse_json(json_file: Path, module_name: str, sample_id: str):
     with xopen(json_file, "r") as file:
-        data = pysimdjson.load(file)
+        data = json.load(file)
 
     date: str = str(datetime.fromtimestamp(os.path.getctime(json_file))).split()[0]
     json_parse = {
@@ -75,7 +75,7 @@ def create_aggregated_json(path_json_files: list, output_dir: str | Path, sample
 
         if file.name.startswith("report-"):
             with xopen(file, "rt") as f:
-                json_files.append(pysimdjson.load(f))
+                json_files.append(json.load(f))
         else:
             relative_output = file.relative_to(output_dir)
             module_name = relative_output.parent.name
@@ -84,7 +84,7 @@ def create_aggregated_json(path_json_files: list, output_dir: str | Path, sample
             json_files.append(parsed)
 
     with xopen(f"{output_dir}/{sample_id}.json.gz", "wt", compresslevel=9) as f:
-        pysimdjson.dump(json_files, f, ensure_ascii=False, indent=4)
+        json.dump(json_files, f, ensure_ascii=False, indent=4)
 
 
 def aio_create_aggregated_json(output: Path, sample: str):

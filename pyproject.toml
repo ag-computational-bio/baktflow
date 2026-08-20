@@ -24,8 +24,8 @@ classifiers = [
 dependencies = [
     "nextflow~=25.10.4",
     "polars>=1.43.2",
-    "pysimdjson~=7.0.2",
     "xopen~=2.1.0",
+    "pyyaml~=6.0.3"
 ]
 
 [dependency-groups]
