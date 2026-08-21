@@ -43,14 +43,27 @@ def normalize_keys(obj):
     return obj
 
 
-def parse_json(json_file: Path, module_name: str, sample_id: str):
-    with xopen(json_file, "r") as file:
-        data = json.load(file)
+def parse_json(json_file: Path | list[Path], module_name: str, sample_id: str):
+    if isinstance(json_file, Path):
+        json_files = [json_file]
+    else:
+        json_files = json_file
 
-    date: str = str(datetime.fromtimestamp(os.path.getctime(json_file))).split()[0]
+    data = []
+
+    for file_path in json_files:
+        with xopen(file_path, "r") as file:
+            data.append(json.load(file))
+
+    date: str = str(datetime.fromtimestamp(json_files[0].stat().st_ctime)).split()[0]
+
     json_parse = {
-        "meta_data": {"version": get_module_tool_versions(module_name), "module": module_name, "date": date,
-                      "sample": sample_id},
+        "meta_data": {
+            "version": get_module_tool_versions(module_name),
+            "module": module_name,
+            "date": date,
+            "sample": sample_id,
+        },
         "data": normalize_keys(data),
     }
 
@@ -69,10 +82,10 @@ def create_aggregated_json(path_json_files: list, output_dir: str | Path, sample
             "data": None,
         }
     ]
+    json_sub_dirs = {}
 
     for file in path_json_files:
         file = Path(file)
-
         if file.name.startswith("report-"):
             with xopen(file, "rt") as f:
                 json_files.append(json.load(f))
@@ -80,8 +93,16 @@ def create_aggregated_json(path_json_files: list, output_dir: str | Path, sample
             relative_output = file.relative_to(output_dir)
             module_name = relative_output.parent.name
 
-            parsed = parse_json(json_file=file, module_name=module_name, sample_id=sample_id)
+            dir_split = str(relative_output).split("/")
+            if len(dir_split) < 3:
+                parsed = parse_json(json_file=file, module_name=module_name, sample_id=sample_id)
+            else:
+                module_name = dir_split[0]
+                json_sub_dirs[module_name] = json_sub_dirs.get(module_name, []) + [file]
             json_files.append(parsed)
+
+    parsed = parse_json(json_file=list(json_sub_dirs.values())[0], module_name=str(next(iter(json_sub_dirs))), sample_id=sample_id)
+    json_files.append(parsed)
 
     with xopen(f"{output_dir}/{sample_id}.json.gz", "wt", compresslevel=9) as f:
         json.dump(json_files, f, ensure_ascii=False, indent=4)
