@@ -30,6 +30,7 @@ include { SETUP_ECTYPER } from './modules/ectyper/setup.nf'
 include { SETUP_KLEBORATE } from './modules/kleborate/setup.nf'
 include { SETUP_PLING } from './modules/pling/setup.nf'
 include { SETUP_PLASMIDFINDER } from './modules/plasmidfinder/setup.nf'
+include { SETUP_MASKING } from './modules/masking/setup.nf'
 include { SETUP_CHEWBBACA } from './modules/chewbbaca/setup.nf'
 include { SETUP_REPORTS } from './modules/reports/setup.nf'
 

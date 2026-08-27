@@ -181,7 +181,9 @@ workflow {
         tuple(new_meta, assembly)
     }
 
-    TYPING_SUBWORKFLOW(cf_assemblies_with_taxonomy)
+    TYPING_SUBWORKFLOW(cf_assemblies_with_taxonomy, ch_short_processed.reads_trimmed, ch_long_processed.assembly_fastq,
+        ch_hybrid_processed.reads_trimmed, ch_assemblies
+    )
 
     // Call antismash
     ANTISMASH(bakta_annotation.gbff)

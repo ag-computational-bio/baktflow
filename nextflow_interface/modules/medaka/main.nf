@@ -12,14 +12,16 @@ process MEDAKA {
 
     output:
         tuple val(meta), path("${meta.sample_id}_polished_assembly.fasta"), emit: fasta
+        tuple val(meta), path("${meta.sample_id}_polished_assembly.fastq"), emit: fastq
         tuple val(meta), val('medaka'), path("${meta.sample_id}_polished_assembly.fasta"), emit: report
 
     script:
     """
-    medaka_consensus -i ${long_reads} -d ${scaffolds} -o ./out -t ${task.cpus} --bacteria || \
-    medaka_consensus -i ${long_reads} -d ${scaffolds} -o ./out -t ${task.cpus} -m r1041_e82_400bps_bacterial_methylation
+    medaka_consensus -i ${long_reads} -d ${scaffolds} -o ./out -t ${task.cpus} --bacteria -q || \
+    medaka_consensus -i ${long_reads} -d ${scaffolds} -o ./out -t ${task.cpus} -m r1041_e82_400bps_bacterial_methylation -q
 
-    mv out/consensus.fasta ${meta.sample_id}_polished_assembly.fasta
+    mv out/consensus.fastq ${meta.sample_id}_polished_assembly.fastq
+    seqkit fq2fa ${meta.sample_id}_polished_assembly.fastq -o ${meta.sample_id}_polished_assembly.fasta
     rm -r out
     """
 

@@ -120,6 +120,7 @@ workflow HYBRID_READ_PROCESSING_SUBWORKFLOW {
         
 
         emit:
+            reads_trimmed = combined_reads
             assembly_gfa = ch_reoriented.gfa
             assembly_fasta = ch_unicylcer_final.mix(ch_polished_assembly)
             reports = FILTLONG.out.report.mix(ch_genomestats_reports).mix(ch_autocycler.reports).mix(ch_unicylcer.report

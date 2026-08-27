@@ -27,6 +27,7 @@ workflow SHORT_READ_PROCESSING_SUBWORKFLOW {
 
     // Emit the final output
     emit:
+        reads_trimmed = ch_trimmed_reads.trimmed_reads
         assembly_gfa = ch_reoriented.gfa
         assembly_fasta = ch_reoriented.fasta
         reports = assembly.report.mix(ch_reoriented.report)

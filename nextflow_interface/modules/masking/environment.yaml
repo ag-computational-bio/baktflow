@@ -1,0 +1,10 @@
+name: pmlst
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - alpaqa-bio==0.1.4
+  - biopython==1.88
+  - minimap2==2.31
+  - minibwa==0.7
+  - samtools==1.24

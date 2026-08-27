@@ -70,6 +70,7 @@ workflow LONG_READ_PROCESSING_SUBWORKFLOW {
     emit:
         assembly_gfa = ch_reoriented.gfa
         assembly_fasta = ch_medaka_polished.fasta
+        assembly_fastq = ch_medaka_polished.fastq
         reports = FILTLONG.out.report.mix(ch_genomestats_reports).mix(ch_autocycler.reports).mix(ch_flye.report).mix(
             ch_reoriented.report).mix(ch_medaka_polished.report)
 }
