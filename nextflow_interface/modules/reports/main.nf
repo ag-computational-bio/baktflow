@@ -88,6 +88,10 @@ process REPORTS {
         """
         parse_macsyfinder.py ${files} ${meta.sample_id} ${meta.finder}
         """
+    else if ( tool == 'masking' )
+        """
+        parse_assembly.py ${files} ${meta.sample_id} masking
+        """
     else if ( tool == 'medaka' )
         """
         parse_assembly.py ${files} ${meta.sample_id} medaka
