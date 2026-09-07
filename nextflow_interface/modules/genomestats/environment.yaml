@@ -4,6 +4,6 @@ channels:
   - bioconda
 dependencies:
   - lrge==0.3.0                  # https://github.com/mbhall88/lrge
-  - seqfu==1.26.0
+  - seqfu==1.27.1
   - kmc==3.2.4
   - genomescope2==2.1.0
