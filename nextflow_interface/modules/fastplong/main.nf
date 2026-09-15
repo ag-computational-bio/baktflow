@@ -17,19 +17,20 @@ process FASTPLONG {
 
     script:
     """
-    fastplong -i ${long_reads} --out ${meta.sample_id}_trimmed.fastq.gz --cut_front --cut_tail --cut_mean_quality 1 \
-    --trim_poly_x --break --break_mean_quality 1 --length_required 500 --compression 6 --thread $task.cpus
-
-    pigz -9 -p ${task.cpus} fastplong.json
+    fastplong -i ${long_reads} --stdout --cut_front --cut_tail --cut_mean_quality 10 --break --break_mean_quality 10 \
+    --mean_qual 10 --length_required 500 --thread $task.cpus | \
+    pigz -9 -p ${task.cpus} > ${meta.sample_id}_trimmed.fastq.gz
 
     # Fallback to use the complete input file if overall quality is to low
-    BEFORE=\$(zgrep -A 1 "before_filtering" fastplong.json.gz | head -n 2 | grep "total_reads" | cut -d: -f 2 | sed 's/,//')
-    AFTER=\$(zgrep -A 1 "after_filtering" fastplong.json.gz | head -n 2 | grep "total_reads" | cut -d: -f 2 | sed 's/,//')
+    BEFORE=\$(grep -A 1 "before_filtering" fastplong.json | head -n 2 | grep "total_reads" | cut -d: -f 2 | sed 's/,//')
+    AFTER=\$(grep -A 1 "after_filtering" fastplong.json | head -n 2 | grep "total_reads" | cut -d: -f 2 | sed 's/,//')
     FRACTION=\$((\$AFTER/\$BEFORE*100))
 
-    if [ \$AFTER -eq 0 || \$FRACTION -le 50 ]; then
-        rm ${meta.sample_id}_trimmed.fastq.gz fastplong.json.gz fastplong.html
+    if [[ \$AFTER -eq 0 || \$FRACTION -le 50 ]]; then
+        rm ${meta.sample_id}_trimmed.fastq.gz fastplong.json fastplong.html
         cp ${long_reads} ${meta.sample_id}_trimmed.fastq.gz
+    else
+        pigz -9 -p ${task.cpus} fastplong.json
     fi
     """
 

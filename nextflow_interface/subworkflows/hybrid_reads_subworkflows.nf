@@ -3,7 +3,8 @@
 include {FASTP} from '../modules/fastp/main.nf'
 include {FASTPLONG} from '../modules/fastplong/main.nf'
 include {FILTLONG} from '../modules/filtlong/main.nf'
-include {GENOMESTATS} from '../modules/genomestats/main.nf'
+include {GENOMESTATS as GENOMESTATS_RAW} from '../modules/genomestats/main.nf'
+include {GENOMESTATS as GENOMESTATS_FILTERED} from '../modules/genomestats/main.nf'
 include {UNICYCLER} from '../modules/unicycler/main.nf'
 include {AUTOCYCLER_SUBWORKFLOW} from './autocycler_subworkflow.nf'
 include {POLYPOLISH} from '../modules/polypolish/main.nf'
@@ -20,35 +21,53 @@ workflow HYBRID_READ_PROCESSING_SUBWORKFLOW {
         short_read_samples = ch_hybrid_reads.filter { it -> it.r1 && it.r2 }
         long_read_samples = ch_hybrid_reads.filter { it -> !it.long_reads.isEmpty() }
 
-        // Process short and long reads using FastP, FastPlong and Filtlong
+        // Trim short reads using FastP
         ch_processed_short_reads = FASTP(short_read_samples.map { sample -> 
             tuple(sample.meta, sample.r1, sample.r2)
         })
 
-        if ( params.longReadTrimming.toBoolean() ) {
-            ch_trimmed_long_reads = FASTPLONG(long_read_samples.map { it -> tuple(it.meta, it.long_reads) }).trimmed_long_reads
-            ch_filtered_long_reads = FILTLONG(ch_trimmed_long_reads).filtered_long_reads
-        } else {
-            ch_filtered_long_reads = FILTLONG(long_read_samples.map { sample ->
-                tuple(sample.meta, sample.long_reads)
-            }).filtered_long_reads
-        }
-
-        // Get processed reads for assembly
-        // Key channels with sample_id for easy joining
+        // Keyed filtered short reads
         ch_keyed_short_reads = ch_processed_short_reads.trimmed_reads.map { meta, r1, r2, se ->
             tuple(meta.sample_id, meta, r1, r2, se)
         }
-        ch_keyed_long_reads = ch_filtered_long_reads.map { meta, long_reads ->
-            tuple(meta.sample_id, long_reads)
-        }
-        combined_reads = ch_keyed_short_reads.join(ch_keyed_long_reads)
-            .map { _sample_id, meta_short, r1, r2, se, long_reads ->
-                tuple(meta_short, r1, r2, se, long_reads)
-            }
 
-        ch_genomestats = GENOMESTATS(combined_reads).hybrid_genome_size
-        ch_genomestats_reports = GENOMESTATS.out.report.mix(GENOMESTATS.out.report_hybrid.map { it -> return [it[0], it[1], it[2..-1]] })
+        // Estimate genome size
+        ch_genomestats_raw_input = ch_keyed_short_reads.join(
+            long_read_samples.map { it -> tuple(it.meta.sample_id, it.long_reads) }
+        ).map { _sample_id, meta_short, r1, r2, se, long_reads ->
+            tuple(meta_short, r1, r2, se, long_reads)
+        }
+        ch_genomestats_raw = GENOMESTATS_RAW(ch_genomestats_raw_input).hybrid_genome_size
+
+        // Determine trim or filter strategy
+        ch_filtering_input = ch_genomestats_raw.filter { _meta, genomesize, _short_coverage, long_coverage, _r1, _r2, _se, _long_reads ->
+            genomesize.toInteger() == 1 || long_coverage.toInteger() < params.minReadDepth
+        }.map { meta, genomesize, _short_coverage, long_coverage, _r1, _r2, _se, long_reads ->
+            tuple(meta, genomesize, long_coverage, long_reads)
+        }
+        ch_trimming_input = ch_genomestats_raw.filter { _meta, genomesize, _short_coverage, long_coverage, _r1, _r2, _se, _long_reads ->
+            genomesize.toInteger() > 1 && long_coverage.toInteger() >= params.minReadDepth
+        }.map { meta, _genomesize, _short_coverage, _long_coverage, _r1, _r2, _se, long_reads ->
+            tuple(meta, long_reads)
+        }
+
+        // Trim or filter long reads
+        ch_trimmed_long_reads = FASTPLONG(ch_trimming_input).trimmed_long_reads
+        ch_filtered_long_reads = FILTLONG(ch_filtering_input).filtered_long_reads
+        
+        // Re-estimate genome size and determine assembler
+        ch_genomestats_reestimation_input = ch_keyed_short_reads.join(
+            ch_trimmed_long_reads.mix(ch_filtered_long_reads).map { meta, long_reads -> tuple(meta.sample_id, long_reads) }
+        ).map { _sample_id, meta_short, r1, r2, se, long_reads ->
+            tuple(meta_short, r1, r2, se, long_reads)
+        }
+        ch_genomestats_filtered = GENOMESTATS_FILTERED(ch_genomestats_reestimation_input).hybrid_genome_size
+        ch_genomestats_reports = GENOMESTATS_FILTERED.out.report.mix(GENOMESTATS_FILTERED.out.report_hybrid.map { it -> return [it[0], it[1], it[2..-1]] })
+
+        // Combined trimmed and filterd reads
+        combined_reads = ch_genomestats_filtered.map { meta, _genomesize, _short_coverage, _long_coverage, r1, r2, se, long_reads ->
+            tuple(meta, r1, r2, se, long_reads)
+        }
 
         /*
         Assembly based on read set depths
@@ -58,13 +77,13 @@ workflow HYBRID_READ_PROCESSING_SUBWORKFLOW {
         - Shallow reads -> ?
         */
 
-        ch_unicycler_input = ch_genomestats.filter { _meta, genomesize, _short_coverage, _long_coverage, _r1, _r2, _se, _long_reads ->
+        ch_unicycler_input = ch_genomestats_filtered.filter { _meta, genomesize, _short_coverage, _long_coverage, _r1, _r2, _se, _long_reads ->
             genomesize.toInteger() == 1
         }.map { meta, genomesize, _short_coverage, _long_coverage, r1, r2, se, long_reads ->
             tuple(meta, genomesize, r1, r2, se, long_reads)
         }
 
-        ch_assembler_input = ch_genomestats.filter { _meta, genomesize, _short_coverage, _long_coverage, _r1, _r2, _se, _long_reads ->
+        ch_assembler_input = ch_genomestats_filtered.filter { _meta, genomesize, _short_coverage, _long_coverage, _r1, _r2, _se, _long_reads ->
             genomesize.toInteger() > 1
         }.branch { _meta, _genomesize, short_coverage, long_coverage, _r1, _r2, _se, _long_reads ->
             autocycler: long_coverage.toInteger() >= 50
@@ -88,7 +107,6 @@ workflow HYBRID_READ_PROCESSING_SUBWORKFLOW {
         .map { meta, genomesize, _short_coverage, _long_coverage, _r1, _r2, _se, long_reads ->
             tuple(meta, genomesize, long_reads)
         })
-
 
         // Reorient GFA with DNAAPLER
         ch_reoriented = DNAAPLER(ch_unicylcer.gfa.mix(ch_autocycler.assembly_gfa))
