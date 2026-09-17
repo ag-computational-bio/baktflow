@@ -31,6 +31,7 @@ def main():
     modules: list[Path] = [Path(str(x[0])) for x in os.walk(args.input)][1:]
 
     environment_definitions: dict[str, dict[str, str]] = {}
+    skip_list: list[str] = ["pigz"]
 
     for module in modules:
         env_path: Path = module.joinpath("environment.yaml")
@@ -43,6 +44,8 @@ def main():
         environment_definitions[env_def["name"]] = {}
         for dep in env_def["dependencies"]:
             tool, version = split_dependency_description(dep)
+            if tool in skip_list:
+                continue
             environment_definitions[env_def["name"]].setdefault(tool, version)
 
     all_deps: list[str] = sorted(list(set([dep for deps in environment_definitions.values() for dep in deps.keys()])))
