@@ -48,19 +48,19 @@ process REPORTS {
         """
     else if ( tool == 'gecco' )
         """
-        if [ -s ${files[0]} ]; then
+        if [[ -s ${files[0]} ]]; then
             genes=${files[0]}
         else
             genes=None
         fi
 
-        if [ -s ${files[1]} ]; then
+        if [[ -s ${files[1]} ]]; then
             features=${files[1]}
         else
             features=None
         fi
 
-        if [ -s ${files[2]} ]; then
+        if [[ -s ${files[2]} ]]; then
             clusters=${files[2]}
         else
             clusters=None

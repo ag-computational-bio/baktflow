@@ -21,15 +21,15 @@ process GECCO {
     """
     gecco run -j ${task.cpus} --genome ${genbank} --cds-feature CDS --merge-gbk --output ./
 
-    if [ ! -f ${meta.sample_id}.genes.tsv ]; then
+    if [[ ! -f ${meta.sample_id}.genes.tsv ]]; then
         touch ${meta.sample_id}.genes.tsv
     fi
 
-    if [ ! -f ${meta.sample_id}.features.tsv ]; then
+    if [[ ! -f ${meta.sample_id}.features.tsv ]]; then
         touch ${meta.sample_id}.features.tsv
     fi
 
-    if [ ! -f ${meta.sample_id}.clusters.tsv ]; then
+    if [[ ! -f ${meta.sample_id}.clusters.tsv ]]; then
         touch ${meta.sample_id}.clusters.tsv
     fi
     """

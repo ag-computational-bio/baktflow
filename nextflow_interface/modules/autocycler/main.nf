@@ -48,7 +48,7 @@ process AUTOCYCLER_ASSEMBLY {
     autocycler helper $assembler --reads $subsample --out_prefix ${meta.sample_id}_${assembler}_${subsample.baseName.tokenize('_')[1]} \
     --threads $task.cpus --genome_size $genome_size --min_depth_rel 0.1
 
-    if [ ! -f ./${meta.sample_id}_${assembler}_${subsample.baseName.tokenize('_')[1]}.fasta ]; then
+    if [[ ! -f ./${meta.sample_id}_${assembler}_${subsample.baseName.tokenize('_')[1]}.fasta ]]; then
         touch ${meta.sample_id}_${assembler}_${subsample.baseName.tokenize('_')[1]}.fasta
     fi
 
@@ -90,7 +90,7 @@ process AUTOCYCLER_CONSENSUS {
     """
     # Exclude failed empty assemblies
     for f in assemblies/*.fasta; do
-        if [ ! -s \$f ]; then
+        if [[ ! -s \$f ]]; then
             rm \$f
         fi
     done

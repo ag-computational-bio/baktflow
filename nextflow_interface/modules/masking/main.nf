@@ -21,7 +21,7 @@ process MASKING {
         """
         minibwa index ${assembly}
         minibwa map -t $task.cpus ${assembly} ${r1} ${r2} | samtools sort - -@ ${task.cpus} -o alignments_pe.bam
-        if [ -s ${se} ]; then
+        if [[ -s ${se} ]]; then
             minibwa map -t $task.cpus ${assembly} ${se} | samtools sort - -@ ${task.cpus} -o alignments_se.bam
             samtools merge -@ ${task.cpus} alignments_merged.bam alignments_pe.bam alignments_se.bam
         else
@@ -39,7 +39,7 @@ process MASKING {
         # Use awk to compare floating point numbers (returns 1 for True, 0 for False)
         do_mask=\$(awk -v val="\$lqb_val" -v limit="${params.min_lqb_mb}" 'BEGIN {print (val >= limit) ? 1 : 0}')
 
-        if [ "\$lqb_val" != "Low" ] && [ "\$do_mask" -eq 1 ]; then
+        if [[ "\$lqb_val" != "Low" ]] && [[ "\$do_mask" -eq 1 ]]; then
             echo "Sample ${meta.sample_id}: LQB/Mbp (\$lqb_val) >= ${params.min_lqb_mb}. Masking with Q<${params.mask_threshold}..."
             cat ${meta.sample_id}_assembly.fastq | masking.py ${params.mask_threshold} > ${meta.sample_id}.masked.fasta
         else
@@ -59,7 +59,7 @@ process MASKING {
         # Use awk to compare floating point numbers (returns 1 for True, 0 for False)
         do_mask=\$(awk -v val="\$lqb_val" -v limit="${params.min_lqb_mb}" 'BEGIN {print (val >= limit) ? 1 : 0}')
 
-        if [ "\$lqb_val" != "Low" ] && [ "\$do_mask" -eq 1 ]; then
+        if [[ "\$lqb_val" != "Low" ]] && [[ "\$do_mask" -eq 1 ]]; then
             echo "Sample ${meta.sample_id}: LQB/Mbp (\$lqb_val) >= ${params.min_lqb_mb}. Masking with Q<${params.mask_threshold}..."
             cat ${long_reads} | masking.py ${params.mask_threshold} > ${meta.sample_id}.masked.fasta
         else
@@ -72,7 +72,7 @@ process MASKING {
         # Map and get quality fastq for short reads
         minibwa index ${assembly}
         minibwa map -t $task.cpus ${assembly} ${r1} ${r2} | samtools sort - -@ ${task.cpus} -o alignments_pe.bam
-        if [ -s ${se} ]; then
+        if [[ -s ${se} ]]; then
             minibwa map -t $task.cpus ${assembly} ${se} | samtools sort - -@ ${task.cpus} -o alignments_se.bam
             samtools merge -@ ${task.cpus} alignments_short_merged.bam alignments_pe.bam alignments_se.bam
         else
@@ -102,7 +102,7 @@ process MASKING {
         # Use awk to compare floating point numbers (returns 1 for True, 0 for False)
         do_mask=\$(awk -v val="\$lqb_val" -v limit="${params.min_lqb_mb}" 'BEGIN {print (val >= limit) ? 1 : 0}')
 
-        if [ "\$lqb_val" != "Low" ] && [ "\$do_mask" -eq 1 ]; then
+        if [[ "\$lqb_val" != "Low" ]] && [[ "\$do_mask" -eq 1 ]]; then
             echo "Sample ${meta.sample_id}: LQB/Mbp (\$lqb_val) >= ${params.min_lqb_mb}. Masking with Q<${params.mask_threshold}..."
             cat ${meta.sample_id}_assembly.fastq | masking.py ${params.mask_threshold} > ${meta.sample_id}.masked.fasta
         else
