@@ -2,7 +2,6 @@
 
 include {FASTP} from '../modules/fastp/main.nf'
 include {FASTPLONG} from '../modules/fastplong/main.nf'
-include {FILTLONG} from '../modules/filtlong/main.nf'
 include {GENOMESTATS} from '../modules/genomestats/main.nf'
 include {UNICYCLER} from '../modules/unicycler/main.nf'
 include {AUTOCYCLER_SUBWORKFLOW} from './autocycler_subworkflow.nf'
@@ -20,26 +19,19 @@ workflow HYBRID_READ_PROCESSING_SUBWORKFLOW {
         short_read_samples = ch_hybrid_reads.filter { it -> it.r1 && it.r2 }
         long_read_samples = ch_hybrid_reads.filter { it -> !it.long_reads.isEmpty() }
 
-        // Process short and long reads using FastP, FastPlong and Filtlong
+        // Process short and long reads using FastP and FastPlong
         ch_processed_short_reads = FASTP(short_read_samples.map { sample -> 
             tuple(sample.meta, sample.r1, sample.r2)
         })
 
-        if ( params.longReadTrimming.toBoolean() ) {
-            ch_trimmed_long_reads = FASTPLONG(long_read_samples.map { it -> tuple(it.meta, it.long_reads) }).trimmed_long_reads
-            ch_filtered_long_reads = FILTLONG(ch_trimmed_long_reads).filtered_long_reads
-        } else {
-            ch_filtered_long_reads = FILTLONG(long_read_samples.map { sample ->
-                tuple(sample.meta, sample.long_reads)
-            }).filtered_long_reads
-        }
+        ch_trimmed_long_reads = FASTPLONG(long_read_samples.map { it -> tuple(it.meta, it.long_reads) }).trimmed_long_reads
 
         // Get processed reads for assembly
         // Key channels with sample_id for easy joining
         ch_keyed_short_reads = ch_processed_short_reads.trimmed_reads.map { meta, r1, r2, se ->
             tuple(meta.sample_id, meta, r1, r2, se)
         }
-        ch_keyed_long_reads = ch_filtered_long_reads.map { meta, long_reads ->
+        ch_keyed_long_reads = ch_trimmed_long_reads.map { meta, long_reads ->
             tuple(meta.sample_id, long_reads)
         }
         combined_reads = ch_keyed_short_reads.join(ch_keyed_long_reads)
@@ -47,6 +39,7 @@ workflow HYBRID_READ_PROCESSING_SUBWORKFLOW {
                 tuple(meta_short, r1, r2, se, long_reads)
             }
 
+        // Estimate genome size
         ch_genomestats = GENOMESTATS(combined_reads).hybrid_genome_size
         ch_genomestats_reports = GENOMESTATS.out.report.mix(GENOMESTATS.out.report_hybrid.map { it -> return [it[0], it[1], it[2..-1]] })
 
@@ -123,6 +116,6 @@ workflow HYBRID_READ_PROCESSING_SUBWORKFLOW {
             reads_trimmed = combined_reads
             assembly_gfa = ch_reoriented.gfa
             assembly_fasta = ch_unicylcer_final.mix(ch_polished_assembly)
-            reports = FILTLONG.out.report.mix(ch_genomestats_reports).mix(ch_autocycler.reports).mix(ch_unicylcer.report
+            reports = FASTPLONG.out.report.mix(ch_genomestats_reports).mix(ch_autocycler.reports).mix(ch_unicylcer.report
                 ).mix(ch_reoriented.report).mix(PYPOLCA.out.report).mix(POLYPOLISH.out.report)
 }

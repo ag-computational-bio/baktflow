@@ -2,7 +2,7 @@
 
 process FASTPLONG {
     tag "$meta.sample_id"
-    publishDir "${params.output}/${meta.sample_id}/fastplong", pattern: "*.json", mode: 'copy'
+    publishDir "${params.output}/${meta.sample_id}/fastplong", pattern: "*.json.gz", mode: 'copy'
     publishDir "${params.output}/${meta.sample_id}/fastplong", pattern: "*.html", mode: 'copy'
     conda "${projectDir}/modules/fastplong/environment.yaml"
     memory { workflow.stubRun ? 64.MB : 2.GB * task.attempt }
@@ -12,24 +12,23 @@ process FASTPLONG {
         tuple val(meta), path(long_reads)
 
     output:
-        tuple val(meta), path("${meta.sample_id}_trimmed.fastq.gz"), emit: trimmed_long_reads
+        tuple val(meta), path("${meta.sample_id}_trimmed.fastq.gz"), emit: trimmed_long_reads, optional: true
         tuple path("fastplong.json.gz"), path("fastplong.html"), emit: log, optional: true
+        tuple val(meta), val('fastplong'), path("${meta.sample_id}_trimmed.fastq.gz"), emit: report, optional: true
 
     script:
     """
-    fastplong -i ${long_reads} --out ${meta.sample_id}_trimmed.fastq.gz --cut_front --cut_tail --cut_mean_quality 1 \
-    --trim_poly_x --break --break_mean_quality 1 --length_required 500 --compression 6 --thread $task.cpus
+    fastplong -i ${long_reads} --stdout --cut_front --cut_tail --cut_mean_quality 10 --break --break_mean_quality 10 \
+    --mean_qual 10 --length_required 500 --thread $task.cpus | \
+    pigz -9 -p ${task.cpus} > ${meta.sample_id}_trimmed.fastq.gz
 
-    pigz -9 -p ${task.cpus} fastplong.json
+    # Skip sample if no read passed quality filtering
+    AFTER=\$(grep -A 1 "after_filtering" fastplong.json | head -n 2 | grep "total_reads" | cut -d: -f 2 | sed 's/,//')
 
-    # Fallback to use the complete input file if overall quality is to low
-    BEFORE=\$(zgrep -A 1 "before_filtering" fastplong.json.gz | head -n 2 | grep "total_reads" | cut -d: -f 2 | sed 's/,//')
-    AFTER=\$(zgrep -A 1 "after_filtering" fastplong.json.gz | head -n 2 | grep "total_reads" | cut -d: -f 2 | sed 's/,//')
-    FRACTION=\$((\$AFTER/\$BEFORE*100))
-
-    if [ \$AFTER -eq 0 || \$FRACTION -le 50 ]; then
-        rm ${meta.sample_id}_trimmed.fastq.gz fastplong.json.gz fastplong.html
-        cp ${long_reads} ${meta.sample_id}_trimmed.fastq.gz
+    if [[ \$AFTER -eq 0 ]]; then
+        rm ${meta.sample_id}_trimmed.fastq.gz fastplong.json fastplong.html
+    else
+        pigz -9 -p ${task.cpus} fastplong.json
     fi
     """
 

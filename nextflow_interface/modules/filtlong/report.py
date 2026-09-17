@@ -1,1 +1,0 @@
-../../bin/parse_assembly.py

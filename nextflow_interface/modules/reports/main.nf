@@ -38,9 +38,9 @@ process REPORTS {
         """
         parse_ectyper.py ${files} ${meta.sample_id}
         """
-    else if ( tool == 'filtlong' )
+    else if ( tool == 'fastplong' )
         """
-        parse_assembly.py ${files} ${meta.sample_id} filtlong
+        parse_assembly.py ${files} ${meta.sample_id} fastplong
         """
     else if ( tool == 'flye' )
         """
