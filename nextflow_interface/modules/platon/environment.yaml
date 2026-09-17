@@ -4,3 +4,4 @@ channels:
   - bioconda
 dependencies:
   - platon=1.8
+  - pigz

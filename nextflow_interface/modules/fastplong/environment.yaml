@@ -3,4 +3,5 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - fastplong==0.7.0
+  - fastplong==0.7.1
+  - pigz

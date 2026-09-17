@@ -5,3 +5,4 @@ channels:
 dependencies:
   - bakta=1.12.1
   - diamond=2.2.0
+  - pigz

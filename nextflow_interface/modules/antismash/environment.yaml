@@ -4,3 +4,4 @@ channels:
   - bioconda
 dependencies:
   - antismash==8.0.4
+  - pigz
