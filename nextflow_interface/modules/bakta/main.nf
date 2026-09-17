@@ -5,7 +5,7 @@ process BAKTA {
     tag "$meta.sample_id"
     publishDir "${params.output}/${meta.sample_id}/bakta", mode: 'copy'
     conda "${projectDir}/modules/bakta/environment.yaml"
-    memory { workflow.stubRun ? 64.MB : 8.GB * task.attempt }
+    memory { workflow.stubRun ? 64.MB : 16.GB * task.attempt }
     cpus { workflow.stubRun ? 1 : (params.threads >= 8 ? 8 : params.threads) }
     errorStrategy { (task.attempt <= 3) ? 'retry' : 'ignore' }
 
@@ -26,10 +26,13 @@ process BAKTA {
         tuple val(meta), path("${meta.sample_id}.json.gz"), emit: json
 
     script:
-    if ( "${params.baktaDbType}" == "light" ) {
-        baktaDb = "${params.databaseDir}/bakta/db-light"
-    } else {
+    if ( "${params.baktaDbType}" == "full" ) {
         baktaDb = "${params.databaseDir}/bakta/db"
+    } else if ( "${params.baktaDbType}" == "light" ) {
+        // TODO fix always light bug
+        baktaDb = "${params.databaseDir}/bakta/db"
+    } else {
+        error "Invalid Bakta db type: ${params.baktaDbType}"
     }
 
     """
