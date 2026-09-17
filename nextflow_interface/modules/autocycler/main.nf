@@ -96,7 +96,7 @@ process AUTOCYCLER_CONSENSUS {
     done
 
     # When all assemblies failed ignore the sample
-    if [ -z \$( ls assemblies/ ) ]; then
+    if [[ -z "\$( ls assemblies/ )" ]]; then
        exit 66
     fi
 
@@ -109,7 +109,7 @@ process AUTOCYCLER_CONSENSUS {
         autocycler resolve -c \$c
     done
 
-    autocycler combine -a autocycler_out -i autocycler_out/clustering/qc_pass/cluster_*/5_final.gfa
+    autocycler combine -a autocycler_out -i autocycler_out/clustering/qc_pass/cluster_*/5_final.gfa --threads $task.cpus
 
     autocycler table -a autocycler_out -n ${meta.sample_id} > metrics.tsv
     COMPLETE=\$(awk '{print \$NF}' metrics.tsv)
