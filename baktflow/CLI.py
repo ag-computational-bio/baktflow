@@ -64,7 +64,6 @@ def on_the_fly_setup(setup_dir: str, bakta_db_type: str, work_dir: str, output: 
         )
         setup_subdir, conda_dir, database_dir = bu.get_setup_directories(setup_dir, setup_mode=True)
         setup_subdir.mkdir(parents=True, exist_ok=True)
-        bakta_db_type: str = bakta_db_type
         bn.baktflow_setup(
             bu.get_nf_script("setup.nf"), setup_subdir, conda_dir, database_dir, bakta_db_type=bakta_db_type
         )
@@ -197,7 +196,7 @@ def parse_arguments():
         "--force", "-f", action="store_true", help="Force the (re)installation setup of baktflow."
     )
     setup_parser.add_argument(
-        "--bakta_db_type", type=str, default="light", help="Bakta database type [light, full]. default = 'light'"
+        "--bakta_db_type", type=str, default="full", help="Bakta database type [light, full]. default = 'full'"
     )
 
     # Single subcommand
@@ -206,7 +205,7 @@ def parse_arguments():
     single_parser.add_argument("--output", help="Output directory", required=True)
     single_parser.add_argument("--setup_dir", help="Directory for the workflow setup", required=True)
     single_parser.add_argument(
-        "--bakta_db_type", type=str, default="light", help="Bakta database type [light, full]. default = 'light'"
+        "--bakta_db_type", type=str, default="full", help="Bakta database type [light, full]. default = 'full'"
     )
     single_parser.add_argument("--r1", default=None, help="Input file for R1 sequencing reads (FASTQ format)")
     single_parser.add_argument("--r2", default=None, help="Input file for R2 sequencing reads (FASTQ format)")
@@ -225,7 +224,7 @@ def parse_arguments():
     batch_parser.add_argument("--output", help="Output directory for batch analysis", required=True)
     batch_parser.add_argument("--setup_dir", help="Directory for the workflow setup", required=True)
     batch_parser.add_argument(
-        "--bakta_db_type", type=str, default="light", help="Bakta database type [light, full]. default = 'light'"
+        "--bakta_db_type", type=str, default="full", help="Bakta database type [light, full]. default = 'full'"
     )
     batch_parser.add_argument("--long_read_trimming", action="store_true", help="Enable trimming for long reads")
     batch_parser.add_argument("--work_dir", "-w", help="Directory for the nextflow work folder (default: output/work)")
