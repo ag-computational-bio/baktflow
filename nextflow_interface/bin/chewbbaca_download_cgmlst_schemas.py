@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import time
 import zipfile
+from http.client import RemoteDisconnected
 from urllib.error import URLError
 from urllib.request import urlopen, urlretrieve
 
@@ -22,6 +23,7 @@ def fetch_schema_list() -> list[dict[str, str | list[str]]]:
     with urlopen(SCHEMA_LIST_URL, timeout=30) as response:
         html = response.read().decode("utf-8")
 
+    seen_isolates: set[str] = set()
     schema_pattern = r"/ncs/schema/([A-Za-z0-9_]+)/"
     organism_pattern = r">([A-Z]{1}[a-z]+\s[A-Za-z0-9_/\. \(\)]+)</"
     schema_matches = re.findall(schema_pattern, html)
@@ -31,16 +33,24 @@ def fetch_schema_list() -> list[dict[str, str | list[str]]]:
 
     spp = [o.split()[0] for o in organism_list if "spp." in o]
     schemata: list[dict[str, str | list[str]]] = []
+    organisms: list[str]
     for schema, organism in zip(schema_list, organism_list[2:-2]):
         if schema.endswith("_complex"):
             organisms = [f"{organism.split('/')[0].split()[0]} {s}" for s in organism.split()[1].split("/")]
-        elif schema.endswith("_fli") or schema.endswith("_rki"):
+        elif schema.endswith(("_fli", "_rki")):
             organisms = [" ".join(organism.split()[:2])]
         elif schema in spp:
             organisms = [organism.rstrip("cgMLST").strip()]
         else:
             organisms = [organism]
-        schemata.append({"schema": schema, "organisms": organisms})
+
+        organisms = [o for o in organisms if o not in seen_isolates]
+        seen_isolates: set[str] = seen_isolates.union(organisms)
+
+        if len(organisms) > 0:
+            schemata.append({"schema": schema, "organisms": organisms})
+        else:
+            print(f"Skip schema: {schema} with {organism} (already included)")
 
     # j: int = 0
     # for i, organism_short in enumerate(schema_list):
@@ -120,15 +130,23 @@ def download_schema(schemata: dict[str, str | list[str]], outdir="chewBBACA", de
     os.makedirs(schema_dir, exist_ok=True)
     zip_path = os.path.join(outdir, f"{schemata['schema']}.zip")
 
-    try:
-        request = requests.get(download_url, timeout=30, stream=True)
-        with open(zip_path, "wb") as fh:
-            for chunk in request.iter_content(4 * 1024 * 1024):
-                fh.write(chunk)
-    except URLError or requests.exceptions.ReadTimeout as e:
-        print(e)
-        time.sleep(30)
-        urlretrieve(download_url, zip_path)
+    done: bool = False
+    while not done:
+        try:
+            request = requests.get(download_url, timeout=30, stream=True)
+            with open(zip_path, "wb") as fh:
+                fh.writelines(request.iter_content(4 * 1024 * 1024))
+
+            done = True
+        except (URLError, requests.exceptions.ReadTimeout) as e:
+            print(f"\tRetry download: {schemata['schema']}, Error: {e}")
+            time.sleep(30)
+            try:
+                urlretrieve(download_url, zip_path)
+
+                done = True
+            except (URLError, RemoteDisconnected):
+                time.sleep(60)
 
     try:
         with zipfile.ZipFile(zip_path, "r") as zf:
@@ -149,7 +167,7 @@ def prep_schema(schema_dir: str, threads: int = 1):
     print(f"\t{schema_dir.rstrip('/').split('/')[-1]}".rstrip("RAW"))
     prepped_dir = schema_dir.rstrip("/").rstrip("RAW")
     cmd = ["chewBBACA.py", "PrepExternalSchema", "-g", schema_dir, "-o", prepped_dir, "--cpu", str(threads)]
-    subprocess.run(cmd)
+    subprocess.run(cmd, check=True)
 
     shutil.rmtree(schema_dir)
     # os.renames(prepped_dir, schema_dir)
@@ -158,7 +176,7 @@ def prep_schema(schema_dir: str, threads: int = 1):
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Download chewbbaca databases from cgMLST.")
-    parser.add_argument("--threads", type=int, default=8, help="Number of threads")
+    parser.add_argument("--threads", type=int, default=16, help="Number of threads")
     return parser.parse_args()
 
 
