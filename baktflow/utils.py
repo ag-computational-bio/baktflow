@@ -93,7 +93,9 @@ def check_directory_accessibility(directory_path: str | Path):
 # ------------------------------
 
 
-def determine_sample_type(r1: str | None, r2: str | None, long: str | None, assembly: str | None) -> str:
+def determine_sample_type(
+    r1: str | None, r2: str | None, long: str | None, assembly: str | None, meta: str | None
+) -> str:
     """
     Determine the type of sequencing data based on file names.
 
@@ -112,10 +114,16 @@ def determine_sample_type(r1: str | None, r2: str | None, long: str | None, asse
         return "short"
     elif long and not (r1 or r2 or assembly):
         return "long"
+    if meta and r1 and r2 and long and not assembly:
+        return "meta-hybrid"
+    elif meta and r1 and r2 and not (long or assembly):
+        return "meta-short"
+    elif meta and long and not (r1 or r2 or assembly):
+        return "meta-long"
     elif assembly and not (r1 or r2 or long):
         return "assembly"
     else:
-        raise Exception(
+        raise ValueError(
             f"Could not determine sample type from input:\nR1: {r1}\nR2: {r2}\nLong: {long}\nAssembly: {assembly}"
         )
 
@@ -188,6 +196,9 @@ def preprocess_tsv(input_tsv: str | Path, input_dir: Path, output_dir: Path) -> 
         "short": 2,
         "long": 1,
         "hybrid": 3,
+        "meta-short": 2,
+        "meta-long": 1,
+        "meta-hybrid": 3,
         "assembly": 1,
     }
     if not str(input_tsv).endswith((".csv", ".tsv")):
@@ -213,12 +224,18 @@ def preprocess_tsv(input_tsv: str | Path, input_dir: Path, output_dir: Path) -> 
                 continue
 
             logger.debug(f"Processing row {i}: {' '.join(row)}")
-            if sample_type == "short" and len(files) == sample_types["short"]:
+            if (sample_type == "short" and len(files) == sample_types["short"]) or (
+                sample_type == "meta-short" and len(files) == sample_types["meta-short"]
+            ):
                 checked_row.append(checked_file(files[0], input_dir, extensions))  # R1
                 checked_row.append(checked_file(files[1], input_dir, extensions))  # R2
-            elif sample_type == "long" and len(files) == sample_types["long"]:
+            elif (sample_type == "long" and len(files) == sample_types["long"]) or (
+                sample_type == "meta-long" and len(files) == sample_types["meta-long"]
+            ):
                 checked_row.extend(["", "", checked_file(files[0], input_dir, extensions)])  # Long-read file
-            elif sample_type == "hybrid" and len(files) == sample_types["hybrid"]:
+            elif (sample_type == "hybrid" and len(files) == sample_types["hybrid"]) or (
+                sample_type == "meta-hybrid" and len(files) == sample_types["meta-hybrid"]
+            ):
                 checked_row.append(checked_file(files[0], input_dir, extensions))  # R1
                 checked_row.append(checked_file(files[1], input_dir, extensions))  # R2
                 checked_row.append(checked_file(files[2], input_dir, extensions))  # Long-read file

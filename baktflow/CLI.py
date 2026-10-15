@@ -1,9 +1,11 @@
 import argparse
 import concurrent.futures as cf
 import logging
+from concurrent.futures import as_completed
 from pathlib import Path
 
 import polars as pl
+from tqdm import tqdm
 
 import baktflow.nextflow as bn
 import baktflow.report as br
@@ -97,7 +99,7 @@ def single_subcommand(args):
         raise e
     bu.check_directory_accessibility(output)
 
-    sample_type = bu.determine_sample_type(args.r1, args.r2, args.long, args.assembly)
+    sample_type = bu.determine_sample_type(args.r1, args.r2, args.long, args.assembly, args.meta)
     tsv_path = output.joinpath("single_config.tsv")
     bu.create_tsv(args.id, sample_type, tsv_path, args.r1, args.r2, args.long, args.assembly)
 
@@ -118,8 +120,8 @@ def single_subcommand(args):
         resume=args.resume,
         stub=args.stub,
     )
-    logger.info("Nextflow workflow executed successfully.")
 
+    logger.info("Creating report...")
     jsons = br.check_output(output_dir=f"{output}/{args.id}")
     br.create_aggregated_json(path_json_files=jsons, output_dir=f"{output}/{args.id}", sample_id=args.id)
 
@@ -166,15 +168,15 @@ def batch_subcommand(args):
         resume=args.resume,
         stub=args.stub,
     )
-    logger.info("Nextflow workflow executed successfully.")
 
-    df = pl.read_csv(cleaned_tsv, separator="\t", has_header=False)
-    samples_id = df.get_column("column_1").to_list()
+    logger.info("Creating per sample report...")
+    df: pl.DataFrame = pl.read_csv(cleaned_tsv, separator="\t", has_header=False)
+    samples_id: list[str] = df.get_column("column_1").to_list()
 
-    futures = []
-    with cf.ThreadPoolExecutor() as tpe:
-        for sample in samples_id:
-            futures.append(tpe.submit(br.aio_create_aggregated_json, output, sample))
+    with tqdm(total=len(samples_id)) as pbar, cf.ProcessPoolExecutor() as ppe:
+        futures = [ppe.submit(br.aio_create_aggregated_json, output, sample) for sample in samples_id]
+        for _ in as_completed(futures):
+            pbar.update(1)
 
     logger.info("Report generation completed successfully.")
 
@@ -211,6 +213,7 @@ def parse_arguments():
     single_parser.add_argument("--r2", default=None, help="Input file for R2 sequencing reads (FASTQ format)")
     single_parser.add_argument("--long", default=None, help="Input file for long reads (FASTQ format)")
     single_parser.add_argument("--assembly", default=None, help="Input assembly file (FASTQ format)")
+    single_parser.add_argument("--meta", action="store_true", help="Is a metagenome sample")
     single_parser.add_argument("--long_read_trimming", action="store_true", help="Enable trimming for long reads")
     single_parser.add_argument("--work_dir", help="Directory for the nextflow work folder (default: output/work)")
     single_parser.add_argument("--profile", type=str, default="standard", help="Nextflow execution profile")
