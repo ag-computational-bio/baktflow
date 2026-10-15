@@ -1,0 +1,6 @@
+name: metacat
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - metacat==1.0.6

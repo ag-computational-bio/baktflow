@@ -1,0 +1,7 @@
+name: hostile
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - hostile==2.0.2
+  - pigz

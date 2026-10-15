@@ -1,0 +1,7 @@
+name: nanolyse
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - nanolyse==1.2.1
+  - pigz

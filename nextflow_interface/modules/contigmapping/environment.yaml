@@ -1,0 +1,7 @@
+name: contigmapping
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - minimap2==2.31
+  - samtools==1.24

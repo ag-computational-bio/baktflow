@@ -1,0 +1,6 @@
+name: sylph
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - sylph==1.0.0

@@ -69,8 +69,7 @@ workflow HYBRID_READ_PROCESSING_SUBWORKFLOW {
         ch_unicylcer = UNICYCLER(ch_unicycler_input.mix(
             ch_assembler_input.unicycler.map { meta, _genomesize, _short_coverage, _long_coverage, r1, r2, se, long_reads ->
                 tuple(meta, r1, r2, se, long_reads)
-            }
-        ).mix(
+            },
             ch_assembler_input.other.map { meta, _genomesize, _short_coverage, _long_coverage, r1, r2, se, long_reads ->
                 tuple(meta, r1, r2, se, long_reads)
             }
@@ -116,6 +115,7 @@ workflow HYBRID_READ_PROCESSING_SUBWORKFLOW {
             reads_trimmed = combined_reads
             assembly_gfa = ch_reoriented.gfa
             assembly_fasta = ch_unicylcer_final.mix(ch_polished_assembly)
-            reports = FASTPLONG.out.report.mix(ch_genomestats_reports).mix(ch_autocycler.reports).mix(ch_unicylcer.report
-                ).mix(ch_reoriented.report).mix(PYPOLCA.out.report).mix(POLYPOLISH.out.report)
+            reports = ch_genomestats_reports.mix(ch_genomestats_reports, ch_autocycler.reports, ch_unicylcer.report,
+                    ch_reoriented.report, PYPOLCA.out.report, POLYPOLISH.out.report
+                )
 }

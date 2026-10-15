@@ -1,72 +1,95 @@
 #!/usr/bin/env nextflow
 
 // Include setup processes from modules
+include { SETUP_AMRFINDERPLUS } from './modules/amrfinderplus/setup.nf'
+include { SETUP_ANTISMASH } from './modules/antismash/setup.nf'
 include { SETUP_AUTOCYCLER } from './modules/autocycler/setup.nf'
-include { SETUP_GENOMESTATS } from './modules/genomestats/setup.nf'
+include { SETUP_BAKTA } from './modules/bakta/setup.nf'
+include { SETUP_BANDAGE } from './modules/bandage/setup.nf'
+include { SETUP_CHECKM2 } from './modules/checkm2/setup.nf'
+include { SETUP_CHEWBBACA } from './modules/chewbbaca/setup.nf'
+include { SETUP_CONTIGMAPPING } from './modules/contigmapping/setup.nf'
+include { SETUP_DNAAPLER } from './modules/dnaapler/setup.nf'
+include { SETUP_ECTYPER } from './modules/ectyper/setup.nf'
 include { SETUP_FASTP } from './modules/fastp/setup.nf'
-include { SETUP_FILTLONG} from './modules/filtlong/setup.nf'
+include { SETUP_FASTPLONG } from './modules/fastplong/setup.nf'
 include { SETUP_FLYE } from './modules/flye/setup.nf'
-include { SETUP_UNICYCLER } from './modules/unicycler/setup.nf'
+include { SETUP_GENOMESTATS } from './modules/genomestats/setup.nf'
+include { SETUP_GTDBTK } from './modules/gtdbtk/setup.nf'
+include { SETUP_HOSTILE } from './modules/hostile/setup.nf'
+include { SETUP_KLEBORATE } from './modules/kleborate/setup.nf'
+include { SETUP_MACSYFINDER } from './modules/macsyfinder/setup.nf'
+include { SETUP_MASKING } from './modules/masking/setup.nf'
 include { SETUP_MEDAKA } from './modules/medaka/setup.nf'
+include { SETUP_METABINNER } from './modules/metabinner/setup.nf'
+include { SETUP_METACAT } from './modules/metacat/setup.nf'
+include { SETUP_METAWRAP } from './modules/metawrap/setup.nf'
+include { SETUP_MLST } from './modules/mlst/setup.nf'
+include { SETUP_MOB_SUITE } from './modules/mob_suite/setup.nf'
+include { SETUP_MYLOASM } from './modules/myloasm/setup.nf'
+include { SETUP_NANOLYSE } from './modules/nanolyse/setup.nf'
+include { SETUP_NANOPLOT } from './modules/nanoplot/setup.nf'
+include { SETUP_PLASMIDFINDER } from './modules/plasmidfinder/setup.nf'
+include { SETUP_PLATON } from './modules/platon/setup.nf'
+include { SETUP_PLING } from './modules/pling/setup.nf'
+include { SETUP_PMLST } from './modules/pmlst/setup.nf'
 include { SETUP_POLYPOLISH } from './modules/polypolish/setup.nf'
 include { SETUP_PYPOLCA } from './modules/pypolca/setup.nf'
-include { SETUP_DNAAPLER } from './modules/dnaapler/setup.nf'
-include { SETUP_BAKTA } from './modules/bakta/setup.nf'
-include { SETUP_CHECKM2 } from './modules/checkm2/setup.nf'
-include { SETUP_MOB_SUITE  } from './modules/mob_suite/setup.nf'
-include { SETUP_MLST } from './modules/mlst/setup.nf'
-include { SETUP_SKA } from './modules/ska/setup.nf'
-include { SETUP_RGI } from './modules/rgi/setup.nf'
-include { SETUP_VFDB } from './modules/vfdb/setup.nf'
-include { SETUP_AMRFINDERPLUS } from './modules/amrfinderplus/setup.nf'
 include { SETUP_REFERENCESEEKER } from './modules/referenceseeker/setup.nf'
-include { SETUP_PLATON } from './modules/platon/setup.nf'
-include { SETUP_SILVA_16S } from './modules/silva-16s/setup.nf'
-include { SETUP_BANDAGE } from './modules/bandage/setup.nf'
-include { SETUP_MACSYFINDER} from './modules/macsyfinder/setup.nf'
-include { SETUP_GTDBTK} from './modules/gtdbtk/setup.nf'
-include { SETUP_PMLST} from './modules/pmlst/setup.nf'
-include { SETUP_ECTYPER } from './modules/ectyper/setup.nf'
-include { SETUP_KLEBORATE } from './modules/kleborate/setup.nf'
-include { SETUP_PLING } from './modules/pling/setup.nf'
-include { SETUP_PLASMIDFINDER } from './modules/plasmidfinder/setup.nf'
-include { SETUP_MASKING } from './modules/masking/setup.nf'
-include { SETUP_CHEWBBACA } from './modules/chewbbaca/setup.nf'
 include { SETUP_REPORTS } from './modules/reports/setup.nf'
+include { SETUP_RGI } from './modules/rgi/setup.nf'
+include { SETUP_SEMIBIN } from './modules/semibin/setup.nf'
+include { SETUP_SILVA_16S } from './modules/silva-16s/setup.nf'
+include { SETUP_SKA } from './modules/ska/setup.nf'
+include { SETUP_SYLPH } from './modules/sylph/setup.nf'
+include { SETUP_UNICYCLER } from './modules/unicycler/setup.nf'
+include { SETUP_VFDB } from './modules/vfdb/setup.nf'
 
 // Workflow definition
 workflow {
+    SETUP_AMRFINDERPLUS()
+    SETUP_ANTISMASH()
     SETUP_AUTOCYCLER()
-    SETUP_GENOMESTATS()
+    SETUP_BAKTA()
+    SETUP_BANDAGE()
+    SETUP_CHECKM2()
+    SETUP_CHEWBBACA()
+    SETUP_CONTIGMAPPING()
+    SETUP_DNAAPLER()
+    SETUP_ECTYPER()
     SETUP_FASTP()
-    SETUP_FILTLONG()
+    SETUP_FASTPLONG()
     SETUP_FLYE()
-    SETUP_UNICYCLER()
+    SETUP_GENOMESTATS()
+    SETUP_GTDBTK()
+    SETUP_HOSTILE()
+    SETUP_KLEBORATE()
+    SETUP_MACSYFINDER()
+    SETUP_MASKING()
     SETUP_MEDAKA()
+    SETUP_METABINNER()
+    SETUP_METACAT()
+    SETUP_METAWRAP()
+    SETUP_MLST()
+    SETUP_MOB_SUITE()
+    SETUP_MYLOASM()
+    SETUP_NANOLYSE()
+    SETUP_NANOPLOT()
+    SETUP_PLASMIDFINDER()
+    SETUP_PLATON()
+    SETUP_PLING()
+    SETUP_PMLST()
     SETUP_POLYPOLISH()
     SETUP_PYPOLCA()
-    SETUP_DNAAPLER()
-    SETUP_BAKTA()
-    SETUP_CHECKM2()
-    SETUP_MOB_SUITE()
-    SETUP_VFDB()
-    SETUP_AMRFINDERPLUS()
-    SETUP_SKA()
-    SETUP_RGI()
     SETUP_REFERENCESEEKER()
-    SETUP_MLST()
-    SETUP_PLATON()
-    SETUP_SILVA_16S()
-    SETUP_MACSYFINDER()
-    SETUP_BANDAGE()
-    SETUP_PMLST()
-    SETUP_GTDBTK()
-    SETUP_ECTYPER()
-    SETUP_KLEBORATE()
-    SETUP_PLING()
-    SETUP_PLASMIDFINDER()
-    SETUP_CHEWBBACA()
     SETUP_REPORTS()
+    SETUP_RGI()
+    SETUP_SEMIBIN()
+    SETUP_SILVA_16S()
+    SETUP_SKA()
+    SETUP_SYLPH()
+    SETUP_UNICYCLER()
+    SETUP_VFDB()
 
     /*
     workflow.onComplete {
