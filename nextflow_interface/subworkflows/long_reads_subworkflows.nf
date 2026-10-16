@@ -65,5 +65,5 @@ workflow LONG_READ_PROCESSING_SUBWORKFLOW {
         assembly_gfa = ch_reoriented.gfa
         assembly_fasta = ch_medaka_polished.fasta
         assembly_fastq = ch_medaka_polished.fastq
-        reports = ch_genomestats.report.mix(ch_autocycler.reports, ch_flye.report, ch_reoriented.report, ch_medaka_polished.report)
+        reports = GENOMESTATS.out.report.mix(ch_autocycler.reports, ch_flye.report, ch_reoriented.report, ch_medaka_polished.report)
 }
