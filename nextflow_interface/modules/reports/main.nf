@@ -80,6 +80,10 @@ process REPORTS {
         """
         parse_gtdbtk.py ${files} ${meta.sample_id}
         """
+    else if ( tool == 'hostile' )
+        """
+        parse_assembly.py ${files} ${meta.sample_id} hostile
+        """
     else if ( tool == 'kleborate' )
         """
         parse_kleborate.py ${files} ${meta.sample_id}
@@ -96,9 +100,21 @@ process REPORTS {
         """
         parse_assembly.py ${files} ${meta.sample_id} medaka
         """
+    else if ( tool == 'metawrap' )
+        """
+        parse_assembly.py ${files} ${meta.sample_id} metawrap
+        """
     else if ( tool == 'mob_suite' )
         """
         parse_mob.py ${files} ${meta.sample_id}
+        """
+    else if ( tool == 'myloasm' )
+        """
+        parse_assembly.py ${files} ${meta.sample_id} myloasm
+        """
+    else if ( tool == 'nanolyse' )
+        """
+        parse_assembly.py ${files} ${meta.sample_id} nanolyse
         """
     else if ( tool == 'pling' )
         """

@@ -1,8 +1,9 @@
 #!/usr/bin/env nextflow
 
-include { HYBRID_READ_PROCESSING_SUBWORKFLOW } from './subworkflows/hybrid_reads_subworkflows.nf'
 include { SHORT_READ_PROCESSING_SUBWORKFLOW } from './subworkflows/short_reads_subworkflows.nf'
 include { LONG_READ_PROCESSING_SUBWORKFLOW } from './subworkflows/long_reads_subworkflows.nf'
+include { HYBRID_READ_PROCESSING_SUBWORKFLOW } from './subworkflows/hybrid_reads_subworkflows.nf'
+include { META_LONG_READ_PROCESSING_SUBWORKFLOW } from './subworkflows/meta_long_reads_subworkflows.nf'
 include { TYPING_SUBWORKFLOW } from './subworkflows/typing_subworkflow.nf'
 include { BAKTA } from './modules/bakta/main.nf'
 include { MLST } from './modules/mlst/main.nf'
@@ -68,14 +69,9 @@ workflow {
     ch_short_reads = ch_samples.filter { it -> it.meta.sample_type == 'short' }
     ch_long_reads = ch_samples.filter { it -> it.meta.sample_type == 'long' }
     ch_hybrid_reads = ch_samples.filter { it -> it.meta.sample_type == 'hybrid' }
+    ch_meta_long_reads = ch_samples.filter { it -> it.meta.sample_type == 'meta-long' }
     ch_assemblies = ch_samples.filter { it -> it.meta.sample_type == 'assembly' }
-        .map { sample ->
-            // Modify the assembly channel to include only meta and assembly path
-            return [
-                meta: sample.meta,  // Only include metadata
-                assembly: sample.assembly // Only include the assembly path
-            ]
-        }
+        .map { sample -> tuple(sample.meta, sample.assembly) }
 
     // Process each type of read and gather the outputs
     ch_short_processed = SHORT_READ_PROCESSING_SUBWORKFLOW(ch_short_reads)
@@ -90,9 +86,15 @@ workflow {
     ch_hybrid_assemblies = ch_hybrid_processed.assembly_fasta
     ch_hybrid_gfa = ch_hybrid_processed.assembly_gfa
 
+    ch_meta_long_processed = META_LONG_READ_PROCESSING_SUBWORKFLOW(ch_meta_long_reads)
+    ch_meta_long_assemblies = ch_meta_long_processed.assembly_fasta
+    ch_meta_long_gfa = ch_meta_long_processed.assembly_gfa
+
     // Combine all outputs into a single channel
-    combined_assemblies = ch_short_assemblies.mix(ch_long_assemblies, ch_hybrid_assemblies, ch_assemblies)
-    combined_gfa = ch_short_gfa.mix(ch_long_gfa, ch_hybrid_gfa)
+    combined_assemblies = ch_short_assemblies.mix(
+        ch_long_assemblies, ch_hybrid_assemblies, ch_meta_long_assemblies, ch_assemblies
+    )
+    combined_gfa = ch_short_gfa.mix(ch_long_gfa, ch_hybrid_gfa, ch_meta_long_gfa)
 
     // Call BAKTA with the combined output channel
     bakta_annotation = BAKTA(combined_assemblies)
@@ -142,7 +144,7 @@ workflow {
 
     // Call MacSyFinder using CONJSCAN model
     CONJSCAN(bakta_annotation.faa)
-    ch_macsyfinder_reports = TXSSCAN.out.report.mix(CASFINDER.out.report).mix(CONJSCAN.out.report)
+    ch_macsyfinder_reports = TXSSCAN.out.report.mix(CASFINDER.out.report, CONJSCAN.out.report)
 
     // Call PLING
     // PLING(mob_results.plasmids)
@@ -193,11 +195,11 @@ workflow {
 
     // Create reports
     REPORTS(
-        ch_short_processed.reports.mix(ch_long_processed.reports).mix(ch_hybrid_processed.reports).mix(
-        AMRFINDERPLUS.out.report).mix(CHECKM2.out.report).mix(TYPING_SUBWORKFLOW.out.reports).mix(GTDBTK.out.report).mix(
-        mob_results.report).mix(ch_macsyfinder_reports).mix(
-        GECCO.out.report.map { it -> return [it[0], it[1], it[2..-1]] }).mix(REFERENCESEEKER.out.report).mix(
-        SILVA_16S.out.report).mix(VFDB.out.report)
+        ch_short_processed.reports.mix(ch_long_processed.reports, ch_hybrid_processed.reports, ch_meta_long_processed.reports,
+        AMRFINDERPLUS.out.report, CHECKM2.out.report, TYPING_SUBWORKFLOW.out.reports, GTDBTK.out.report,
+        mob_results.report, ch_macsyfinder_reports,
+        GECCO.out.report.map { it -> return [it[0], it[1], it[2..-1]] }, REFERENCESEEKER.out.report,
+        SILVA_16S.out.report, VFDB.out.report)
     )
     // .mix(PLING.out.report)
 

@@ -1,0 +1,8 @@
+name: myloasm
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - myloasm==0.7.0
+  - mylotools==2.1.0
+  - myloasm-kmc==0.1.0

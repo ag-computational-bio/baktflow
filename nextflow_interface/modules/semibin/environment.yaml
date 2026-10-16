@@ -1,0 +1,8 @@
+name: semibin
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - semibin==2.6.0
+  - pytorch-cpu>=2.13.0
+  - mmseqs2>=18.8cc5c
