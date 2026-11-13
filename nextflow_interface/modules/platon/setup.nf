@@ -1,12 +1,14 @@
 #!/usr/bin/env nextflow
 
 process SETUP_PLATON {
-    publishDir path: "${params.databaseDir}", mode: 'move'
+    publishDir path: "${params.databaseDir}/versions", mode: 'move', pattern: "*.txt"
+    publishDir path: "${params.databaseDir}", mode: 'move', pattern: "platon_db"
     tag "SETUP_PLATON"
     conda "${projectDir}/modules/platon/environment.yaml"
 
     output:
     path "platon_db", emit: db
+    path "platon_db.txt", emit: version
 
     script:
     """
@@ -14,6 +16,7 @@ process SETUP_PLATON {
     tar -xzf platon_db.tar.gz
     rm platon_db.tar.gz
     mv db platon_db
+    date '+%Y-%m-%d %H:%M:%S' > platon_db.txt
     echo 'Finished mamba environment setup.'
     """
 }

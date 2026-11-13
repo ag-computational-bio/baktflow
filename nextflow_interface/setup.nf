@@ -2,6 +2,7 @@
 
 // Include setup processes from modules
 include { SETUP_AUTOCYCLER } from './modules/autocycler/setup.nf'
+include { SETUP_ANTISMASH } from './modules/antismash/setup.nf'
 include { SETUP_GENOMESTATS } from './modules/genomestats/setup.nf'
 include { SETUP_FASTP } from './modules/fastp/setup.nf'
 include { SETUP_FILTLONG} from './modules/filtlong/setup.nf'
@@ -36,7 +37,9 @@ include { SETUP_REPORTS } from './modules/reports/setup.nf'
 
 // Workflow definition
 workflow {
+    
     SETUP_AUTOCYCLER()
+    SETUP_ANTISMASH()
     SETUP_GENOMESTATS()
     SETUP_FASTP()
     SETUP_FILTLONG()
